@@ -233,17 +233,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
         if(isStartButton) {
             addPreferencesFromResource(R.xml.tb_pref_context_menu_open_settings);
             findPreference(PREF_OPEN_TASKBAR_SETTINGS).setOnPreferenceClickListener(this);
-            findPreference(PREF_START_MENU_APPS).setOnPreferenceClickListener(this);
-
-            if(U.isFreeformModeEnabled(this)
-                    && ((U.launcherIsDefault(this)
-                    && !U.isOverridingFreeformHack(this, false)
-                    && FreeformHackHelper.getInstance().isInFreeformWorkspace())
-                    || (U.isOverridingFreeformHack(this, false)
-                    && LauncherHelper.getInstance().isOnHomeScreen(this)))) {
-                addPreferencesFromResource(R.xml.tb_pref_context_menu_change_wallpaper);
-                findPreference(PREF_CHANGE_WALLPAPER).setOnPreferenceClickListener(this);
-            }
 
             if(showQuitOption) {
                 addPreferencesFromResource(R.xml.tb_pref_context_menu_quit);
@@ -423,11 +412,7 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
             case PREF_WINDOW_SIZE_HALF_RIGHT:
             case PREF_WINDOW_SIZE_PHONE_SIZE:
                 String windowSize = p.getKey().replace("window_size_", "");
-
-                SharedPreferences pref2 = U.getSharedPreferences(this);
-                if(pref2.getBoolean(PREF_SAVE_WINDOW_SIZES, true)) {
-                    SavedWindowSizes.getInstance(this).setWindowSize(this, entry.getPackageName(), windowSize);
-                }
+                SavedWindowSizes.getInstance(this).setWindowSize(this, entry.getPackageName(), windowSize);
 
                 U.launchApp(
                         U.getDisplayContext(this),
@@ -460,32 +445,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
                         getListView().getChildAt(p.getOrder()));
 
                 prepareToClose();
-                break;
-            case PREF_START_MENU_APPS:
-                Intent intent = U.getThemedIntent(this, SelectAppActivity.class);
-
-                if(U.hasFreeformSupport(this)
-                        && U.isFreeformModeEnabled(this)
-                        && isInMultiWindowMode()) {
-                    intent.putExtra("no_shadow", true);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
-
-                    U.startActivityMaximized(U.getDisplayContext(this), intent);
-                } else {
-                    try {
-                        startActivity(intent);
-                    } catch (IllegalArgumentException ignored) {}
-                }
-
-                prepareToClose();
-                break;
-            case PREF_CHANGE_WALLPAPER:
-                if(U.isChromeOs(this)) {
-                    U.sendBroadcast(this, ACTION_WALLPAPER_CHANGE_REQUESTED);
-                } else {
-                    changeWallpaper();
-                    prepareToClose();
-                }
                 break;
         }
 
@@ -583,15 +542,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
         U.unregisterReceiver(this, finishReceiver);
     }
 
-    private void changeWallpaper() {
-        if(LauncherHelper.getInstance().isOnHomeScreen(this))
-            U.sendBroadcast(this, ACTION_TEMP_HIDE_TASKBAR);
-
-        Intent intent = Intent.createChooser(new Intent(Intent.ACTION_SET_WALLPAPER), getString(R.string.tb_set_wallpaper));
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        U.startActivityMaximized(U.getDisplayContext(this), intent);
-    }
-    
     private void prepareToClose() {
         showStartMenu = false;
         shouldHideTaskbar = true;

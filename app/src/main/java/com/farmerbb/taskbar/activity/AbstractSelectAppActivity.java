@@ -71,12 +71,7 @@ public abstract class AbstractSelectAppActivity extends AppCompatActivity {
                 getWindow().setElevation(0);
         }
 
-        SharedPreferences pref = U.getSharedPreferences(this);
-        isCollapsed = !pref.getBoolean(PREF_COLLAPSED, false);
-
-        if(!isCollapsed) {
-            U.sendBroadcast(this, ACTION_HIDE_TASKBAR);
-        }
+        isCollapsed = true;
 
         progressBar = findViewById(R.id.progress_bar);
         appList = findViewById(R.id.list);

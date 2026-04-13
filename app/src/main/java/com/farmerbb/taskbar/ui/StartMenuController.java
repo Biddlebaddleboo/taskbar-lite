@@ -48,12 +48,10 @@ import com.farmerbb.taskbar.activity.InvisibleActivityAlt;
 import com.farmerbb.taskbar.adapter.StartMenuAdapter;
 import com.farmerbb.taskbar.util.TaskbarPosition;
 import com.farmerbb.taskbar.util.AppEntry;
-import com.farmerbb.taskbar.util.Blacklist;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.util.IconCache;
 import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.helper.MenuHelper;
-import com.farmerbb.taskbar.util.TopApps;
 import com.farmerbb.taskbar.util.U;
 import com.farmerbb.taskbar.widget.StartMenuLayout;
 
@@ -154,10 +152,6 @@ public class StartMenuController extends UIController {
 
         final SharedPreferences pref = U.getSharedPreferences(context);
 
-        // Initialize layout params
-        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        TaskbarPosition.setCachedRotation(windowManager.getDefaultDisplay().getRotation());
-
         final ViewParams params = new ViewParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -178,25 +172,13 @@ public class StartMenuController extends UIController {
 
         startMenu = layout.findViewById(R.id.start_menu);
 
-        boolean scrollbar = pref.getBoolean(PREF_SCROLLBAR, false);
-        startMenu.setFastScrollEnabled(scrollbar);
-        startMenu.setFastScrollAlwaysVisible(scrollbar);
-        startMenu.setScrollBarStyle(scrollbar ? View.SCROLLBARS_OUTSIDE_INSET : View.SCROLLBARS_INSIDE_OVERLAY);
-
         if(pref.getBoolean(PREF_TRANSPARENT_START_MENU, false))
             startMenu.setBackgroundColor(0);
 
-        if(pref.getBoolean(PREF_VISUAL_FEEDBACK, true))
-            startMenu.setRecyclerListener(view -> view.setBackgroundColor(0));
-
         int columns = context.getResources().getInteger(R.integer.tb_start_menu_columns);
-        boolean isGrid = pref.getString(PREF_START_MENU_LAYOUT, "grid").equals("grid");
-
-        if(isGrid) {
-            ViewGroup.LayoutParams startMenuParams = startMenu.getLayoutParams();
-            startMenuParams.width = (int) (startMenuParams.width * (columns / 3f));
-            startMenu.setLayoutParams(startMenuParams);
-        }
+        ViewGroup.LayoutParams startMenuParams = startMenu.getLayoutParams();
+        startMenuParams.width = (int) (startMenuParams.width * (columns / 3f));
+        startMenu.setLayoutParams(startMenuParams);
 
         int backgroundTint = U.getBackgroundTint(context);
 
@@ -284,36 +266,8 @@ public class StartMenuController extends UIController {
                 unfilteredList.addAll(launcherApps.getActivityList(null, handle));
             }
 
-            final List<LauncherActivityInfo> topAppsList = new ArrayList<>();
-            final List<LauncherActivityInfo> allAppsList = new ArrayList<>();
-            final List<LauncherActivityInfo> list = new ArrayList<>();
-
-            TopApps topApps = TopApps.getInstance(context);
-            for(LauncherActivityInfo appInfo : unfilteredList) {
-                String userSuffix = ":" + userManager.getSerialNumberForUser(appInfo.getUser());
-                if(topApps.isTopApp(appInfo.getComponentName().flattenToString() + userSuffix)
-                        || topApps.isTopApp(appInfo.getComponentName().flattenToString())
-                        || topApps.isTopApp(appInfo.getName()))
-                    topAppsList.add(appInfo);
-            }
-
-            Blacklist blacklist = Blacklist.getInstance(context);
-            for(LauncherActivityInfo appInfo : unfilteredList) {
-                String userSuffix = ":" + userManager.getSerialNumberForUser(appInfo.getUser());
-                if(!(blacklist.isBlocked(appInfo.getComponentName().flattenToString() + userSuffix)
-                        || blacklist.isBlocked(appInfo.getComponentName().flattenToString())
-                        || blacklist.isBlocked(appInfo.getName()))
-                        && !(topApps.isTopApp(appInfo.getComponentName().flattenToString() + userSuffix)
-                        || topApps.isTopApp(appInfo.getComponentName().flattenToString())
-                        || topApps.isTopApp(appInfo.getName())))
-                    allAppsList.add(appInfo);
-            }
-
-            Collections.sort(topAppsList, comparator);
-            Collections.sort(allAppsList, comparator);
-
-            list.addAll(topAppsList);
-            list.addAll(allAppsList);
+            final List<LauncherActivityInfo> list = new ArrayList<>(unfilteredList);
+            Collections.sort(list, comparator);
 
             // Now that we've generated the list of apps,
             // we need to determine if we need to redraw the start menu or not
@@ -345,13 +299,8 @@ public class StartMenuController extends UIController {
 
                 handler.post(() -> {
                     if(firstDraw) {
-                        SharedPreferences pref = U.getSharedPreferences(context);
-                        if(pref.getString(PREF_START_MENU_LAYOUT, "grid").equals("grid")) {
-                            startMenu.setNumColumns(context.getResources().getInteger(R.integer.tb_start_menu_columns));
-                            adapter = new StartMenuAdapter(context, R.layout.tb_row_alt, entries);
-                        } else
-                            adapter = new StartMenuAdapter(context, R.layout.tb_row, entries);
-
+                        startMenu.setNumColumns(context.getResources().getInteger(R.integer.tb_start_menu_columns));
+                        adapter = new StartMenuAdapter(context, R.layout.tb_row_alt, entries);
                         startMenu.setAdapter(adapter);
                     }
 

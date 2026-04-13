@@ -85,11 +85,11 @@
         <activity
             android:name=".activity.SelectAppActivity"
             android:process=":libtaskbar"
-            android:theme="@style/Taskbar.Dialog.Blacklist"/>
+            android:theme="@style/Taskbar.Dialog"/>
         <activity
             android:name=".activity.dark.SelectAppActivityDark"
             android:process=":libtaskbar"
-            android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
+            android:theme="@style/Taskbar.Dialog.Dark"/>
         <activity
             android:name=".activity.DummyActivity"
             android:process=":libtaskbar"

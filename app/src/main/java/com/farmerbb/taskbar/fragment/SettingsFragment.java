@@ -35,8 +35,6 @@ import androidx.annotation.XmlRes;
 import com.farmerbb.taskbar.BuildConfig;
 import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.activity.MainActivity;
-import com.farmerbb.taskbar.helper.FreeformHackHelper;
-import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.util.U;
 
 import java.util.HashMap;
@@ -78,9 +76,7 @@ public abstract class SettingsFragment extends PreferenceFragment implements Pre
             if(pref.contains(key + "_default")) continue;
 
             Class<?> rClass = prefsToSanitize.get(key);
-            if(rClass == R.bool.class)
-                pref.edit().putBoolean(key + "_default", U.getBooleanPrefWithDefault(getActivity(), key)).apply();
-            else if(rClass == R.integer.class)
+            if(rClass == R.integer.class)
                 pref.edit().putInt(key + "_default", U.getIntPrefWithDefault(getActivity(), key)).apply();
         }
 
@@ -134,48 +130,6 @@ public abstract class SettingsFragment extends PreferenceFragment implements Pre
 
             if(finishedLoadingPrefs) {
                 boolean shouldRestart = true;
-
-                switch(preference.getKey()) {
-                    case PREF_CHROME_OS_CONTEXT_MENU_FIX:
-                        FreeformHackHelper helper = FreeformHackHelper.getInstance();
-                        helper.setFreeformHackActive(false);
-                        helper.setInFreeformWorkspace(false);
-
-                        U.sendBroadcast(getActivity(), ACTION_FINISH_FREEFORM_ACTIVITY);
-
-                        SharedPreferences pref = U.getSharedPreferences(getActivity());
-                        if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !pref.getBoolean(PREF_IS_HIDDEN, false))
-                            U.newHandler().post(() -> U.startFreeformHack(getActivity()));
-                        break;
-                    case PREF_START_BUTTON_IMAGE:
-                        if(stringValue.equals(PREF_START_BUTTON_IMAGE_CUSTOM)) {
-                            U.showImageChooser(getActivity());
-                        }
-                        break;
-                    case PREF_DISPLAY_DENSITY:
-                        boolean isOnHomeScreen = LauncherHelper.getInstance().isOnHomeScreen(getActivity());
-                        int displayID = U.getExternalDisplayID(getActivity());
-
-                        try {
-                            U.setDensity(displayID, stringValue);
-
-                            SharedPreferences pref2 = U.getSharedPreferences(getActivity());
-                            if(pref2.getBoolean(PREF_AUTO_HIDE_NAVBAR_DESKTOP_MODE, false) && isOnHomeScreen)
-                                U.showHideNavigationBar(U.getDisplayContext(getActivity()), displayID, false, 250);
-                        } catch (Exception e) {
-                            U.showToast(getActivity(), R.string.tb_unable_to_apply_density_change);
-                        }
-
-                        shouldRestart = false;
-                        break;
-                    case PREF_HIDE_ICON_LABELS:
-                        U.sendBroadcast(getActivity(), ACTION_REFRESH_DESKTOP_ICONS);
-                        break;
-                    case PREF_SYS_TRAY:
-                        SharedPreferences pref2 = U.getSharedPreferences(getActivity());
-                        pref2.edit().putBoolean(preference.getKey() + isModified, true).apply();
-                        break;
-                }
 
                 if(shouldRestart) U.restartTaskbar(getActivity());
             }

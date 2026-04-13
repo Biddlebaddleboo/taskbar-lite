@@ -33,10 +33,6 @@ public class DependencyUtils {
 
     private DependencyUtils() {}
 
-    public static CharSequence getKeyboardShortcutSummary(Context context) {
-        return context.getString(R.string.tb_pref_description_keyboard_shortcut_alt);
-    }
-
     static ToastInterface createToast(Context context, String message, int length) {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1)
             return new ToastFrameworkImpl(context, message, length);

@@ -18,7 +18,6 @@ package com.farmerbb.taskbar.activity;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
-import android.app.WallpaperManager;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
@@ -85,18 +84,12 @@ import java.util.List;
 import static com.farmerbb.taskbar.util.Constants.*;
 
 public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
-    private TaskbarController taskbarController;
-    private StartMenuController startMenuController;
-
     private FrameLayout layout;
     private GridLayout desktopIcons;
     private FABWrapper fab;
-    private ImageView wallpaper;
-
     private boolean forceTaskbarStart = false;
     private AlertDialog dialog;
 
-    private WindowManager windowManager;
     private boolean shouldDelayFreeformHack;
     private int hits;
 
@@ -105,10 +98,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
     private int startDragIndex;
     private int endDragIndex;
 
-    private boolean isSecondaryHome;
     private boolean waitingForPermission;
-    private boolean isWallpaperEnabled;
-    private boolean isTaskVirtualDisplay;
 
     private final BroadcastReceiver killReceiver = new BroadcastReceiver() {
         @Override
@@ -121,14 +111,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         @Override
         public void onReceive(Context context, Intent intent) {
             forceTaskbarStart = true;
-        }
-    };
-
-    private final BroadcastReceiver restartReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(taskbarController != null) taskbarController.onRecreateHost(HomeActivityDelegate.this);
-            if(startMenuController != null) startMenuController.onRecreateHost(HomeActivityDelegate.this);
         }
     };
 
@@ -167,20 +149,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         }
     };
 
-    private final BroadcastReceiver removeDesktopWallpaperReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            removeCustomWallpaper();
-        }
-    };
-
-    private final BroadcastReceiver wallpaperChangeRequestReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            U.showImageChooser(HomeActivityDelegate.this);
-        }
-    };
-
     private final LauncherApps.Callback callback = new LauncherApps.Callback() {
         @Override
         public void onPackageRemoved(String packageName, UserHandle user) {
@@ -214,30 +182,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         super.onCreate(savedInstanceState);
         SharedPreferences pref = U.getSharedPreferences(this);
 
-        isSecondaryHome = false;
-        if(isSecondaryHome) {
-            windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-            Display display = windowManager.getDefaultDisplay();
-
-            isTaskVirtualDisplay = display.getName().startsWith("TaskVirtualDisplay");
-
-            if(display.getDisplayId() == Display.DEFAULT_DISPLAY
-                    || !U.isLibrary(this)) {
-                finish();
-                return;
-            }
-
-            if(pref.getBoolean(PREF_DIM_SCREEN, false)
-                    && U.launcherIsDefault(this)
-                    && !GlobalHelper.getInstance().isOnMainActivity()) {
-                Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-                homeIntent.addCategory(Intent.CATEGORY_HOME);
-                homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                getApplicationContext().startActivity(homeIntent);
-            }
-        }
-
         shouldDelayFreeformHack = true;
         hits = 0;
 
@@ -250,18 +194,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
             protected void onAttachedToWindow() {
                 super.onAttachedToWindow();
 
-                WallpaperManager wallpaperManager = (WallpaperManager) getSystemService(WALLPAPER_SERVICE);
-                wallpaperManager.setWallpaperOffsets(getWindowToken(), 0.5f, 0.5f);
-
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    DisplayInfo display = U.getDisplayInfo(HomeActivityDelegate.this);
-                    if(display.width > 0 && display.height > 0) {
-                        try {
-                            wallpaperManager.suggestDesiredDimensions(display.width, display.height);
-                        } catch (IllegalArgumentException ignored) {}
-                    }
-                }
-
                 boolean shouldStartFreeformHack = shouldDelayFreeformHack && hits > 0;
                 shouldDelayFreeformHack = false;
 
@@ -270,14 +202,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
             }
         };
 
-        isWallpaperEnabled = !isTaskVirtualDisplay && (isSecondaryHome || U.isChromeOs(this));
-        if(isWallpaperEnabled) {
-            wallpaper = new ImageView(this);
-            wallpaper.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            layout.addView(wallpaper);
-        }
-
-        isDesktopIconsEnabled = false;
+        isDesktopIconsEnabled = true;
         if(isDesktopIconsEnabled) {
             layout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
@@ -290,41 +215,13 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
                     initDesktopIcons();
                 }
             });
-        } else if(!isTaskVirtualDisplay) {
-            layout.setOnClickListener(
-                    view1 -> U.sendBroadcast(this, ACTION_HIDE_START_MENU));
-
-            layout.setOnLongClickListener(view2 -> {
-                if(!U.isFreeformModeEnabled(this))
-                    setWallpaper();
-
-                return false;
-            });
-
-            layout.setOnGenericMotionListener((view3, motionEvent) -> {
-                if(motionEvent.getAction() == MotionEvent.ACTION_BUTTON_PRESS
-                        && motionEvent.getButtonState() == MotionEvent.BUTTON_SECONDARY
-                        && !U.isFreeformModeEnabled(this))
-                    setWallpaper();
-
-                return false;
-            });
         }
 
         layout.setFitsSystemWindows(true);
 
         if((this instanceof HomeActivity
-                || isSecondaryHome
                 || U.isLauncherPermanentlyEnabled(this))) {
             setContentView(layout);
-
-            if(isWallpaperEnabled) {
-                File file = new File(getFilesDir() + "/tb_images", "desktop_wallpaper");
-                if(file.exists()) {
-                    U.applyCustomImage(this, "desktop_wallpaper", wallpaper, null);
-                    getWindow().setNavigationBarColor(Color.BLACK);
-                }
-            }
 
             pref.edit()
                     .putBoolean(PREF_LAUNCHER, true)
@@ -338,17 +235,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         U.registerReceiver(this, forceTaskbarStartReceiver, ACTION_FORCE_TASKBAR_RESTART);
 
         U.registerReceiver(this, freeformToggleReceiver,
-                ACTION_UPDATE_FREEFORM_CHECKBOX,
-                ACTION_TOUCH_ABSORBER_STATE_CHANGED,
-                ACTION_FREEFORM_PREF_CHANGED);
-
-        if(isSecondaryHome)
-            U.registerReceiver(this, restartReceiver, ACTION_RESTART);
-
-        if(isWallpaperEnabled) {
-            U.registerReceiver(this, removeDesktopWallpaperReceiver, ACTION_REMOVE_DESKTOP_WALLPAPER);
-            U.registerReceiver(this, wallpaperChangeRequestReceiver, ACTION_WALLPAPER_CHANGE_REQUESTED);
-        }
+                ACTION_TOUCH_ABSORBER_STATE_CHANGED);
 
         if(isDesktopIconsEnabled) {
             U.registerReceiver(this, refreshDesktopIconsReceiver, ACTION_REFRESH_DESKTOP_ICONS);
@@ -361,14 +248,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         }
 
         U.initPrefs(this);
-    }
-
-    private void setWallpaper() {
-        U.sendBroadcast(this, ACTION_TEMP_HIDE_TASKBAR);
-
-        try {
-            startActivity(Intent.createChooser(new Intent(Intent.ACTION_SET_WALLPAPER), getString(R.string.tb_set_wallpaper)));
-        } catch (ActivityNotFoundException ignored) {}
     }
 
     @TargetApi(Build.VERSION_CODES.N)
@@ -436,27 +315,14 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         if(pref.getBoolean(PREF_FIRST_RUN, true)) {
             SharedPreferences.Editor editor = pref.edit();
             editor.putBoolean(PREF_FIRST_RUN, false);
-            editor.putBoolean(PREF_COLLAPSED, true);
             editor.apply();
         }
 
-        if(isSecondaryHome) {
-            // Stop any currently running services and switch to using HomeActivityDelegate as UI host
-            stopService(new Intent(this, TaskbarService.class));
-            stopService(new Intent(this, StartMenuService.class));
-
-            taskbarController = new TaskbarController(this);
-            startMenuController = new StartMenuController(this);
-
-            taskbarController.onCreateHost(this);
-            startMenuController.onCreateHost(this);
-        } else {
-            // We always start the Taskbar and Start Menu services, even if the app isn't normally running
-            try {
-                startService(new Intent(this, TaskbarService.class));
-                startService(new Intent(this, StartMenuService.class));
-            } catch (IllegalStateException ignored) {}
-        }
+        // We always start the Taskbar and Start Menu services, even if the app isn't normally running
+        try {
+            startService(new Intent(this, TaskbarService.class));
+            startService(new Intent(this, StartMenuService.class));
+        } catch (IllegalStateException ignored) {}
 
         if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !U.isServiceRunning(this, NotificationService.class))
             pref.edit().putBoolean(PREF_TASKBAR_ACTIVE, false).apply();
@@ -483,25 +349,12 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
                 U.sendBroadcast(this, ACTION_TEMP_HIDE_TASKBAR);
             }
 
-            if(isSecondaryHome) {
-                if(taskbarController != null) taskbarController.onDestroyHost(this);
-                if(startMenuController != null) startMenuController.onDestroyHost(this);
+            // Stop the Taskbar and Start Menu services if they should normally not be active
+            if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
+                stopService(new Intent(this, TaskbarService.class));
+                stopService(new Intent(this, StartMenuService.class));
 
                 U.clearCaches(this);
-
-                // Stop using HomeActivityDelegate as UI host and restart services if needed
-                if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !pref.getBoolean(PREF_IS_HIDDEN, false)) {
-                    startService(new Intent(this, TaskbarService.class));
-                    startService(new Intent(this, StartMenuService.class));
-                }
-            } else {
-                // Stop the Taskbar and Start Menu services if they should normally not be active
-                if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
-                    stopService(new Intent(this, TaskbarService.class));
-                    stopService(new Intent(this, StartMenuService.class));
-
-                    U.clearCaches(this);
-                }
             }
 
             if(isChangingConfigurations())
@@ -523,14 +376,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         U.unregisterReceiver(this, killReceiver);
         U.unregisterReceiver(this, forceTaskbarStartReceiver);
         U.unregisterReceiver(this, freeformToggleReceiver);
-
-        if(isSecondaryHome)
-            U.unregisterReceiver(this, restartReceiver);
-
-        if(isWallpaperEnabled) {
-            U.unregisterReceiver(this, removeDesktopWallpaperReceiver);
-            U.unregisterReceiver(this, wallpaperChangeRequestReceiver);
-        }
 
         if(isDesktopIconsEnabled) {
             U.unregisterReceiver(this, refreshDesktopIconsReceiver);
@@ -555,29 +400,14 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
     }
 
     private void killHomeActivity() {
-        if(isSecondaryHome) {
-            if(taskbarController != null) taskbarController.onDestroyHost(this);
-            if(startMenuController != null) startMenuController.onDestroyHost(this);
+        // Stop the Taskbar and Start Menu services if they should normally not be active
+        SharedPreferences pref = U.getSharedPreferences(this);
+        if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
+            stopService(new Intent(this, TaskbarService.class));
+            stopService(new Intent(this, StartMenuService.class));
 
             U.clearCaches(this);
             U.stopFreeformHack(this);
-
-            // Stop using HomeActivityDelegate as UI host and restart services if needed
-            SharedPreferences pref = U.getSharedPreferences(this);
-            if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !pref.getBoolean(PREF_IS_HIDDEN, false)) {
-                startService(new Intent(this, TaskbarService.class));
-                startService(new Intent(this, StartMenuService.class));
-            }
-        } else {
-            // Stop the Taskbar and Start Menu services if they should normally not be active
-            SharedPreferences pref = U.getSharedPreferences(this);
-            if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
-                stopService(new Intent(this, TaskbarService.class));
-                stopService(new Intent(this, StartMenuService.class));
-
-                U.clearCaches(this);
-                U.stopFreeformHack(this);
-            }
         }
 
         U.newHandler().post(() -> {
@@ -596,14 +426,12 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
 
     @Override
     public void addView(View view, ViewParams params) {
-        if(isTaskVirtualDisplay) return;
-        windowManager.addView(view, params.toWindowManagerParams());
+        // no-op
     }
 
     @Override
     public void removeView(View view) {
-        if(isTaskVirtualDisplay) return;
-        windowManager.removeView(view);
+        // no-op
     }
 
     @Override
@@ -613,8 +441,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
 
     @Override
     public void updateViewLayout(View view, ViewParams params) {
-        if(isTaskVirtualDisplay) return;
-        windowManager.updateViewLayout(view, params.toWindowManagerParams());
+        // no-op
     }
 
     private void initDesktopIcons() {
@@ -903,11 +730,10 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
     }
 
     private View inflateDesktopIcon(ViewGroup parent, AppEntry entry) {
-        SharedPreferences pref = U.getSharedPreferences(this);
         View icon = LayoutInflater.from(this).inflate(R.layout.tb_row_alt, parent, false);
 
         TextView textView = icon.findViewById(R.id.name);
-        textView.setText(pref.getBoolean(PREF_HIDE_ICON_LABELS, false) ? "" : entry.getLabel());
+        textView.setText(entry.getLabel());
         textView.setTextColor(ContextCompat.getColor(this, R.color.tb_desktop_icon_text));
         textView.setShadowLayer(10, 0, 0, R.color.tb_desktop_icon_shadow);
 
@@ -990,21 +816,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
 
     private void setOnHomeScreen(boolean value) {
         LauncherHelper helper = LauncherHelper.getInstance();
-
-        if(isSecondaryHome) {
-            int displayID = windowManager.getDefaultDisplay().getDisplayId();
-            if(displayID == Display.DEFAULT_DISPLAY) {
-                finish();
-                return;
-            }
-
-            helper.setOnSecondaryHomeScreen(value, displayID);
-
-            SharedPreferences pref = U.getSharedPreferences(this);
-            if(pref.getBoolean(PREF_AUTO_HIDE_NAVBAR_DESKTOP_MODE, false))
-                U.showHideNavigationBar(this, displayID, !value, 0);
-        } else
-            helper.setOnPrimaryHomeScreen(value);
+        helper.setOnPrimaryHomeScreen(value);
     }
 
     @Override
@@ -1030,23 +842,5 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         if(resultCode != RESULT_OK)
             return;
 
-        if(requestCode == U.IMAGE_REQUEST_CODE) {
-            if(data.getData() == null)
-                return;
-
-            if(U.importImage(this, data.getData(), "desktop_wallpaper")) {
-                U.applyCustomImage(this, "desktop_wallpaper", wallpaper, null);
-                getWindow().setNavigationBarColor(Color.BLACK);
-            }
-        }
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void removeCustomWallpaper() {
-        File file = new File(getFilesDir() + "/tb_images", "desktop_wallpaper");
-        if(file.exists()) file.delete();
-        if(wallpaper != null) wallpaper.setImageDrawable(null);
-
-        getWindow().setNavigationBarColor(0);
     }
 }

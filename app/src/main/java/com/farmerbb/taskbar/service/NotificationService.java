@@ -108,11 +108,7 @@ public class NotificationService extends Service {
                 }
 
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, id)
-                        .setSmallIcon(pref.getString(PREF_START_BUTTON_IMAGE,
-                                U.getDefaultStartButtonImage(this))
-                                .equals(PREF_START_BUTTON_IMAGE_APP_LOGO)
-                                ? R.drawable.tb_system
-                                : R.drawable.tb_allapps)
+                        .setSmallIcon(U.getStartButtonIcon())
                         .setContentIntent(contentIntent)
                         .setContentTitle(getString(R.string.tb_taskbar_is_active))
                         .setContentText(getString(R.string.tb_click_to_open_settings))
@@ -121,21 +117,7 @@ public class NotificationService extends Service {
                         .setShowWhen(false)
                         .setOngoing(true);
 
-                String showHideLabel;
-
-                if(U.canEnableFreeform(this) && !U.isChromeOs(this)) {
-                    String freeformLabel = getString(pref.getBoolean(PREF_FREEFORM_HACK, false) ? R.string.tb_freeform_off : R.string.tb_freeform_on);
-
-                    Intent freeformIntent = new Intent(ACTION_TOGGLE_FREEFORM_MODE);
-                    freeformIntent.setPackage(getPackageName());
-
-                    PendingIntent freeformPendingIntent = PendingIntent.getBroadcast(this, 0, freeformIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-                    mBuilder.addAction(0, freeformLabel, freeformPendingIntent);
-
-                    showHideLabel = getString(isHidden ? R.string.tb_action_show_alt : R.string.tb_action_hide_alt);
-                } else
-                    showHideLabel = getString(isHidden ? R.string.tb_action_show : R.string.tb_action_hide);
+                String showHideLabel = getString(isHidden ? R.string.tb_action_show : R.string.tb_action_hide);
 
                 mBuilder.addAction(0, showHideLabel, receiverPendingIntent)
                         .addAction(0, getString(R.string.tb_action_quit), receiverPendingIntent2);

@@ -37,9 +37,6 @@ public class BootReceiver extends BroadcastReceiver {
 
             SharedPreferences.Editor editor = pref.edit();
 
-            if(!U.hasFreeformSupport(context))
-                editor.putBoolean(PREF_FREEFORM_HACK, false);
-
             if(pref.getBoolean(PREF_START_ON_BOOT, false)) {
                 editor.putBoolean(PREF_TASKBAR_ACTIVE, true);
                 editor.putLong(PREF_TIME_OF_SERVICE_START, System.currentTimeMillis());
@@ -48,7 +45,7 @@ public class BootReceiver extends BroadcastReceiver {
                 boolean startServices = false;
 
                 if(!pref.getBoolean(PREF_IS_HIDDEN, false)) {
-                    if(U.hasFreeformSupport(context) && U.isFreeformModeEnabled(context)) {
+                    if(U.hasFreeformSupport(context)) {
                         Intent intent2 = new Intent(context, DummyActivity.class);
                         intent2.putExtra(EXTRA_START_FREEFORM_HACK, true);
                         intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

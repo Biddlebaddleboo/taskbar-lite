@@ -141,12 +141,6 @@
             android:excludeFromRecents="true"
             android:theme="@style/Taskbar.Dialog.Dark"/>
         <activity
-            android:name=".activity.SelectAppActivity"
-            android:theme="@style/Taskbar.Dialog.Blacklist"/>
-        <activity
-            android:name=".activity.dark.SelectAppActivityDark"
-            android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
-        <activity
             android:name=".activity.DummyActivity"
             android:documentLaunchMode="always"
             android:excludeFromRecents="true"
@@ -194,7 +188,7 @@
             android:label="@string/tb_new_shortcut"
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
-            android:theme="@style/Taskbar.Dialog.Blacklist"
+            android:theme="@style/Taskbar.Dialog"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -208,7 +202,7 @@
             android:label="@string/tb_new_shortcut"
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
-            android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
+            android:theme="@style/Taskbar.Dialog.Dark"/>
         <activity
             android:name=".activity.PersistentShortcutLaunchActivity"
             android:launchMode="singleInstance"
@@ -275,15 +269,6 @@
                 <data android:scheme="package" />
             </intent-filter>
         </receiver>
-        <receiver
-            android:name=".receiver.ToggleFreeformModeReceiver"
-            android:permission="com.jcdigitalsolutions.taskbarlite.androidx86.START_STOP_TASKBAR"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.farmerbb.taskbar.TOGGLE_FREEFORM_MODE"/>
-            </intent-filter>
-        </receiver>
-
         <provider
             android:name=".provider.Kustom5SecsProvider"
             android:authorities="com.jcdigitalsolutions.taskbarlite.androidx86.kustom5secsprovider"

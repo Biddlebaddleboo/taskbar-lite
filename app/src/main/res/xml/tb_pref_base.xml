@@ -22,9 +22,4 @@
         android:icon="@drawable/tb_settings"
         android:title="@string/tb_pref_header_general" />
 
-    <Preference
-        android:key="pref_screen_freeform"
-        android:icon="@drawable/tb_web_asset"
-        android:title="@string/tb_pref_header_freeform" />
-
 </PreferenceScreen>

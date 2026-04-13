@@ -22,9 +22,6 @@
     <permission android:name="${applicationId}.START_STOP_TASKBAR"
         android:protectionLevel="signature" />
 
-    <!-- Signature protection level removed for Bliss OS -->
-    <permission android:name="${applicationId}.ENABLE_DISABLE_HOME" />
-
     <permission android:name="${applicationId}.ENABLE_DISABLE_FREEFORM"
         android:protectionLevel="signature" />
 
@@ -120,7 +117,7 @@
             android:name=".activity.HomeActivity"
             android:label="${appName}"
             android:launchMode="singleTask"
-            android:enabled="false"
+            android:enabled="true"
             android:theme="@style/Taskbar.HomeActivity"
             android:exported="true">
             <intent-filter>
@@ -134,7 +131,6 @@
             android:name=".activity.HomeActivityDelegate"
             android:label="${appName}"
             android:launchMode="singleTask"
-            android:permission="${applicationId}.ENABLE_DISABLE_HOME"
             android:theme="@style/Taskbar.HomeActivity"
             android:exported="true">
             <intent-filter>
@@ -151,12 +147,6 @@
             android:documentLaunchMode="always"
             android:excludeFromRecents="true"
             android:theme="@style/Taskbar.Dialog.Dark"/>
-        <activity
-            android:name=".activity.SelectAppActivity"
-            android:theme="@style/Taskbar.Dialog.Blacklist"/>
-        <activity
-            android:name=".activity.dark.SelectAppActivityDark"
-            android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
         <activity
             android:name=".activity.DummyActivity"
             android:documentLaunchMode="always"
@@ -205,7 +195,7 @@
             android:label="@string/tb_new_shortcut"
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
-            android:theme="@style/Taskbar.Dialog.Blacklist"
+            android:theme="@style/Taskbar.Dialog"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -219,7 +209,7 @@
             android:label="@string/tb_new_shortcut"
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
-            android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
+            android:theme="@style/Taskbar.Dialog.Dark"/>
         <activity
             android:name=".activity.PersistentShortcutLaunchActivity"
             android:launchMode="singleInstance"
@@ -282,50 +272,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".receiver.EnableHomeReceiver"
-            android:enabled="true"
-            android:permission="${applicationId}.ENABLE_DISABLE_HOME"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.farmerbb.taskbar.ENABLE_HOME"/>
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".receiver.DisableHomeReceiver"
-            android:enabled="true"
-            android:permission="${applicationId}.ENABLE_DISABLE_HOME"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.farmerbb.taskbar.DISABLE_HOME"/>
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".receiver.ToggleFreeformModeReceiver"
-            android:permission="${applicationId}.START_STOP_TASKBAR"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.farmerbb.taskbar.TOGGLE_FREEFORM_MODE"/>
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".receiver.EnableFreeformReceiver"
-            android:enabled="true"
-            android:permission="${applicationId}.ENABLE_DISABLE_FREEFORM"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.farmerbb.taskbar.ENABLE_FREEFORM_MODE"/>
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".receiver.DisableFreeformReceiver"
-            android:enabled="true"
-            android:permission="${applicationId}.ENABLE_DISABLE_FREEFORM"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.farmerbb.taskbar.DISABLE_FREEFORM_MODE"/>
             </intent-filter>
         </receiver>
     </application>

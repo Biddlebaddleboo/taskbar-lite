@@ -51,7 +51,6 @@ public class StartReceiver extends BroadcastReceiver {
             if(taskbarNotActive) {
                 if(pref.getBoolean(PREF_FIRST_RUN, true)) {
                     editor.putBoolean(PREF_FIRST_RUN, false);
-                    editor.putBoolean(PREF_COLLAPSED, true);
                 }
 
                 editor.putBoolean(PREF_TASKBAR_ACTIVE, true);
@@ -63,7 +62,7 @@ public class StartReceiver extends BroadcastReceiver {
             if(taskbarActiveButHidden)
                 context.stopService(new Intent(context, NotificationService.class));
 
-            if(U.hasFreeformSupport(context) && U.isFreeformModeEnabled(context)) {
+            if(U.hasFreeformSupport(context)) {
                 Intent intent2 = new Intent(context, DummyActivity.class);
                 intent2.putExtra(EXTRA_START_FREEFORM_HACK, true);
                 intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

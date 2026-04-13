@@ -17,7 +17,6 @@ package com.farmerbb.taskbar.activity;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.util.ShortcutUtils;
@@ -34,13 +33,6 @@ public class ShortcutActivity extends Activity {
         if(getIntent().hasExtra(EXTRA_IS_LAUNCHING_SHORTCUT)) {
             if(U.hasFreeformSupport(this)) {
                 U.restartNotificationService(this);
-
-                SharedPreferences pref = U.getSharedPreferences(this);
-                if(!U.isFreeformModeEnabled(this)) {
-                    pref.edit().putBoolean(PREF_FREEFORM_HACK, true).apply();
-
-                    U.sendBroadcast(this, ACTION_UPDATE_FREEFORM_CHECKBOX);
-                }
 
                 Intent intent = new Intent(ACTION_START);
                 intent.setPackage(getPackageName());

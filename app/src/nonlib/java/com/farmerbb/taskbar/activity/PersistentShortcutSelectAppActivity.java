@@ -19,12 +19,10 @@ import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.view.View;
-import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 
@@ -51,19 +49,11 @@ public class PersistentShortcutSelectAppActivity extends AbstractSelectAppActivi
 
         LinearLayout layout = (LinearLayout) View.inflate(this, R.layout.tb_shortcut_options, null);
         final Spinner spinner = layout.findViewById(R.id.spinner);
-        final CheckBox checkBox = layout.findViewById(R.id.checkBox);
 
         String[] windowSizes = getResources().getStringArray(R.array.tb_pref_window_size_list_values);
 
         layout.findViewById(R.id.window_size_options).setVisibility(View.VISIBLE);
-
-        SharedPreferences pref = U.getSharedPreferences(this);
-        boolean isFreeformEnabled = U.isFreeformModeEnabled(this);
-
-        checkBox.setChecked(isFreeformEnabled);
-        spinner.setEnabled(isFreeformEnabled);
-
-        String defaultWindowSize = pref.getString(PREF_WINDOW_SIZE, "standard");
+        String defaultWindowSize = "standard";
         for(int i = 0; i < windowSizes.length; i++) {
             if(windowSizes[i].equals(defaultWindowSize)) {
                 spinner.setSelection(i);
@@ -71,13 +61,11 @@ public class PersistentShortcutSelectAppActivity extends AbstractSelectAppActivi
             }
         }
 
-        checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> spinner.setEnabled(isChecked));
-
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(selectedEntry.getLabel())
                 .setView(layout)
                 .setPositiveButton(R.string.tb_action_ok, (dialog, which) -> {
-                    createShortcut(checkBox.isChecked() ? windowSizes[spinner.getSelectedItemPosition()] : null);
+                    createShortcut(windowSizes[spinner.getSelectedItemPosition()]);
                 })
                 .setNegativeButton(R.string.tb_action_cancel, null);
 

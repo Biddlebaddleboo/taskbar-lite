@@ -28,8 +28,4 @@
         android:key="sort_by_name"
         android:title="@string/tb_sort_by_name" />
 
-    <Preference
-        android:key="change_wallpaper"
-        android:title="@string/tb_change_wallpaper" />
-
 </PreferenceScreen>

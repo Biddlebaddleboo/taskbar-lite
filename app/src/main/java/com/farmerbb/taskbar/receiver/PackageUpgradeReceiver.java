@@ -34,7 +34,7 @@ public class PackageUpgradeReceiver extends BroadcastReceiver {
             boolean startServices = false;
 
             if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !pref.getBoolean(PREF_IS_HIDDEN, false)) {
-                if(U.hasFreeformSupport(context) && U.isFreeformModeEnabled(context)) {
+                if(U.hasFreeformSupport(context)) {
                     Intent intent2 = new Intent(context, DummyActivity.class);
                     intent2.putExtra(EXTRA_START_FREEFORM_HACK, true);
                     intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

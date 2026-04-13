@@ -19,33 +19,9 @@
     <string name="tb_left_arrow" translatable="false">&#10094;</string>
     <string name="tb_right_arrow" translatable="false">&#10095;</string>
     <string name="tb_x" translatable="false">&#215;</string>
-    <string name="tb_dashboard_grid_description" translatable="false">%1$d &#215; %2$d</string>
     <string name="tb_infinity" translatable="false">&#8734;</string>
     <string name="tb_systray_clock" translatable="false">%1$s\n%2$s</string>
     <string name="tb_adb_shell_command" translatable="false">adb shell pm grant %1$s %2$s</string>
-
-    <string-array name="tb_pref_start_menu_list_values">
-        <item>grid</item>
-        <item>list</item>
-    </string-array>
-
-    <string-array name="tb_pref_position_list_values">
-        <item>bottom_left</item>
-        <item>bottom_vertical_left</item>
-        <item>bottom_right</item>
-        <item>bottom_vertical_right</item>
-        <item>top_left</item>
-        <item>top_vertical_left</item>
-        <item>top_right</item>
-        <item>top_vertical_right</item>
-    </string-array>
-
-    <string-array name="tb_pref_theme_list_values">
-        <item>light</item>
-        <item>dark</item>
-    </string-array>
-
-    <string name="tb_pref_theme_default">light</string>
 
     <string-array name="tb_pref_window_size_list">
         <item>@string/tb_window_size_standard</item>
@@ -63,29 +39,6 @@
         <item>half_left</item>
         <item>half_right</item>
         <item>phone_size</item>
-    </string-array>
-
-    <string-array name="tb_pref_start_button_image_list">
-        <item>@string/tb_start_button_image_default</item>
-        <item>@string/tb_pref_title_app_drawer_icon</item>
-        <item>@string/tb_start_button_image_custom</item>
-    </string-array>
-
-    <string-array name="tb_pref_start_button_image_list_values">
-        <item>default</item>
-        <item>app_logo</item>
-        <item>custom</item>
-    </string-array>
-
-    <string-array name="tb_pref_display_density_list_values">
-        <item>reset</item>
-        <item>160</item>
-        <item>320</item>
-    </string-array>
-
-    <string-array name="tb_pref_display_density_list_values_alt">
-        <item>160</item>
-        <item>320</item>
     </string-array>
 
 </resources>

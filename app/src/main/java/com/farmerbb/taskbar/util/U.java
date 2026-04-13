@@ -114,6 +114,10 @@ public class U {
     private static final int LEFT = -1;
     private static final int RIGHT = 1;
 
+    private static final int HARD_CODED_BACKGROUND_TINT = 0x66000000;
+    private static final int HARD_CODED_ACCENT_COLOR = 0xFFF0F0F0;
+    private static final int HARD_CODED_START_BUTTON_ICON = R.drawable.tb_allapps;
+
     public static final int HIDDEN = 0;
     public static final int TOP_APPS = 1;
 
@@ -127,8 +131,6 @@ public class U {
 
     public static final int EXPORT = 123;
     public static final int IMPORT = 456;
-
-    public static final int IMAGE_REQUEST_CODE = 1001;
 
     public static SharedPreferences getSharedPreferences(Context context) {
         return context.getSharedPreferences(BuildConfig.APPLICATION_ID + "_preferences", Context.MODE_PRIVATE);
@@ -377,7 +379,7 @@ public class U {
         if(pref.getBoolean(PREF_DISABLE_ANIMATIONS, false))
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
 
-        boolean realOpenInNewWindow = openInNewWindow || pref.getBoolean(PREF_FORCE_NEW_WINDOW, false);
+        boolean realOpenInNewWindow = openInNewWindow;
         if(realOpenInNewWindow) applyOpenInNewWindow(context, intent);
 
         ApplicationType type = getApplicationType(context, entry);
@@ -677,11 +679,7 @@ public class U {
 
     @TargetApi(Build.VERSION_CODES.N)
     public static boolean hasFreeformSupport(Context context) {
-        return canEnableFreeform(context)
-                && (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_FREEFORM_WINDOW_MANAGEMENT)
-                || Settings.Global.getInt(context.getContentResolver(), "enable_freeform_support", 0) != 0
-                || (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1
-                && Settings.Global.getInt(context.getContentResolver(), "force_resizable_activities", 0) != 0));
+        return canEnableFreeform(context);
     }
 
     public static boolean canBootToFreeform(Context context) {
@@ -715,25 +713,11 @@ public class U {
     }
 
     public static int getBackgroundTint(Context context) {
-        SharedPreferences pref = getSharedPreferences(context);
-
-        // Import old background tint preference
-        if(pref.contains(PREF_SHOW_BACKGROUND)) {
-            SharedPreferences.Editor editor = pref.edit();
-
-            if(!pref.getBoolean(PREF_SHOW_BACKGROUND, true))
-                editor.putInt(PREF_BACKGROUND_TINT, Color.TRANSPARENT).apply();
-
-            editor.remove(PREF_SHOW_BACKGROUND);
-            editor.apply();
-        }
-
-        return pref.getInt(PREF_BACKGROUND_TINT, context.getResources().getInteger(R.integer.tb_translucent_gray));
+        return HARD_CODED_BACKGROUND_TINT;
     }
 
     public static int getAccentColor(Context context) {
-        SharedPreferences pref = getSharedPreferences(context);
-        return pref.getInt(PREF_ACCENT_COLOR, context.getResources().getInteger(R.integer.tb_translucent_white));
+        return HARD_CODED_ACCENT_COLOR;
     }
 
     public static boolean canDrawOverlays(Context context) {
@@ -741,18 +725,7 @@ public class U {
     }
 
     public static boolean isGame(Context context, String packageName) {
-        SharedPreferences pref = getSharedPreferences(context);
-        if(pref.getBoolean(PREF_LAUNCH_GAMES_FULLSCREEN, true)) {
-            PackageManager pm = context.getPackageManager();
-
-            try {
-                ApplicationInfo info = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-                return (info.flags & ApplicationInfo.FLAG_IS_GAME) != 0 || (info.metaData != null && info.metaData.getBoolean("isGame", false));
-            } catch (PackageManager.NameNotFoundException e) {
-                return false;
-            }
-        } else
-            return false;
+        return false;
     }
 
     private static ActivityOptions getActivityOptions(View view) {
@@ -844,8 +817,7 @@ public class U {
     }
 
     public static Bundle getActivityOptionsBundle(Context context, ApplicationType type, View view) {
-        SharedPreferences pref = getSharedPreferences(context);
-        return getActivityOptionsBundle(context, type, pref.getString(PREF_WINDOW_SIZE, "standard"), view);
+        return getActivityOptionsBundle(context, type, "standard", view);
     }
 
     private static Bundle getActivityOptionsBundle(Context context, ApplicationType type, String windowSize, View view) {
@@ -1003,36 +975,11 @@ public class U {
     }
 
     public static float getBaseTaskbarSizeStart(Context context) {
-        SharedPreferences pref = getSharedPreferences(context);
-        float baseTaskbarSize = context.getResources().getDimension(R.dimen.tb_base_size_start_plus_divider);
-
-        baseTaskbarSize += pref.getBoolean(PREF_ALT_BUTTON_CONFIG, false)
-                ? context.getResources().getDimension(R.dimen.tb_base_size_collapse_button) : 0;
-
-        return baseTaskbarSize;
+        return context.getResources().getDimension(R.dimen.tb_base_size_start_plus_divider);
     }
 
     public static float getBaseTaskbarSizeEnd(Context context, Map<Integer, Boolean> sysTrayIconStates) {
-        SharedPreferences pref = getSharedPreferences(context);
-        float baseTaskbarSize = pref.getBoolean(PREF_ALT_BUTTON_CONFIG, false)
-                ? 0 : context.getResources().getDimension(R.dimen.tb_base_size_collapse_button);
-
-        if(isSystemTrayEnabled(context)) {
-            float sysTraySize = context.getResources().getDimension(R.dimen.tb_systray_size);
-
-            if(sysTrayIconStates != null) {
-                for(Integer key : sysTrayIconStates.keySet()) {
-                    if(!sysTrayIconStates.get(key)) {
-                        sysTraySize -= context.getResources().getDimension(key == R.id.notification_count
-                                ? R.dimen.tb_systray_icon_size_notifications : R.dimen.tb_systray_icon_size);
-                    }
-                }
-            }
-
-            baseTaskbarSize += sysTraySize;
-        }
-
-        return baseTaskbarSize;
+        return 0;
     }
 
     private static void startTaskbarService(Context context, boolean fullRestart) {
@@ -1135,32 +1082,9 @@ public class U {
     }
 
     public static void initPrefs(Context context) {
-        // Enable freeform hack automatically on supported devices
         SharedPreferences pref = getSharedPreferences(context);
-        if(canEnableFreeform(context)) {
-            if(!pref.getBoolean(PREF_FREEFORM_HACK_OVERRIDE, false)) {
-                pref.edit()
-                        .putBoolean(PREF_FREEFORM_HACK, hasFreeformSupport(context) && !isSamsungDevice())
-                        .putBoolean(PREF_SAVE_WINDOW_SIZES, false)
-                        .putBoolean(PREF_FREEFORM_HACK_OVERRIDE, true)
-                        .apply();
-            } else if(!hasFreeformSupport(context)) {
-                pref.edit().putBoolean(PREF_FREEFORM_HACK, false).apply();
-
-                stopFreeformHack(context);
-            }
-        } else {
-            boolean freeformWasEnabled = isFreeformModeEnabled(context)
-                    || pref.getBoolean(PREF_SHOW_FREEFORM_DISABLED_MESSAGE, false);
-
-            pref.edit()
-                    .putBoolean(PREF_FREEFORM_HACK, false)
-                    .putBoolean(PREF_SHOW_FREEFORM_DISABLED_MESSAGE, freeformWasEnabled)
-                    .apply();
-
-            SavedWindowSizes.getInstance(context).clear(context);
+        if(!canEnableFreeform(context))
             stopFreeformHack(context);
-        }
 
         if(!pref.contains(PREF_LAUNCHER)) {
             pref.edit().putBoolean(PREF_LAUNCHER, true).apply();
@@ -1171,11 +1095,6 @@ public class U {
                 && !pref.getBoolean(PREF_BLISS_OS_PREFS, false)) {
             SharedPreferences.Editor editor = pref.edit();
 
-            if(hasFreeformSupport(context)) {
-                editor.putBoolean(PREF_FREEFORM_HACK, true);
-            }
-
-            editor.putString(PREF_START_BUTTON_IMAGE, PREF_START_BUTTON_IMAGE_APP_LOGO);
             editor.putBoolean(PREF_AUTO_HIDE_NAVBAR, true);
             editor.putBoolean(PREF_SHORTCUT_ICON, false);
             editor.putBoolean(PREF_BLISS_OS_PREFS, true);
@@ -1336,12 +1255,6 @@ public class U {
                 && !isNvidiaDevice();
     }
 
-    public static String getSecondScreenPackageName(Context context) {
-        return getInstalledPackage(context,
-                "com.farmerbb.secondscreen.free",
-                "com.farmerbb.secondscreen");
-    }
-
     // Returns the name of an installed package from a list of package names, in order of preference
     private static String getInstalledPackage(Context context, String... packageNames) {
         return getInstalledPackage(context, Arrays.asList(packageNames));
@@ -1398,7 +1311,6 @@ public class U {
 
     public static boolean enableFreeformModeShortcut(Context context) {
         return canEnableFreeform(context)
-                && !isOverridingFreeformHack(context, false)
                 && !isChromeOs(context);
     }
 
@@ -1440,80 +1352,8 @@ public class U {
         }
     }
 
-    public static void showImageChooser(Activity activity) {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("image/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-        String message = activity.getResources().getString(R.string.tb_filepicker_select_an_image_file);
-
-        try {
-            activity.startActivityForResult(Intent.createChooser(intent, message), IMAGE_REQUEST_CODE);
-        } catch (ActivityNotFoundException ex) {
-            showToast(activity, activity.getResources().getString(R.string.tb_filepicker_install_file_manager), 50);
-        }
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static boolean importImage(Context context, Uri uri, String filename) {
-        try {
-            File imagesDir = new File(context.getFilesDir(), "tb_images");
-            imagesDir.mkdirs();
-
-            File importedFile = new File(imagesDir, filename + "_new");
-            if(importedFile.exists()) importedFile.delete();
-
-            BufferedInputStream is = new BufferedInputStream(context.getContentResolver().openInputStream(uri));
-            byte[] data = new byte[is.available()];
-
-            if(data.length > 0) {
-                BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(importedFile));
-                is.read(data);
-                os.write(data);
-                is.close();
-                os.close();
-            }
-
-            File prevFile = new File(imagesDir, filename);
-            if(prevFile.exists()) prevFile.delete();
-
-            importedFile.renameTo(prevFile);
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    public static String[] getImageFilenames() {
-        return new String[] {"custom_image", "desktop_wallpaper"};
-    }
-
-    public static void applyCustomImage(Context context, String filename, ImageView view, Drawable errorDrawable) {
-        File file = new File(context.getFilesDir() + "/tb_images", filename);
-        if(file.exists()) {
-            Handler handler = newHandler();
-            new Thread(() -> {
-                Bitmap bitmap = BitmapFactory.decodeFile(file.getPath());
-                handler.post(() -> {
-                    if(bitmap != null) {
-                        BitmapDrawable bitmapDrawable = new BitmapDrawable(context.getResources(), bitmap);
-                        bitmapDrawable.setFilterBitmap(bitmap.getWidth() * bitmap.getHeight() > 2000);
-                        view.setImageDrawable(bitmapDrawable);
-                    } else {
-                        showToastLong(context, R.string.tb_error_reading_custom_start_image);
-                        view.setImageDrawable(errorDrawable);
-                    }
-                });
-            }).start();
-        } else
-            view.setImageDrawable(errorDrawable);
-    }
-
-    public static String getDefaultStartButtonImage(Context context) {
-        SharedPreferences pref = getSharedPreferences(context);
-        return pref.getBoolean(PREF_APP_DRAWER_ICON, false)
-                ? PREF_START_BUTTON_IMAGE_APP_LOGO
-                : PREF_START_BUTTON_IMAGE_DEFAULT;
+    public static int getStartButtonIcon() {
+        return HARD_CODED_START_BUTTON_ICON;
     }
 
     private static boolean shouldLaunchTouchAbsorber(Context context) {
@@ -1525,12 +1365,7 @@ public class U {
     }
 
     public static boolean isSystemTrayEnabled(Context context) {
-        SharedPreferences pref = getSharedPreferences(context);
-
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && getBooleanPrefWithDefault(context, PREF_SYS_TRAY)
-                && pref.getBoolean(PREF_FULL_LENGTH, true)
-                && !TaskbarPosition.isVertical(context);
+        return false;
     }
 
     public static boolean isLibrary(Context context) {
@@ -1732,29 +1567,6 @@ public class U {
         return new BitmapDrawable(context.getResources(), resizedBitmap);
     }
 
-    private static String getCurrentTheme(Context context) {
-        String defaultTheme = context.getString(R.string.tb_pref_theme_default);
-
-        SharedPreferences pref = getSharedPreferences(context);
-        String themePref = pref.getString(PREF_THEME, defaultTheme);
-
-        if(themePref.equals("system")) {
-            Configuration configuration = context.getResources().getConfiguration();
-            int currentNightMode = configuration.uiMode & Configuration.UI_MODE_NIGHT_MASK;
-            switch(currentNightMode) {
-                case Configuration.UI_MODE_NIGHT_NO:
-                    // Night mode is not active, we're using the light theme
-                    return "light";
-                case Configuration.UI_MODE_NIGHT_YES:
-                    // Night mode is active, we're using dark theme
-                    return "dark";
-            }
-        } else
-            return themePref;
-
-        return defaultTheme;
-    }
-
     public static boolean isFavoriteAppTilesEnabled(Context context) {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !isChromeOs(context) && !isLibrary(context);
     }
@@ -1774,15 +1586,13 @@ public class U {
     }
 
     public static boolean isDarkTheme(Context context) {
-        return getCurrentTheme(context).equals("dark");
+        return true;
     }
 
     public static boolean getBooleanPrefWithDefault(Context context, String key) {
         context = getDisplayContext(context);
-        int resId = getDefaultPrefResID(key, R.bool.class);
-
         SharedPreferences pref = getSharedPreferences(context);
-        boolean def = pref.getBoolean(key + "_default", context.getResources().getBoolean(resId));
+        boolean def = pref.getBoolean(key + "_default", false);
         return pref.getBoolean(key, def);
     }
 
@@ -1810,10 +1620,7 @@ public class U {
     }
 
     public static boolean isFreeformModeEnabled(Context context) {
-        if(isLibrary(context)) return true;
-
-        SharedPreferences pref = getSharedPreferences(context);
-        return pref.getBoolean(PREF_FREEFORM_HACK, false);
+        return isLibrary(context) || canEnableFreeform(context);
     }
 
     public static Context getDisplayContext(Context context) {

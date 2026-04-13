@@ -18,82 +18,24 @@
 
     <CheckBoxPreference
         android:defaultValue="true"
-        android:key="launcher"
-        android:title="@string/tb_pref_title_launcher"
-        android:summary="@string/tb_pref_description_launcher" />
-
-    <CheckBoxPreference
-        android:defaultValue="true"
         android:key="shortcut_icon"
         android:title="@string/tb_pref_title_shortcut_icon" />
 
     <CheckBoxPreference
         android:defaultValue="true"
-        android:key="visual_feedback"
-        android:title="@string/tb_visual_feedback" />
-
-    <ListPreference
-        android:defaultValue="grid"
-        android:entries="@array/tb_pref_start_menu_list"
-        android:entryValues="@array/tb_pref_start_menu_list_values"
-        android:key="start_menu_layout"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:title="@string/tb_pref_title_start_menu_layout"/>
-
-    <ListPreference
-        android:defaultValue="bottom_left"
-        android:entries="@array/tb_pref_position_list"
-        android:entryValues="@array/tb_pref_position_list_values"
-        android:key="position"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:title="@string/tb_pref_title_position"/>
-
-    <Preference
-        android:key="blacklist"
-        android:title="@string/tb_pref_title_blacklist" />
-
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="scrollbar"
-        android:title="@string/tb_pref_title_scrollbar"/>
-
-    <CheckBoxPreference
-        android:defaultValue="true"
         android:key="hide_taskbar"
-        android:title="@string/tb_pref_title_hide_taskbar"/>
-
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="hide_when_keyboard_shown"
-        android:title="@string/tb_pref_title_hide_when_keyboard_shown"
-        android:summary="@string/tb_pref_description_hide_when_keyboard_shown" />
-
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="alt_button_config"
-        android:title="@string/tb_alt_button_config"/>
-
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="anchor"
-        android:title="@string/tb_pref_title_anchor"/>
+        android:title="@string/tb_pref_title_hide_taskbar" />
 
     <CheckBoxPreference
         android:defaultValue="false"
         android:key="start_on_boot"
-        android:title="@string/tb_pref_title_start_on_boot"/>
+        android:title="@string/tb_pref_title_start_on_boot" />
 
     <CheckBoxPreference
         android:defaultValue="true"
         android:key="chrome_os_context_menu_fix"
         android:title="@string/tb_pref_title_chrome_os_context_menu_fix"
-        android:summary="@string/tb_pref_description_chrome_os_context_menu_fix"/>
-
-    <Preference
-        android:key="notification_settings"
-        android:title="@string/tb_notification_settings"/>
+        android:summary="@string/tb_pref_description_chrome_os_context_menu_fix" />
 
     <PreferenceCategory android:key="dummy" android:title="\n\n" />
 

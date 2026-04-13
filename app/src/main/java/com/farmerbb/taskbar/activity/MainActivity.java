@@ -16,7 +16,6 @@
 package com.farmerbb.taskbar.activity;
 
 import android.annotation.TargetApi;
-import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.ActivityNotFoundException;
@@ -32,7 +31,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -42,7 +40,6 @@ import androidx.appcompat.widget.SwitchCompat;
 import com.farmerbb.taskbar.BuildConfig;
 import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.fragment.AboutFragment;
-import com.farmerbb.taskbar.fragment.FreeformModeFragment;
 import com.farmerbb.taskbar.fragment.SettingsFragment;
 import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.service.StartMenuService;
@@ -101,18 +98,16 @@ public class MainActivity extends AppCompatActivity {
         if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !U.isServiceRunning(this, NotificationService.class))
             editor.putBoolean(PREF_TASKBAR_ACTIVE, false);
 
-        boolean launcherPrefDefined = pref.contains(PREF_LAUNCHER);
         boolean launcherEnabled = (pref.getBoolean(PREF_LAUNCHER, true) && U.canDrawOverlays(this))
                 || U.isLauncherPermanentlyEnabled(this);
 
-        if(launcherPrefDefined || launcherEnabled)
+        if(pref.contains(PREF_LAUNCHER) || launcherEnabled)
             editor.putBoolean(PREF_LAUNCHER, launcherEnabled);
         editor.apply();
 
         boolean isLibrary = U.isLibrary(this);
         if(!isLibrary) {
-            U.setComponentEnabled(this, HomeActivity.class,
-                    launcherEnabled && !U.isDelegatingHomeActivity(this));
+            U.setComponentEnabled(this, HomeActivity.class, true);
 
             U.setComponentEnabled(this, ShortcutActivity.class,
                     U.enableFreeformModeShortcut(this));
@@ -281,7 +276,6 @@ public class MainActivity extends AppCompatActivity {
 
         if(pref.getBoolean(PREF_FIRST_RUN, true)) {
             editor.putBoolean(PREF_FIRST_RUN, false);
-            editor.putBoolean(PREF_COLLAPSED, true);
         }
 
         editor.putBoolean(PREF_TASKBAR_ACTIVE, true);
@@ -358,13 +352,8 @@ public class MainActivity extends AppCompatActivity {
     public void updateHelpButton(SettingsFragment fragment) {
         if(helpButton == null) return;
 
-        if(fragment instanceof FreeformModeFragment) {
-            helpButton.setVisibility(View.VISIBLE);
-            helpButton.setOnClickListener(v -> showHelpDialog(R.string.tb_freeform_help_dialog_message));
-        } else {
-            helpButton.setVisibility(View.INVISIBLE);
-            helpButton.setOnClickListener(null);
-        }
+        helpButton.setVisibility(View.INVISIBLE);
+        helpButton.setOnClickListener(null);
     }
 
     private void navigateTo(Fragment fragment) {
@@ -372,20 +361,6 @@ public class MainActivity extends AppCompatActivity {
                 .beginTransaction()
                 .replace(R.id.fragmentContainer, fragment, fragment.getClass().getSimpleName())
                 .commit();
-    }
-
-    private void showHelpDialog(int helpText) {
-        View view = View.inflate(MainActivity.this, R.layout.tb_freeform_help_dialog, null);
-        TextView dialogMessage = view.findViewById(R.id.dialogMessage);
-        dialogMessage.setText(helpText);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-        builder.setView(view)
-                .setTitle(R.string.tb_freeform_help_dialog_title)
-                .setPositiveButton(R.string.tb_action_close, null);
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
     }
 
     @Override

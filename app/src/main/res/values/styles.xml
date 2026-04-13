@@ -68,18 +68,6 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
-    <style name="Taskbar.Dialog.Blacklist" parent="Theme.AppCompat.Light.Dialog">
-        <item name="colorPrimary">@color/tb_colorPrimary</item>
-        <item name="colorPrimaryDark">@color/tb_colorPrimaryDark</item>
-        <item name="colorAccent">@color/tb_colorAccent</item>
-    </style>
-
-    <style name="Taskbar.Dialog.Blacklist.Dark" parent="Theme.AppCompat.Dialog">
-        <item name="colorPrimary">@color/tb_colorPrimary</item>
-        <item name="colorPrimaryDark">@color/tb_colorPrimaryDark</item>
-        <item name="colorAccent">@color/tb_colorAccent</item>
-    </style>
-
     <style name="Taskbar.Incognito" parent="@android:style/Theme.Material.Light">
         <item name="android:windowIsFloating">true</item>
         <item name="android:windowNoTitle">true</item>

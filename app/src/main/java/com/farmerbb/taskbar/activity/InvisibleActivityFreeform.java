@@ -179,7 +179,6 @@ public class InvisibleActivityFreeform extends Activity {
             if(pref.getBoolean(PREF_FIRST_RUN, true)) {
                 SharedPreferences.Editor editor = pref.edit();
                 editor.putBoolean(PREF_FIRST_RUN, false);
-                editor.putBoolean(PREF_COLLAPSED, true);
                 editor.apply();
             }
 

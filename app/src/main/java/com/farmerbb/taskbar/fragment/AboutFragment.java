@@ -61,12 +61,6 @@ public class AboutFragment extends SettingsFragment {
                 getPreferenceScreen().removePreference(findPreference("donate_category"));
         }
 
-        // Set OnClickListeners for certain preferences
-        if(U.canEnableFreeform(getActivity()))
-            findPreference(PREF_PREF_SCREEN_FREEFORM).setOnPreferenceClickListener(this);
-        else
-            getPreferenceScreen().removePreference(findPreference(PREF_PREF_SCREEN_FREEFORM));
-
         findPreference(PREF_PREF_SCREEN_GENERAL).setOnPreferenceClickListener(this);
 
         if(!isLibrary) {
@@ -100,6 +94,9 @@ public class AboutFragment extends SettingsFragment {
         final SharedPreferences pref = U.getSharedPreferences(getActivity());
 
         switch(p.getKey()) {
+            case PREF_PREF_SCREEN_GENERAL:
+                navigateTo(new GeneralFragment());
+                break;
             case PREF_ABOUT:
                 U.checkForUpdates(getActivity());
                 break;
@@ -130,12 +127,6 @@ public class AboutFragment extends SettingsFragment {
 
                 AlertDialog dialog = builder.create();
                 dialog.show();
-                break;
-            case PREF_PREF_SCREEN_GENERAL:
-                navigateTo(new GeneralFragment());
-                break;
-            case PREF_PREF_SCREEN_FREEFORM:
-                navigateTo(new FreeformModeFragment());
                 break;
         }
 
