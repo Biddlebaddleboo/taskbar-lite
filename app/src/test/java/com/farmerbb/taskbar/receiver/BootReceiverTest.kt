@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.farmerbb.taskbar.mockito.BooleanAnswer
-import com.farmerbb.taskbar.service.NotificationService
 import com.farmerbb.taskbar.util.Constants
 import com.farmerbb.taskbar.util.U
 import org.junit.After
@@ -84,20 +83,5 @@ class BootReceiverTest {
         prefs.edit().putBoolean(Constants.PREF_FREEFORM_HACK, true).apply()
         bootReceiver.onReceive(context, intent)
         Assert.assertTrue(prefs.getBoolean(Constants.PREF_FREEFORM_HACK, false))
-    }
-
-    @Test
-    fun testStartOnBootInit() {
-        prefs.edit().putBoolean(Constants.PREF_START_ON_BOOT, true).apply()
-        bootReceiver.onReceive(context, intent)
-        Assert.assertTrue(prefs.getBoolean(Constants.PREF_TASKBAR_ACTIVE, false))
-        prefs.edit().putBoolean(Constants.PREF_START_ON_BOOT, false).apply()
-        prefs.edit().putBoolean(Constants.PREF_TASKBAR_ACTIVE, true).apply()
-        PowerMockito.mockStatic(U::class.java)
-        PowerMockito.`when`(U.getSharedPreferences(context)).thenReturn(prefs)
-        PowerMockito.`when`(U.isServiceRunning(context, NotificationService::class.java))
-                .thenReturn(false)
-        bootReceiver.onReceive(context, intent)
-        Assert.assertFalse(prefs.getBoolean(Constants.PREF_TASKBAR_ACTIVE, false))
     }
 }

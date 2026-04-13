@@ -15,7 +15,6 @@
 
 package com.farmerbb.taskbar.ui;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -46,7 +45,6 @@ import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.activity.InvisibleActivity;
 import com.farmerbb.taskbar.activity.InvisibleActivityAlt;
 import com.farmerbb.taskbar.adapter.StartMenuAdapter;
-import com.farmerbb.taskbar.util.TaskbarPosition;
 import com.farmerbb.taskbar.util.AppEntry;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.util.IconCache;
@@ -160,10 +158,9 @@ public class StartMenuController extends UIController {
                 getBottomMargin(context)
         );
 
-        // Determine where to show the start menu on screen
-        String taskbarPosition = TaskbarPosition.getTaskbarPosition(context);
-        int layoutId = getStartMenuLayoutId(taskbarPosition);
-        params.gravity = getStartMenuGravity(taskbarPosition);
+        // The taskbar is fixed to the bottom-left corner, so the start menu is too.
+        int layoutId = R.layout.tb_start_menu_left;
+        params.gravity = Gravity.BOTTOM | Gravity.LEFT;
 
         // Initialize views
         layout = (StartMenuLayout) LayoutInflater.from(U.wrapContext(context)).inflate(layoutId, null);
@@ -206,47 +203,6 @@ public class StartMenuController extends UIController {
         refreshApps(true);
 
         host.addView(layout, params);
-    }
-
-    @VisibleForTesting
-    int getStartMenuLayoutId(String taskbarPosition) {
-        switch(taskbarPosition) {
-            case POSITION_BOTTOM_LEFT:
-            default:
-                return R.layout.tb_start_menu_left;
-            case POSITION_BOTTOM_RIGHT:
-                return R.layout.tb_start_menu_right;
-            case POSITION_TOP_LEFT:
-                return R.layout.tb_start_menu_top_left;
-            case POSITION_TOP_VERTICAL_LEFT:
-            case POSITION_BOTTOM_VERTICAL_LEFT:
-                return R.layout.tb_start_menu_vertical_left;
-            case POSITION_TOP_RIGHT:
-                return R.layout.tb_start_menu_top_right;
-            case POSITION_TOP_VERTICAL_RIGHT:
-            case POSITION_BOTTOM_VERTICAL_RIGHT:
-                return R.layout.tb_start_menu_vertical_right;
-        }
-    }
-
-    @VisibleForTesting
-    @SuppressLint("RtlHardcoded")
-    int getStartMenuGravity(String taskbarPosition) {
-        switch(taskbarPosition) {
-            case POSITION_BOTTOM_LEFT:
-            case POSITION_BOTTOM_VERTICAL_LEFT:
-            default:
-                return Gravity.BOTTOM | Gravity.LEFT;
-            case POSITION_BOTTOM_RIGHT:
-            case POSITION_BOTTOM_VERTICAL_RIGHT:
-                return Gravity.BOTTOM | Gravity.RIGHT;
-            case POSITION_TOP_LEFT:
-            case POSITION_TOP_VERTICAL_LEFT:
-                return Gravity.TOP | Gravity.LEFT;
-            case POSITION_TOP_RIGHT:
-            case POSITION_TOP_VERTICAL_RIGHT:
-                return Gravity.TOP | Gravity.RIGHT;
-        }
     }
 
     private void refreshApps(boolean firstDraw) {

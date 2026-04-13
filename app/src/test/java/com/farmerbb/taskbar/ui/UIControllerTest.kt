@@ -47,7 +47,6 @@ class UIControllerTest {
 
     @Test
     fun testInitWithoutProceed() {
-        LauncherHelper.getInstance().setOnSecondaryHomeScreen(true, 1)
         val runnable = TestRunnable()
         val context = ApplicationProvider.getApplicationContext<Context>()
         uiController.init(context, hostService, runnable)

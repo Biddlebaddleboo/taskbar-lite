@@ -20,7 +20,7 @@
     <string name="tb_app_name_debug">Taskbar Lite (Debug)</string>
 
     <string name="tb_taskbar_is_active">Taskbar Lite is active</string>
-    <string name="tb_click_to_open_settings">Click to open settings</string>
+    <string name="tb_click_to_open_taskbar">Tap to show Taskbar Lite</string>
     <string name="tb_action_show">Show Taskbar Lite</string>
     <string name="tb_action_hide">Hide Taskbar Lite</string>
     <string name="tb_action_show_alt">Show</string>
@@ -34,21 +34,12 @@
     <string name="tb_permission_dialog_instructions_phone">Please press \"Grant Permission\" and ensure that \"Permit drawing over other apps\" is enabled.</string>
     <string name="tb_permission_dialog_instructions_tv">Please press \"Open Settings\" to open the Android TV app settings menu. Select \"Special app access\", then select \"Display over other apps\" and ensure that Taskbar Lite is enabled.</string>
 
-    <string name="tb_pref_header_general">General settings</string>
-    <string name="tb_pref_title_start_on_boot">Launch on boot</string>
-    <string name="tb_pref_title_hide_taskbar">Collapse Taskbar when selecting items</string>
-    <string name="tb_hide_taskbar_disclaimer">Does not apply to apps in freeform mode</string>
     <string name="tb_set_as_default_home">Press \"Always\" to set Taskbar Lite as your default launcher</string>
-
-    <string name="tb_pref_header_about">About Taskbar Lite</string>
-    <string name="tb_pref_about_description">Taskbar Lite: PC-style productivity for Android\n\n&#169; %1$d Braden Farmer\nApp logo by Mark Morilla\n\nClick here to check for updates or leave a rating! %2$s</string>
-    <string name="tb_pref_about_description_alt">Taskbar Lite: PC-style productivity for Android\n\n&#169; %1$d Braden Farmer\nApp logo by Mark Morilla</string>
 
     <string name="tb_pref_disable_animations">Faster app switching</string>
 
     <string name="tb_app_info">App info</string>
     <string name="tb_uninstall">Uninstall</string>
-    <string name="tb_open_taskbar_settings">Open settings</string>
     <string name="tb_quit_taskbar">Quit</string>
 
     <string name="tb_loading_apps">Loading apps&#8230;</string>
@@ -58,8 +49,6 @@
     <string name="tb_error_dialog_message">Unfortunately, due to OEM restrictions, this feature can\'t be enabled on your device.\n\nYou may still be able to enable it by using this adb shell command:\n\nappops set %1$s %2$s allow</string>
     <string name="tb_action_ok">OK</string>
     <string name="tb_action_cancel">Cancel</string>
-
-    <string name="tb_pref_title_shortcut_icon">Show shortcut icon for pinned apps</string>
 
     <string name="tb_action_developer_options">Open Developer Options</string>
     <string name="tb_action_close">Close</string>
@@ -75,11 +64,6 @@
     <string name="tb_window_size_half_right">@string/tb_window_size_half_right_alt</string>
     <string name="tb_window_size_half_right_alt">Half screen (right/bottom)</string>
 
-    <string name="tb_pref_title_donate">Donate</string>
-    <string name="tb_pref_summary_donate">Support the development of Taskbar Lite with a small donation by upgrading to the Donate Version</string>
-    <string name="tb_dialog_donate_message">Support the development of Taskbar Lite by upgrading to the Donate Version for %1$s!\n\nThe Donate Version is identical to the free version and your preferences will automatically transfer over.\n\nTaskbar Lite is and will always be 100%% free, open source, with absolutely no ads.  However, your support is greatly appreciated!</string>
-    <string name="tb_action_no_thanks">No thanks</string>
-
     <string name="tb_show_window_sizes">New window&#8230;</string>
 
     <string name="tb_add_shortcut">Add shortcut to home screen</string>
@@ -87,15 +71,9 @@
 
     <string name="tb_start_taskbar">Start/stop Taskbar Lite</string>
     <string name="tb_no_freeform_support">Freeform mode is not enabled on your device &#8211; open Taskbar Lite and enable it first</string>
-    <string name="tb_action_dont_show_again">Don\'t show again</string>
-
     <string name="tb_app_shortcuts">More actions&#8230;</string>
 
     <string name="tb_usage_stats_message">Please ensure that %s is set to \"On\"</string>
-
-    <string name="tb_power_button_warning_title">Caution</string>
-    <string name="tb_power_button_warning_message">Custom ROMs based on CyanogenMod / LineageOS have an issue where the power button does not work while the device is in freeform mode.\n\nPlease test your power button now.  If it does not work, then exercise caution when using freeform mode as you may lose the ability to wake the device from sleep if the screen times out.</string>
-    <string name="tb_action_i_understand">I understand</string>
 
     <string name="tb_transparent_start_menu">Transparent start menu</string>
 
@@ -103,13 +81,8 @@
 
     <string name="tb_window_sizes_not_available">Window sizes don\'t work correctly on this Android version - see \"Help &amp; instructions\" for a workaround</string>
 
-    <string name="tb_full_length">Expand area with whitespace</string>
-
     <string name="tb_auto_hide_navbar">Automatically control the system navigation bar</string>
     <string name="tb_auto_hide_navbar_description">Hide the navigation bar when Taskbar Lite is active, and show it when Taskbar Lite is inactive</string>
-
-    <string name="tb_pref_title_chrome_os_context_menu_fix">Chrome OS dock compatibility fix</string>
-    <string name="tb_pref_description_chrome_os_context_menu_fix">Enable this if using Taskbar Lite alongside the Chrome OS dock</string>
 
     <string name="tb_pin_shortcut_not_supported">Your launcher doesn\'t support adding shortcuts from other apps.\n\nPlease manually add the shortcut from your launcher\'s \"Widgets\" menu.</string>
 
@@ -133,7 +106,6 @@
     <string name="tb_no_icons_to_arrange">No icons to move</string>
     <string name="tb_no_icons_to_sort">No icons to sort</string>
     <string name="tb_pref_centered_icons">Centered app icons</string>
-    <string name="tb_settings">Settings</string>
     <string name="tb_powered_by_taskbar">Powered by Taskbar Lite</string>
 
     <string name="tb_new_shortcut">Launch app</string>

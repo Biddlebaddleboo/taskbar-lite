@@ -61,7 +61,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/tb_launcher"
+        android:icon="@android:drawable/sym_def_app_icon"
         android:label="@string/tb_app_name"
         android:theme="@style/Taskbar"
         tools:ignore="GoogleAppIndexingWarning">
@@ -71,21 +71,6 @@
             android:exported="true"
             android:label="@string/tb_app_name"
             android:launchMode="singleTask"/>
-        <activity-alias
-            android:name=".MainActivity"
-            android:targetActivity=".activity.MainActivity"
-            android:label="@string/tb_app_name"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <action android:name="android.intent.action.APPLICATION_PREFERENCES"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-            <meta-data
-                android:name="WindowManagerPreference:SuppressWindowControlNavigationButton"
-                android:value="true" />
-        </activity-alias>
         <activity
             android:name=".activity.InvisibleActivity"
             android:documentLaunchMode="always"
@@ -147,7 +132,6 @@
             android:theme="@style/Taskbar.Incognito"/>
         <activity
             android:name=".activity.ShortcutActivity"
-            android:icon="@mipmap/tb_freeform_mode"
             android:label="@string/tb_pref_header_freeform"
             android:documentLaunchMode="always"
             android:excludeFromRecents="true"
@@ -176,13 +160,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".activity.TouchAbsorberActivity"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|layoutDirection"
-            android:theme="@style/Taskbar.Incognito"/>
         <activity
             android:name=".activity.PersistentShortcutSelectAppActivity"
             android:label="@string/tb_new_shortcut"

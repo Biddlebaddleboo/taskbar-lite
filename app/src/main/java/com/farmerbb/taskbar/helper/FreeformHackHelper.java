@@ -19,7 +19,6 @@ public class FreeformHackHelper {
 
     private boolean freeformHackActive = false;
     private boolean inFreeformWorkspace = false;
-    private boolean touchAbsorberActive = false;
 
     private static FreeformHackHelper theInstance;
 
@@ -45,13 +44,5 @@ public class FreeformHackHelper {
 
     public void setInFreeformWorkspace(boolean value) {
         inFreeformWorkspace = value;
-    }
-
-    public boolean isTouchAbsorberActive() {
-        return touchAbsorberActive;
-    }
-
-    public void setTouchAbsorberActive(boolean value) {
-        touchAbsorberActive = value;
     }
 }

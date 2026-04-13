@@ -25,13 +25,11 @@ public class Constants {
     public static final String ACTION_CONTEXT_MENU_DISAPPEARING = "com.farmerbb.taskbar.CONTEXT_MENU_DISAPPEARING";
     public static final String ACTION_ENTER_ICON_ARRANGE_MODE = "com.farmerbb.taskbar.ENTER_ICON_ARRANGE_MODE";
     public static final String ACTION_FINISH_DIM_SCREEN_ACTIVITY = "com.farmerbb.taskbar.FINISH_DIM_SCREEN_ACTIVITY";
-    public static final String ACTION_FINISH_FREEFORM_ACTIVITY = "com.farmerbb.taskbar.FINISH_FREEFORM_ACTIVITY";
     public static final String ACTION_FORCE_TASKBAR_RESTART = "com.farmerbb.taskbar.FORCE_TASKBAR_RESTART";
     public static final String ACTION_HIDE_CONTEXT_MENU = "com.farmerbb.taskbar.HIDE_CONTEXT_MENU";
     public static final String ACTION_HIDE_START_MENU = "com.farmerbb.taskbar.HIDE_START_MENU";
     public static final String ACTION_HIDE_START_MENU_NO_RESET = "com.farmerbb.taskbar.HIDE_START_MENU_NO_RESET";
     public static final String ACTION_HIDE_START_MENU_SPACE = "com.farmerbb.taskbar.HIDE_START_MENU_SPACE";
-    public static final String ACTION_HIDE_TASKBAR = "com.farmerbb.taskbar.HIDE_TASKBAR";
     public static final String ACTION_KILL_HOME_ACTIVITY = "com.farmerbb.taskbar.KILL_HOME_ACTIVITY";
     public static final String ACTION_QUIT = "com.farmerbb.taskbar.QUIT";
     public static final String ACTION_REFRESH_DESKTOP_ICONS = "com.farmerbb.taskbar.REFRESH_DESKTOP_ICONS";
@@ -44,17 +42,13 @@ public class Constants {
     public static final String ACTION_START = "com.farmerbb.taskbar.START";
     public static final String ACTION_START_MENU_APPEARING = "com.farmerbb.taskbar.START_MENU_APPEARING";
     public static final String ACTION_START_MENU_DISAPPEARING = "com.farmerbb.taskbar.START_MENU_DISAPPEARING";
-    public static final String ACTION_TEMP_HIDE_TASKBAR = "com.farmerbb.taskbar.TEMP_HIDE_TASKBAR";
     public static final String ACTION_TEMP_SHOW_TASKBAR = "com.farmerbb.taskbar.TEMP_SHOW_TASKBAR";
     public static final String ACTION_TOGGLE_START_MENU = "com.farmerbb.taskbar.TOGGLE_START_MENU";
-    public static final String ACTION_TOUCH_ABSORBER_STATE_CHANGED = "com.farmerbb.taskbar.TOUCH_ABSORBER_STATE_CHANGED";
     public static final String ACTION_UNDIM_SCREEN = "com.farmerbb.taskbar.ACTION_UNDIM_SCREEN";
     public static final String ACTION_UPDATE_HOME_SCREEN_MARGINS = "com.farmerbb.taskbar.UPDATE_HOME_SCREEN_MARGINS";
-    public static final String ACTION_UPDATE_SWITCH = "com.farmerbb.taskbar.UPDATE_SWITCH";
 
     // SharedPreference keys
 
-    public static final String PREF_ABOUT = "about";
     public static final String PREF_ADD_ICON_TO_DESKTOP = "add_icon_to_desktop";
     public static final String PREF_ADD_SHORTCUT = "add_shortcut";
     public static final String PREF_ANDROID_X86_PREFS = "android_x86_prefs";
@@ -71,24 +65,15 @@ public class Constants {
     public static final String PREF_DESKTOP_ICONS = "desktop_icons";
     public static final String PREF_DIM_SCREEN = "dim_screen";
     public static final String PREF_DISABLE_ANIMATIONS = "disable_animations";
-    public static final String PREF_DONATE = "donate";
     public static final String PREF_DONT_SHOW_UNINSTALL_DIALOG = "dont_show_uninstall_dialog";
     public static final String PREF_FIRST_RUN = "first_run";
-    public static final String PREF_FULL_LENGTH = "full_length";
-    public static final String PREF_GRIP_REJECTION_TOAST_SHOWN = "grip_rejection_toast_shown";
     public static final String PREF_HAS_CAPTION = "has_caption";
     public static final String PREF_HEADER = "header";
-    public static final String PREF_HIDE_DONATE = "hide_donate";
     public static final String PREF_HIDE_ICON_LABELS = "hide_icon_labels";
-    public static final String PREF_HIDE_TASKBAR = "hide_taskbar";
     public static final String PREF_HSL_ID = "hsl_id";
     public static final String PREF_HSL_NAME = "hsl_name";
     public static final String PREF_IS_HIDDEN = "is_hidden";
     public static final String PREF_IS_RESTARTING = "is_restarting";
-    public static final String PREF_LAUNCHER = "launcher";
-    public static final String PREF_OPEN_TASKBAR_SETTINGS = "open_taskbar_settings";
-    public static final String PREF_POWER_BUTTON_WARNING = "power_button_warning";
-    public static final String PREF_PREF_SCREEN_GENERAL = "pref_screen_general";
     public static final String PREF_QUIT_TASKBAR = "quit_taskbar";
     public static final String PREF_REMOVE_DESKTOP_ICON = "remove_desktop_icon";
     public static final String PREF_RESET_COLORS = "reset_colors";
@@ -98,13 +83,11 @@ public class Constants {
     public static final String PREF_SHORTCUT_3 = "shortcut_3";
     public static final String PREF_SHORTCUT_4 = "shortcut_4";
     public static final String PREF_SHORTCUT_5 = "shortcut_5";
-    public static final String PREF_SHORTCUT_ICON = "shortcut_icon";
     public static final String PREF_SHOW_WINDOW_SIZES = "show_window_sizes";
     public static final String PREF_SKIP_AUTO_HIDE_NAVBAR = "skip_auto_hide_navbar";
     public static final String PREF_SKIP_DISABLE_FREEFORM_RECEIVER = "skip_disable_freeform_receiver";
     public static final String PREF_SKIP_QUIT_RECEIVER = "skip_quit_receiver";
     public static final String PREF_SORT_BY_NAME = "sort_by_name";
-    public static final String PREF_START_ON_BOOT = "start_on_boot";
     public static final String PREF_TASKBAR_ACTIVE = "taskbar_active";
     public static final String PREF_TIME_OF_SERVICE_START = "time_of_service_start";
     public static final String PREF_TRANSPARENT_START_MENU = "transparent_start_menu";
@@ -124,19 +107,6 @@ public class Constants {
     public static final String PREF_PACKAGE_NAME_SUFFIX = "package_name";
     public static final String PREF_USER_ID_SUFFIX = "user_id";
     public static final String PREF_WINDOW_SIZE_SUFFIX = "window_size";
-
-    // SharedPreference values
-
-    // TaskbarPosition values
-
-    public static final String POSITION_BOTTOM_LEFT = "bottom_left";
-    public static final String POSITION_BOTTOM_RIGHT = "bottom_right";
-    public static final String POSITION_BOTTOM_VERTICAL_LEFT = "bottom_vertical_left";
-    public static final String POSITION_BOTTOM_VERTICAL_RIGHT = "bottom_vertical_right";
-    public static final String POSITION_TOP_LEFT = "top_left";
-    public static final String POSITION_TOP_RIGHT = "top_right";
-    public static final String POSITION_TOP_VERTICAL_LEFT = "top_vertical_left";
-    public static final String POSITION_TOP_VERTICAL_RIGHT = "top_vertical_right";
 
     // Intent extra keys
 

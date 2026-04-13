@@ -6,39 +6,19 @@ import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherActivityInfo
 import android.os.UserManager
-import android.view.Gravity
 import androidx.test.core.app.ApplicationProvider
 import com.farmerbb.taskbar.Constants
 import com.farmerbb.taskbar.LauncherAppsHelper.generateTestLauncherActivityInfo
-import com.farmerbb.taskbar.R
 import com.farmerbb.taskbar.util.AppEntry
-import com.farmerbb.taskbar.util.Constants.POSITION_BOTTOM_LEFT
-import com.farmerbb.taskbar.util.Constants.POSITION_BOTTOM_RIGHT
-import com.farmerbb.taskbar.util.Constants.POSITION_BOTTOM_VERTICAL_LEFT
-import com.farmerbb.taskbar.util.Constants.POSITION_BOTTOM_VERTICAL_RIGHT
-import com.farmerbb.taskbar.util.Constants.POSITION_TOP_LEFT
-import com.farmerbb.taskbar.util.Constants.POSITION_TOP_RIGHT
-import com.farmerbb.taskbar.util.Constants.POSITION_TOP_VERTICAL_LEFT
-import com.farmerbb.taskbar.util.Constants.POSITION_TOP_VERTICAL_RIGHT
-import com.farmerbb.taskbar.util.TaskbarPosition
-import com.farmerbb.taskbar.util.U
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.powermock.core.classloader.annotations.PowerMockIgnore
-import org.powermock.core.classloader.annotations.PrepareForTest
-import org.powermock.modules.junit4.rule.PowerMockRule
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-@PowerMockIgnore("org.mockito.*", "org.robolectric.*", "android.*", "androidx.*")
-@PrepareForTest(value = [U::class, TaskbarPosition::class])
 class StartMenuControllerTest {
-    @get:Rule
-    val rule = PowerMockRule()
     private lateinit var uiController: StartMenuController
     private lateinit var context: Context
     private val host: UIHost = MockUIHost()
@@ -53,70 +33,6 @@ class StartMenuControllerTest {
     @After
     fun tearDown() {
         uiController.onDestroyHost(host)
-    }
-
-    @Test
-    fun testGetStartMenuLayoutId() {
-        Assert.assertEquals(
-                R.layout.tb_start_menu_left.toLong(),
-                uiController.getStartMenuLayoutId(POSITION_BOTTOM_LEFT)
-                        .toLong())
-        Assert.assertEquals(
-                R.layout.tb_start_menu_right.toLong(),
-                uiController.getStartMenuLayoutId(POSITION_BOTTOM_RIGHT)
-                        .toLong())
-        Assert.assertEquals(
-                R.layout.tb_start_menu_top_left.toLong(),
-                uiController.getStartMenuLayoutId(POSITION_TOP_LEFT)
-                        .toLong())
-        Assert.assertEquals(
-                R.layout.tb_start_menu_vertical_left.toLong(),
-                uiController.getStartMenuLayoutId(POSITION_TOP_VERTICAL_LEFT)
-                        .toLong())
-        Assert.assertEquals(
-                R.layout.tb_start_menu_vertical_left.toLong(),
-                uiController.getStartMenuLayoutId(POSITION_BOTTOM_VERTICAL_LEFT)
-                        .toLong())
-        Assert.assertEquals(
-                R.layout.tb_start_menu_top_right.toLong(),
-                uiController.getStartMenuLayoutId(POSITION_TOP_RIGHT)
-                        .toLong())
-        Assert.assertEquals(
-                R.layout.tb_start_menu_vertical_right.toLong(),
-                uiController.getStartMenuLayoutId(POSITION_TOP_VERTICAL_RIGHT)
-                        .toLong())
-        Assert.assertEquals(
-                R.layout.tb_start_menu_vertical_right.toLong(),
-                uiController.getStartMenuLayoutId(POSITION_BOTTOM_VERTICAL_RIGHT)
-                        .toLong())
-    }
-
-    @Test
-    fun testGetStartMenuGravity() {
-        Assert.assertEquals(
-                (Gravity.BOTTOM or Gravity.LEFT).toLong(),
-                uiController.getStartMenuGravity(POSITION_BOTTOM_LEFT).toLong())
-        Assert.assertEquals(
-                (Gravity.BOTTOM or Gravity.LEFT).toLong(),
-                uiController.getStartMenuGravity(POSITION_BOTTOM_VERTICAL_LEFT).toLong())
-        Assert.assertEquals(
-                (Gravity.BOTTOM or Gravity.RIGHT).toLong(),
-                uiController.getStartMenuGravity(POSITION_BOTTOM_RIGHT).toLong())
-        Assert.assertEquals(
-                (Gravity.BOTTOM or Gravity.RIGHT).toLong(),
-                uiController.getStartMenuGravity(POSITION_BOTTOM_VERTICAL_RIGHT).toLong())
-        Assert.assertEquals(
-                (Gravity.TOP or Gravity.LEFT).toLong(),
-                uiController.getStartMenuGravity(POSITION_TOP_LEFT).toLong())
-        Assert.assertEquals(
-                (Gravity.TOP or Gravity.LEFT).toLong(),
-                uiController.getStartMenuGravity(POSITION_TOP_VERTICAL_LEFT).toLong())
-        Assert.assertEquals(
-                (Gravity.TOP or Gravity.RIGHT).toLong(),
-                uiController.getStartMenuGravity(POSITION_TOP_RIGHT).toLong())
-        Assert.assertEquals(
-                (Gravity.TOP or Gravity.RIGHT).toLong(),
-                uiController.getStartMenuGravity(POSITION_TOP_VERTICAL_RIGHT).toLong())
     }
 
     @Test

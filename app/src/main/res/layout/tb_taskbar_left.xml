@@ -18,13 +18,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" >
 
-        <Button
-            android:layout_width="24dp"
-            android:layout_height="@dimen/tb_icon_size"
-            android:textSize="20dp"
-            android:background="@null"
-            android:id="@+id/hide_taskbar_button_alt" />
-
         <Space
             android:id="@+id/space_alt"
             android:layout_width="4dp"
@@ -83,12 +76,5 @@
             android:id="@+id/space"
             android:layout_width="4dp"
             android:layout_height="match_parent" />
-
-        <Button
-            android:layout_width="24dp"
-            android:layout_height="@dimen/tb_icon_size"
-            android:textSize="20dp"
-            android:background="@null"
-            android:id="@+id/hide_taskbar_button" />
 
 </LinearLayout>

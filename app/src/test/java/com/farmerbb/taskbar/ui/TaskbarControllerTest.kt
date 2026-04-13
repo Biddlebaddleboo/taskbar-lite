@@ -8,15 +8,9 @@ import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
 import android.os.SystemClock
 import android.os.UserHandle
 import android.os.UserManager
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.test.core.app.ApplicationProvider
 import com.farmerbb.taskbar.Constants
@@ -27,17 +21,7 @@ import com.farmerbb.taskbar.activity.HomeActivityDelegate
 import com.farmerbb.taskbar.activity.InvisibleActivityFreeform
 import com.farmerbb.taskbar.activity.MainActivity
 import com.farmerbb.taskbar.mockito.BooleanAnswer
-import com.farmerbb.taskbar.mockito.StringAnswer
-import com.farmerbb.taskbar.shadow.TaskbarShadowScrollView
 import com.farmerbb.taskbar.util.AppEntry
-import com.farmerbb.taskbar.util.Constants.POSITION_BOTTOM_LEFT
-import com.farmerbb.taskbar.util.Constants.POSITION_BOTTOM_RIGHT
-import com.farmerbb.taskbar.util.Constants.POSITION_BOTTOM_VERTICAL_LEFT
-import com.farmerbb.taskbar.util.Constants.POSITION_BOTTOM_VERTICAL_RIGHT
-import com.farmerbb.taskbar.util.Constants.POSITION_TOP_LEFT
-import com.farmerbb.taskbar.util.Constants.POSITION_TOP_RIGHT
-import com.farmerbb.taskbar.util.Constants.POSITION_TOP_VERTICAL_LEFT
-import com.farmerbb.taskbar.util.Constants.POSITION_TOP_VERTICAL_RIGHT
 import com.farmerbb.taskbar.util.Constants.PREF_HIDE_FOREGROUND
 import com.farmerbb.taskbar.util.Constants.PREF_RECENTS_AMOUNT
 import com.farmerbb.taskbar.util.Constants.PREF_RECENTS_AMOUNT_APP_START
@@ -48,7 +32,6 @@ import com.farmerbb.taskbar.util.Constants.PREF_START_BUTTON_IMAGE_APP_LOGO
 import com.farmerbb.taskbar.util.Constants.PREF_START_BUTTON_IMAGE_CUSTOM
 import com.farmerbb.taskbar.util.Constants.PREF_START_BUTTON_IMAGE_DEFAULT
 import com.farmerbb.taskbar.util.Constants.PREF_TIME_OF_SERVICE_START
-import com.farmerbb.taskbar.util.TaskbarPosition
 import com.farmerbb.taskbar.util.U
 import org.junit.After
 import org.junit.Assert
@@ -62,13 +45,11 @@ import org.powermock.core.classloader.annotations.PrepareForTest
 import org.powermock.modules.junit4.rule.PowerMockRule
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
-import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowUsageStatsManager
-import org.robolectric.util.ReflectionHelpers
 
 @RunWith(RobolectricTestRunner::class)
 @PowerMockIgnore("org.mockito.*", "org.robolectric.*", "android.*", "androidx.*")
-@PrepareForTest(value = [U::class, TaskbarPosition::class])
+@PrepareForTest(value = [U::class])
 class TaskbarControllerTest {
     @get:Rule
     val rule = PowerMockRule()
@@ -121,68 +102,6 @@ class TaskbarControllerTest {
     }
 
     @Test
-    fun testGetTaskbarGravity() {
-        Assert.assertEquals(
-                (Gravity.BOTTOM or Gravity.LEFT).toLong(),
-                uiController.getTaskbarGravity(POSITION_BOTTOM_LEFT).toLong())
-        Assert.assertEquals(
-                (Gravity.BOTTOM or Gravity.LEFT).toLong(),
-                uiController.getTaskbarGravity(POSITION_BOTTOM_VERTICAL_LEFT).toLong())
-        Assert.assertEquals(
-                (Gravity.BOTTOM or Gravity.RIGHT).toLong(),
-                uiController.getTaskbarGravity(POSITION_BOTTOM_RIGHT).toLong())
-        Assert.assertEquals(
-                (Gravity.BOTTOM or Gravity.RIGHT).toLong(),
-                uiController.getTaskbarGravity(POSITION_BOTTOM_VERTICAL_RIGHT).toLong())
-        Assert.assertEquals(
-                (Gravity.TOP or Gravity.LEFT).toLong(),
-                uiController.getTaskbarGravity(POSITION_TOP_LEFT).toLong())
-        Assert.assertEquals(
-                (Gravity.TOP or Gravity.LEFT).toLong(),
-                uiController.getTaskbarGravity(POSITION_TOP_VERTICAL_LEFT).toLong())
-        Assert.assertEquals(
-                (Gravity.TOP or Gravity.RIGHT).toLong(),
-                uiController.getTaskbarGravity(POSITION_TOP_RIGHT).toLong())
-        Assert.assertEquals(
-                (Gravity.TOP or Gravity.RIGHT).toLong(),
-                uiController.getTaskbarGravity(POSITION_TOP_VERTICAL_RIGHT).toLong())
-        Assert.assertEquals(
-                (Gravity.BOTTOM or Gravity.LEFT).toLong(),
-                uiController.getTaskbarGravity(Constants.UNSUPPORTED).toLong())
-    }
-
-    @Test
-    fun testGetTaskbarLayoutId() {
-        Assert.assertEquals(
-                R.layout.tb_taskbar_left.toLong(),
-                uiController.getTaskbarLayoutId(POSITION_BOTTOM_LEFT).toLong())
-        Assert.assertEquals(
-                R.layout.tb_taskbar_vertical.toLong(),
-                uiController.getTaskbarLayoutId(POSITION_BOTTOM_VERTICAL_LEFT).toLong())
-        Assert.assertEquals(
-                R.layout.tb_taskbar_right.toLong(),
-                uiController.getTaskbarLayoutId(POSITION_BOTTOM_RIGHT).toLong())
-        Assert.assertEquals(
-                R.layout.tb_taskbar_vertical.toLong(),
-                uiController.getTaskbarLayoutId(POSITION_BOTTOM_VERTICAL_RIGHT).toLong())
-        Assert.assertEquals(
-                R.layout.tb_taskbar_left.toLong(),
-                uiController.getTaskbarLayoutId(POSITION_TOP_LEFT).toLong())
-        Assert.assertEquals(
-                R.layout.tb_taskbar_top_vertical.toLong(),
-                uiController.getTaskbarLayoutId(POSITION_TOP_VERTICAL_LEFT).toLong())
-        Assert.assertEquals(
-                R.layout.tb_taskbar_right.toLong(),
-                uiController.getTaskbarLayoutId(POSITION_TOP_RIGHT).toLong())
-        Assert.assertEquals(
-                R.layout.tb_taskbar_top_vertical.toLong(),
-                uiController.getTaskbarLayoutId(POSITION_TOP_VERTICAL_RIGHT).toLong())
-        Assert.assertEquals(
-                R.layout.tb_taskbar_left.toLong(),
-                uiController.getTaskbarLayoutId(Constants.UNSUPPORTED).toLong())
-    }
-
-    @Test
     fun testGetSearchInterval() {
         val permitTimeDeltaMillis: Long = 100
         prefs.edit().remove(PREF_RECENTS_AMOUNT).apply()
@@ -215,132 +134,6 @@ class TaskbarControllerTest {
         searchInterval = uiController.getSearchInterval(prefs)
         Assert.assertEquals(-1, searchInterval)
         prefs.edit().remove(PREF_RECENTS_AMOUNT).apply()
-    }
-
-    @Test
-    fun testDrawSysTrayOnClickListener() {
-        PowerMockito.spy(U::class.java)
-        val isLibraryAnswer = BooleanAnswer()
-        PowerMockito.`when`(U.isLibrary(context)).thenAnswer(isLibraryAnswer)
-        isLibraryAnswer.answer = true
-        var sysTrayLayout = initializeSysTrayLayout(POSITION_BOTTOM_RIGHT)
-        Assert.assertFalse(sysTrayLayout.hasOnClickListeners())
-        isLibraryAnswer.answer = false
-        sysTrayLayout = initializeSysTrayLayout(POSITION_BOTTOM_RIGHT)
-        Assert.assertTrue(sysTrayLayout.hasOnClickListeners())
-    }
-
-    @Test
-    fun testDrawSysTrayParentLayoutVisibility() {
-        val sysTrayLayout = initializeSysTrayLayout(POSITION_BOTTOM_RIGHT)
-        val parent = sysTrayLayout.parent as ViewGroup
-        Assert.assertEquals(View.VISIBLE.toLong(), parent.visibility.toLong())
-    }
-
-    @Test
-    fun testDrawSysTrayGravity() {
-        checkDrawSysTrayGravity(POSITION_BOTTOM_LEFT, Gravity.END)
-        checkDrawSysTrayGravity(POSITION_BOTTOM_RIGHT, Gravity.START)
-    }
-
-    @Test
-    fun testDrawSysTrayTime() {
-        checkDrawSysTrayTimeVisibility(POSITION_BOTTOM_LEFT, R.id.time_right)
-        checkDrawSysTrayTimeVisibility(POSITION_BOTTOM_RIGHT, R.id.time_left)
-    }
-
-    @Test
-    fun testCalculateScrollViewParams() {
-        val isVerticalAnswer = BooleanAnswer()
-        PowerMockito.spy(TaskbarPosition::class.java)
-        PowerMockito.`when`(TaskbarPosition.isVertical(context)).thenAnswer(isVerticalAnswer)
-        val display = U.getDisplayInfo(context)
-        val dividerSize = context.resources.getDimensionPixelSize(R.dimen.tb_divider_size)
-        val defaultSize = -1
-        val params = ViewGroup.LayoutParams(defaultSize, defaultSize)
-        val iconSize = context.resources.getDimensionPixelSize(R.dimen.tb_icon_size)
-        isVerticalAnswer.answer = true
-        var maxScreenSize = Math.max(
-                0,
-                display.height -
-                        U.getStatusBarHeight(context) -
-                        Math.round(U.getBaseTaskbarSize(context))
-        )
-        uiController.calculateScrollViewParams(context, prefs, params, true, 1)
-        Assert.assertEquals(defaultSize.toLong(), params.width.toLong())
-        Assert.assertEquals(maxScreenSize + dividerSize.toLong(), params.height.toLong())
-        params.height = defaultSize
-        uiController.calculateScrollViewParams(context, prefs, params, false, 1)
-        Assert.assertEquals(defaultSize.toLong(), params.width.toLong())
-        Assert.assertEquals(iconSize + dividerSize.toLong(), params.height.toLong())
-        params.height = defaultSize
-        uiController.calculateScrollViewParams(context, prefs, params, false, 10000)
-        Assert.assertEquals(defaultSize.toLong(), params.width.toLong())
-        Assert.assertEquals(maxScreenSize + dividerSize.toLong(), params.height.toLong())
-        params.height = defaultSize
-        isVerticalAnswer.answer = false
-        maxScreenSize = Math.max(0, display.width - Math.round(U.getBaseTaskbarSize(context)))
-        uiController.calculateScrollViewParams(context, prefs, params, true, 1)
-        Assert.assertEquals(maxScreenSize + dividerSize.toLong(), params.width.toLong())
-        Assert.assertEquals(defaultSize.toLong(), params.height.toLong())
-        params.width = defaultSize
-        uiController.calculateScrollViewParams(context, prefs, params, false, 1)
-        Assert.assertEquals(iconSize + dividerSize.toLong(), params.width.toLong())
-        Assert.assertEquals(defaultSize.toLong(), params.height.toLong())
-        params.width = defaultSize
-        uiController.calculateScrollViewParams(context, prefs, params, false, 10000)
-        Assert.assertEquals(maxScreenSize + dividerSize.toLong(), params.width.toLong())
-        Assert.assertEquals(defaultSize.toLong(), params.height.toLong())
-    }
-
-    @Test
-    fun testScrollTaskbarForScrollViewVisibility() {
-        val layoutId = uiController.getTaskbarLayoutId(POSITION_BOTTOM_LEFT)
-        val layout = LayoutInflater.from(context).inflate(layoutId, null) as LinearLayout
-        val scrollView = layout.findViewById<FrameLayout>(R.id.taskbar_scrollview)
-        val taskbar = layout.findViewById<LinearLayout>(R.id.taskbar)
-        uiController.scrollTaskbar(scrollView, taskbar, POSITION_BOTTOM_LEFT, "false", false)
-        Assert.assertEquals(View.GONE.toLong(), scrollView.visibility.toLong())
-        uiController.scrollTaskbar(scrollView, taskbar, POSITION_BOTTOM_LEFT, "false", true)
-        Assert.assertEquals(View.VISIBLE.toLong(), scrollView.visibility.toLong())
-    }
-
-    @Test
-    @Config(shadows = [TaskbarShadowScrollView::class])
-    fun testScrollTaskbarForScrollViewLocation() {
-        // We only provide enhanced ShadowScrollView with scrollTo supported, so we should
-        // choose the layout uses the ScrollView instead of HorizontalScrollView.
-        val taskbarPosition = POSITION_BOTTOM_VERTICAL_LEFT
-        val layoutId = uiController.getTaskbarLayoutId(taskbarPosition)
-        val layout = LayoutInflater.from(context).inflate(layoutId, null) as LinearLayout
-        val scrollView = layout.findViewById<FrameLayout>(R.id.taskbar_scrollview)
-        val taskbar = layout.findViewById<LinearLayout>(R.id.taskbar)
-        val taskbarWidth = 200
-        val taskbarHeight = 50
-        // Change LayoutParams doesn't work with robolectric, so we should use reflection
-        // to change the location directly.
-        ReflectionHelpers.setField(taskbar, "mLeft", 0)
-        ReflectionHelpers.setField(taskbar, "mTop", 0)
-        ReflectionHelpers.setField(taskbar, "mRight", taskbarWidth)
-        ReflectionHelpers.setField(taskbar, "mBottom", taskbarHeight)
-        val isVerticalAnswer = BooleanAnswer()
-        PowerMockito.spy(TaskbarPosition::class.java)
-        PowerMockito.`when`(TaskbarPosition.isVertical(taskbarPosition))
-                .thenAnswer(isVerticalAnswer)
-        isVerticalAnswer.answer = false
-        uiController.scrollTaskbar(scrollView, taskbar, taskbarPosition, "false", true)
-        Assert.assertEquals(0, scrollView.scrollX.toLong())
-        Assert.assertEquals(0, scrollView.scrollY.toLong())
-        uiController.scrollTaskbar(scrollView, taskbar, taskbarPosition, "true", true)
-        Assert.assertEquals(taskbarWidth.toLong(), scrollView.scrollX.toLong())
-        Assert.assertEquals(taskbarHeight.toLong(), scrollView.scrollY.toLong())
-        isVerticalAnswer.answer = true
-        uiController.scrollTaskbar(scrollView, taskbar, taskbarPosition, "true", true)
-        Assert.assertEquals(0, scrollView.scrollX.toLong())
-        Assert.assertEquals(0, scrollView.scrollY.toLong())
-        uiController.scrollTaskbar(scrollView, taskbar, taskbarPosition, "false", true)
-        Assert.assertEquals(taskbarWidth.toLong(), scrollView.scrollX.toLong())
-        Assert.assertEquals(taskbarHeight.toLong(), scrollView.scrollY.toLong())
     }
 
     @Test
@@ -398,47 +191,6 @@ class TaskbarControllerTest {
         prefs.edit().remove(PREF_HIDE_FOREGROUND).apply()
         uiController.filterForegroundApp(context, prefs, searchInterval, applicationIdsToRemove)
         Assert.assertEquals(0, applicationIdsToRemove.size.toLong())
-    }
-
-    @Test
-    fun testNeedToReverseOrder() {
-        PowerMockito.spy(TaskbarPosition::class.java)
-        val positions: MutableList<String> = ArrayList()
-        positions.add(POSITION_BOTTOM_LEFT)
-        positions.add(POSITION_BOTTOM_RIGHT)
-        positions.add(POSITION_BOTTOM_VERTICAL_LEFT)
-        positions.add(POSITION_BOTTOM_VERTICAL_RIGHT)
-        positions.add(POSITION_TOP_LEFT)
-        positions.add(POSITION_TOP_RIGHT)
-        positions.add(POSITION_TOP_VERTICAL_LEFT)
-        positions.add(POSITION_TOP_VERTICAL_RIGHT)
-        positions.add(Constants.UNSUPPORTED)
-        var sortOrder = "false"
-        for (position in positions) {
-            PowerMockito.`when`(TaskbarPosition.getTaskbarPosition(context))
-                    .thenAnswer(StringAnswer(position))
-            if (POSITION_BOTTOM_RIGHT == position || POSITION_TOP_RIGHT == position) {
-                Assert.assertTrue(uiController.needToReverseOrder(context, sortOrder))
-            } else {
-                Assert.assertFalse(uiController.needToReverseOrder(context, sortOrder))
-            }
-        }
-        sortOrder = "true"
-        for (position in positions) {
-            PowerMockito.`when`(TaskbarPosition.getTaskbarPosition(context))
-                    .thenAnswer(StringAnswer(position))
-            if (POSITION_BOTTOM_RIGHT == position || POSITION_TOP_RIGHT == position) {
-                Assert.assertFalse(uiController.needToReverseOrder(context, sortOrder))
-            } else {
-                Assert.assertTrue(uiController.needToReverseOrder(context, sortOrder))
-            }
-        }
-        sortOrder = Constants.UNSUPPORTED
-        for (position in positions) {
-            PowerMockito.`when`(TaskbarPosition.getTaskbarPosition(context))
-                    .thenAnswer(StringAnswer(position))
-            Assert.assertFalse(uiController.needToReverseOrder(context, sortOrder))
-        }
     }
 
     @Test
@@ -621,35 +373,6 @@ class TaskbarControllerTest {
                 .setClass(className)
                 .setEventType(UsageEvents.Event.MOVE_TO_FOREGROUND)
                 .build()
-    }
-
-    private fun checkDrawableBackgroundColor(drawable: Drawable, color: Int) {
-        Assert.assertTrue(drawable is ColorDrawable)
-        val colorDrawable = drawable as ColorDrawable
-        Assert.assertEquals(color.toLong(), colorDrawable.color.toLong())
-    }
-
-    private fun checkDrawSysTrayTimeVisibility(position: String, timeId: Int) {
-        val sysTrayLayout = initializeSysTrayLayout(position)
-        Assert.assertEquals(View.VISIBLE.toLong(), sysTrayLayout.findViewById<View>(timeId)
-                .visibility.toLong())
-    }
-
-    private fun checkDrawSysTrayGravity(position: String, gravity: Int) {
-        val sysTrayLayout = initializeSysTrayLayout(position)
-        val params = sysTrayLayout.layoutParams as FrameLayout.LayoutParams
-        Assert.assertEquals(gravity.toLong(), params.gravity.toLong())
-    }
-
-    private fun initializeSysTrayLayout(position: String): LinearLayout {
-        val layoutId = uiController.getTaskbarLayoutId(position)
-        val layout = LayoutInflater.from(context).inflate(layoutId, null) as LinearLayout
-        uiController.drawSysTray(context, layoutId, layout)
-        return getFieldSysTrayLayout(uiController)
-    }
-
-    private fun getFieldSysTrayLayout(uiController: TaskbarController?): LinearLayout {
-        return ReflectionHelpers.getField(uiController, "sysTrayLayout")
     }
 
     private fun checkStartButtonPadding(padding: Int, startButton: ImageView) {

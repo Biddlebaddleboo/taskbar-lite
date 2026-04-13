@@ -76,7 +76,6 @@ import com.farmerbb.taskbar.activity.ContextMenuActivity;
 import com.farmerbb.taskbar.activity.DummyActivity;
 import com.farmerbb.taskbar.activity.InvisibleActivityFreeform;
 import com.farmerbb.taskbar.activity.MainActivity;
-import com.farmerbb.taskbar.activity.TouchAbsorberActivity;
 import com.farmerbb.taskbar.helper.DisplayHelper;
 import com.farmerbb.taskbar.helper.GlobalHelper;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
@@ -347,8 +346,6 @@ public class U {
     }
 
     public static void stopFreeformHack(Context context) {
-        sendBroadcast(context, ACTION_FINISH_FREEFORM_ACTIVITY);
-
         if(isOverridingFreeformHack(context, false)) {
             FreeformHackHelper helper = FreeformHackHelper.getInstance();
             helper.setFreeformHackActive(false);
@@ -404,11 +401,7 @@ public class U {
                 launchShortcut(context, shortcut, bundle, onError);
         });
 
-        if(shouldCollapse(context, true)) {
-            sendBroadcast(context, ACTION_HIDE_TASKBAR);
-        } else {
-            sendBroadcast(context, ACTION_HIDE_START_MENU);
-        }
+        sendBroadcast(context, ACTION_HIDE_START_MENU);
     }
 
     private static Bundle launchMode1(Context context, ApplicationType type, View view, int factor) {
@@ -434,7 +427,6 @@ public class U {
         DisplayInfo display = getDisplayInfo(context);
 
         int statusBarHeight = getStatusBarHeight(context);
-        String position = TaskbarPosition.getTaskbarPosition(context);
 
         int orientation = getDisplayOrientation(context);
         boolean isPortrait = orientation == Configuration.ORIENTATION_PORTRAIT;
@@ -448,22 +440,10 @@ public class U {
         int iconSize = isOverridingFreeformHack(context) && !LauncherHelper.getInstance().isOnHomeScreen(context)
                 ? 0 : context.getResources().getDimensionPixelSize(R.dimen.tb_icon_size);
 
-        if(TaskbarPosition.isVerticalLeft(position))
-            left = left + iconSize;
-        else if(TaskbarPosition.isVerticalRight(position))
-            right = right - iconSize;
-        else if(TaskbarPosition.isBottom(position))
-            bottom = bottom - iconSize;
-        else
-            top = top + iconSize;
+        bottom = bottom - iconSize;
 
-        int halfLandscape =
-                (right / 2)
-                        + ((iconSize / 2) * (TaskbarPosition.isVerticalLeft(position) ? 1 : 0));
-        boolean isTopLeft = POSITION_TOP_LEFT.equals(position);
-        boolean isTopRight = POSITION_TOP_RIGHT.equals(position);
-        int halfPortrait =
-                (bottom / 2) + ((iconSize / 2) * ((isTopLeft || isTopRight) ? 1 : 0));
+        int halfLandscape = right / 2;
+        int halfPortrait = bottom / 2;
 
         if(launchType == RIGHT && isLandscape)
             left = halfLandscape;
@@ -526,11 +506,7 @@ public class U {
     private static void prepareToStartActivity(Context context, boolean openInNewWindow, Runnable runnable) {
         sendBroadcast(context, ACTION_HIDE_CONTEXT_MENU);
 
-        if(!FreeformHackHelper.getInstance().isTouchAbsorberActive()
-                && shouldLaunchTouchAbsorber(context)) {
-            startTouchAbsorberActivity(context);
-            newHandler().postDelayed(runnable, 100);
-        } else if(openInNewWindow && needsInvisibleActivityHacks()) {
+        if(openInNewWindow && needsInvisibleActivityHacks()) {
             Intent intent = new Intent(context, DummyActivity.class);
             intent.putExtra("finish_on_pause", true);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
@@ -557,37 +533,6 @@ public class U {
                             display.width + 1,
                             display.height + 1
                     ));
-        } catch (IllegalArgumentException | SecurityException ignored) {}
-    }
-
-    public static void startTouchAbsorberActivity(Context context) {
-        String position = TaskbarPosition.getTaskbarPosition(context);
-        DisplayInfo display = getDisplayInfo(context);
-
-        int left = 0;
-        int top = 0;
-        int right = display.width;
-        int bottom = display.height;
-
-        int iconSize = context.getResources().getDimensionPixelSize(R.dimen.tb_icon_size);
-
-        if(TaskbarPosition.isVerticalLeft(position))
-            right = iconSize;
-        else if(TaskbarPosition.isVerticalRight(position))
-            left = right - iconSize;
-        else if(TaskbarPosition.isBottom(position))
-            top = bottom - iconSize;
-        else
-            bottom = iconSize;
-
-        Intent intent = new Intent(context, TouchAbsorberActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-
-        try {
-            context.startActivity(intent,
-                    getActivityOptionsBundle(context, ApplicationType.FREEFORM_HACK, null,
-                            left, top, right, bottom));
         } catch (IllegalArgumentException | SecurityException ignored) {}
     }
 
@@ -628,18 +573,6 @@ public class U {
         try {
             context.startActivity(intent);
         } catch (ActivityNotFoundException ignored) {}
-    }
-
-    public static boolean launcherIsDefault(Context context) {
-        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-        homeIntent.addCategory(Intent.CATEGORY_HOME);
-        ResolveInfo defaultLauncher = context.getPackageManager().resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY);
-
-        try {
-            return defaultLauncher.activityInfo.packageName.equals(context.getPackageName());
-        } catch (NullPointerException e) {
-            return false;
-        }
     }
 
     public static int getStatusBarHeight(Context context) {
@@ -784,12 +717,6 @@ public class U {
                 Method method = ActivityOptions.class.getMethod(getWindowingModeMethodName(), int.class);
                 method.invoke(options, stackId);
             } catch (Exception ignored) {}
-        }
-
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            int launchDisplayId = LauncherHelper.getInstance().getSecondaryDisplayId();
-            if(launchDisplayId != -1)
-                options.setLaunchDisplayId(launchDisplayId);
         }
 
         return options;
@@ -949,13 +876,6 @@ public class U {
                 && isSystemApp(context);
     }
 
-    public static boolean isLauncherPermanentlyEnabled(Context context) {
-        if(context.getPackageName().equals(BuildConfig.ANDROIDX86_APPLICATION_ID))
-            return true;
-
-        return hasSupportLibrary(context, 0);
-    }
-
     public static boolean hasSupportLibrary(Context context, int minVersion) {
         PackageManager pm = context.getPackageManager();
         try {
@@ -971,15 +891,11 @@ public class U {
 
     @VisibleForTesting
     public static float getBaseTaskbarSize(Context context) {
-        return getBaseTaskbarSizeStart(context) + getBaseTaskbarSizeEnd(context, null);
+        return getBaseTaskbarSizeStart(context);
     }
 
     public static float getBaseTaskbarSizeStart(Context context) {
         return context.getResources().getDimension(R.dimen.tb_base_size_start_plus_divider);
-    }
-
-    public static float getBaseTaskbarSizeEnd(Context context, Map<Integer, Boolean> sysTrayIconStates) {
-        return 0;
     }
 
     private static void startTaskbarService(Context context, boolean fullRestart) {
@@ -1086,17 +1002,12 @@ public class U {
         if(!canEnableFreeform(context))
             stopFreeformHack(context);
 
-        if(!pref.contains(PREF_LAUNCHER)) {
-            pref.edit().putBoolean(PREF_LAUNCHER, true).apply();
-        }
-
         // Customizations for BlissOS
         if(isAndroidGeneric(context) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && !pref.getBoolean(PREF_BLISS_OS_PREFS, false)) {
             SharedPreferences.Editor editor = pref.edit();
 
             editor.putBoolean(PREF_AUTO_HIDE_NAVBAR, true);
-            editor.putBoolean(PREF_SHORTCUT_ICON, false);
             editor.putBoolean(PREF_BLISS_OS_PREFS, true);
             editor.apply();
         }
@@ -1106,7 +1017,6 @@ public class U {
                 && isSystemApp(context)
                 && !pref.getBoolean(PREF_ANDROID_X86_PREFS, false)) {
             pref.edit()
-                    .putBoolean(PREF_SHORTCUT_ICON, false)
                     .putBoolean(PREF_ANDROID_X86_PREFS, true)
                     .apply();
         }
@@ -1202,34 +1112,13 @@ public class U {
         }
     }
 
-    public static boolean shouldCollapse(Context context, boolean pendingAppLaunch) {
-        SharedPreferences pref = getSharedPreferences(context);
-        if(pref.getBoolean(PREF_HIDE_TASKBAR, true)) {
-            if(!isFreeformModeEnabled(context)
-                    || isOverridingFreeformHack(context, false))
-                return !LauncherHelper.getInstance().isOnHomeScreen(context);
-            else {
-                FreeformHackHelper helper = FreeformHackHelper.getInstance();
-                if(pendingAppLaunch)
-                    return !helper.isFreeformHackActive();
-                else
-                    return !helper.isInFreeformWorkspace();
-            }
-        } else
-            return false;
-    }
-
     public static boolean isOverridingFreeformHack(Context context) {
         return isOverridingFreeformHack(context, true);
     }
 
     public static boolean isOverridingFreeformHack(Context context, boolean checkPref) {
-        SharedPreferences pref = getSharedPreferences(context);
         return (!checkPref || isFreeformModeEnabled(context))
-                && ((isChromeOs(context) && (getChromeOsContextMenuFix(context)
-                || (pref.getBoolean(PREF_LAUNCHER, true) && launcherIsDefault(context))))
-                || (!isChromeOs(context) && getCurrentApiVersion() >= 28.0f)
-                || (isChromeOs(context) && getCurrentApiVersion() >= 30.0f));
+                && (isChromeOs(context) || (!isChromeOs(context) && getCurrentApiVersion() >= 28.0f));
     }
 
     public static boolean isPlayStoreInstalled(Context context) {
@@ -1356,15 +1245,7 @@ public class U {
         return HARD_CODED_START_BUTTON_ICON;
     }
 
-    private static boolean shouldLaunchTouchAbsorber(Context context) {
-        return isOverridingFreeformHack(context) && !isChromeOs(context) && getCurrentApiVersion() < 29.0f;
-    }
-
     public static boolean isDesktopIconsEnabled(Context context) {
-        return false;
-    }
-
-    public static boolean isSystemTrayEnabled(Context context) {
         return false;
     }
 

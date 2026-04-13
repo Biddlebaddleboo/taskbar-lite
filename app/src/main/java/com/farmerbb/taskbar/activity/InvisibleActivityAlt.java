@@ -16,20 +16,14 @@
 package com.farmerbb.taskbar.activity;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.util.DisplayInfo;
-import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.helper.MenuHelper;
 import com.farmerbb.taskbar.util.U;
-
-import static com.farmerbb.taskbar.util.Constants.*;
 
 public class InvisibleActivityAlt extends InvisibleActivity {
 
@@ -38,8 +32,6 @@ public class InvisibleActivityAlt extends InvisibleActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        boolean powerButtonWarning = getIntent().hasExtra("power_button_warning");
-
         DisplayInfo display = U.getDisplayInfo(this);
 
         setContentView(R.layout.tb_incognito);
@@ -47,26 +39,6 @@ public class InvisibleActivityAlt extends InvisibleActivity {
         LinearLayout layout = findViewById(R.id.incognitoLayout);
         layout.setLayoutParams(new FrameLayout.LayoutParams(display.width, display.height));
 
-        if(!MenuHelper.getInstance().isStartMenuOpen() && !powerButtonWarning) finish();
-
-        if(powerButtonWarning)
-            U.newHandler().postDelayed(() -> {
-                if(FreeformHackHelper.getInstance().isInFreeformWorkspace()) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle(R.string.tb_power_button_warning_title)
-                            .setMessage(R.string.tb_power_button_warning_message)
-                            .setPositiveButton(R.string.tb_action_i_understand, (dialog, which) -> {
-                                SharedPreferences pref = U.getSharedPreferences(this);
-                                pref.edit().putString(PREF_POWER_BUTTON_WARNING,
-                                        Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID)).apply();
-
-                                finish();
-                            });
-
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-                    dialog.setCancelable(false);
-                }
-            }, 100);
+        if(!MenuHelper.getInstance().isStartMenuOpen()) finish();
     }
 }

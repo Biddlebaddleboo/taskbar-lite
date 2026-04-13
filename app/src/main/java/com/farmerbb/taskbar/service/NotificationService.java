@@ -111,7 +111,7 @@ public class NotificationService extends Service {
                         .setSmallIcon(U.getStartButtonIcon())
                         .setContentIntent(contentIntent)
                         .setContentTitle(getString(R.string.tb_taskbar_is_active))
-                        .setContentText(getString(R.string.tb_click_to_open_settings))
+                        .setContentText(getString(R.string.tb_click_to_open_taskbar))
                         .setColor(ContextCompat.getColor(this, R.color.tb_colorPrimary))
                         .setPriority(Notification.PRIORITY_MIN)
                         .setShowWhen(false)
@@ -123,8 +123,6 @@ public class NotificationService extends Service {
                         .addAction(0, getString(R.string.tb_action_quit), receiverPendingIntent2);
 
                 startForeground(8675309, mBuilder.build());
-
-                U.sendBroadcast(this, ACTION_UPDATE_SWITCH);
 
                 if(!isHidden) {
                     registerReceiver(userForegroundReceiver, new IntentFilter(Intent.ACTION_USER_FOREGROUND));
@@ -144,9 +142,7 @@ public class NotificationService extends Service {
         if(pref.getBoolean(PREF_IS_RESTARTING, false))
             pref.edit().remove(PREF_IS_RESTARTING).apply();
         else {
-            U.sendBroadcast(this, ACTION_UPDATE_SWITCH);
-
-            if(!U.launcherIsDefault(this) || U.isChromeOs(this))
+            if(U.isChromeOs(this))
                 U.stopFreeformHack(this);
         }
 

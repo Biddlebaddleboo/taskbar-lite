@@ -36,13 +36,11 @@ import android.view.View;
 import android.view.WindowManager;
 
 import com.farmerbb.taskbar.R;
-import com.farmerbb.taskbar.util.TaskbarPosition;
 import com.farmerbb.taskbar.util.AppEntry;
 import com.farmerbb.taskbar.util.ApplicationType;
 import com.farmerbb.taskbar.util.DisplayInfo;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.util.IconCache;
-import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.helper.MenuHelper;
 import com.farmerbb.taskbar.util.SavedWindowSizes;
 import com.farmerbb.taskbar.util.U;
@@ -56,7 +54,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
     private AppEntry entry;
 
     boolean showStartMenu = false;
-    boolean shouldHideTaskbar = false;
     boolean isStartButton = false;
     boolean secondaryMenu = false;
     boolean startMenuAppearing = false;
@@ -105,11 +102,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
 
         DisplayInfo display = U.getDisplayInfo(this);
 
-        int statusBarHeight = 0;
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if(resourceId > 0)
-            statusBarHeight = getResources().getDimensionPixelSize(resourceId);
-
         int contextMenuWidth = getResources().getDimensionPixelSize(R.dimen.tb_context_menu_width);
 
         if(showStartMenu) {
@@ -117,32 +109,9 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
             int y = args.getInt("y", 0);
             int offset = getResources().getDimensionPixelSize(R.dimen.tb_context_menu_offset);
 
-            switch(TaskbarPosition.getTaskbarPosition(this)) {
-                case POSITION_BOTTOM_LEFT:
-                case POSITION_BOTTOM_VERTICAL_LEFT:
-                    params.gravity = Gravity.BOTTOM | Gravity.LEFT;
-                    params.x = x;
-                    params.y = display.height - y - offset;
-                    break;
-                case POSITION_BOTTOM_RIGHT:
-                case POSITION_BOTTOM_VERTICAL_RIGHT:
-                    params.gravity = Gravity.BOTTOM | Gravity.LEFT;
-                    params.x = x - contextMenuWidth + offset + offset;
-                    params.y = display.height - y - offset;
-                    break;
-                case POSITION_TOP_LEFT:
-                case POSITION_TOP_VERTICAL_LEFT:
-                    params.gravity = Gravity.TOP | Gravity.LEFT;
-                    params.x = x;
-                    params.y = y - offset + statusBarHeight;
-                    break;
-                case POSITION_TOP_RIGHT:
-                case POSITION_TOP_VERTICAL_RIGHT:
-                    params.gravity = Gravity.TOP | Gravity.LEFT;
-                    params.x = x - contextMenuWidth + offset + offset;
-                    params.y = y - offset + statusBarHeight;
-                    break;
-            }
+            params.gravity = Gravity.BOTTOM | Gravity.LEFT;
+            params.x = x;
+            params.y = display.height - y - offset;
         } else {
             U.sendBroadcast(this, ACTION_HIDE_START_MENU);
 
@@ -150,58 +119,18 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
             int y = args.getInt("y", display.height);
             int offset = getResources().getDimensionPixelSize(R.dimen.tb_icon_size);
 
-            switch(TaskbarPosition.getTaskbarPosition(this)) {
-                case POSITION_BOTTOM_LEFT:
-                    params.gravity = Gravity.BOTTOM | Gravity.LEFT;
-                    params.x = isStartButton ? 0 : x;
-                    params.y = offset;
-                    break;
-                case POSITION_BOTTOM_VERTICAL_LEFT:
-                    params.gravity = Gravity.BOTTOM | Gravity.LEFT;
-                    params.x = offset;
-                    params.y = display.height - y - (isStartButton ? 0 : offset);
-                    break;
-                case POSITION_BOTTOM_RIGHT:
-                    params.gravity = Gravity.BOTTOM | Gravity.RIGHT;
-                    params.x = display.width - x;
-                    params.y = offset;
-                    break;
-                case POSITION_BOTTOM_VERTICAL_RIGHT:
-                    params.gravity = Gravity.BOTTOM | Gravity.RIGHT;
-                    params.x = offset;
-                    params.y = display.height - y - (isStartButton ? 0 : offset);
-                    break;
-                case POSITION_TOP_LEFT:
-                    params.gravity = Gravity.TOP | Gravity.LEFT;
-                    params.x = isStartButton ? 0 : x;
-                    params.y = offset;
-                    break;
-                case POSITION_TOP_VERTICAL_LEFT:
-                    params.gravity = Gravity.TOP | Gravity.LEFT;
-                    params.x = offset;
-                    params.y = isStartButton ? 0 : y - statusBarHeight;
-                    break;
-                case POSITION_TOP_RIGHT:
-                    params.gravity = Gravity.TOP | Gravity.RIGHT;
-                    params.x = display.width - x;
-                    params.y = offset;
-                    break;
-                case POSITION_TOP_VERTICAL_RIGHT:
-                    params.gravity = Gravity.TOP | Gravity.RIGHT;
-                    params.x = offset;
-                    params.y = isStartButton ? 0 : y - statusBarHeight;
-                    break;
-            }
+            params.gravity = Gravity.BOTTOM | Gravity.LEFT;
+            params.x = isStartButton ? 0 : x;
+            params.y = offset;
 
-            if(!TaskbarPosition.isVertical(this) && (params.x > display.width / 2))
+            if(params.x > display.width / 2)
                 params.x = params.x - contextMenuWidth + offset;
         }
 
         params.width = getResources().getDimensionPixelSize(R.dimen.tb_context_menu_width);
         params.dimAmount = 0;
 
-        if(U.isChromeOs(this)
-                && TaskbarPosition.isBottom(this)) {
+        if(U.isChromeOs(this)) {
             SharedPreferences pref = U.getSharedPreferences(this);
 
             if(U.getChromeOsContextMenuFix(this)
@@ -231,9 +160,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
     @SuppressWarnings("deprecation")
     private void generateMenu() {
         if(isStartButton) {
-            addPreferencesFromResource(R.xml.tb_pref_context_menu_open_settings);
-            findPreference(PREF_OPEN_TASKBAR_SETTINGS).setOnPreferenceClickListener(this);
-
             if(showQuitOption) {
                 addPreferencesFromResource(R.xml.tb_pref_context_menu_quit);
                 findPreference(PREF_QUIT_TASKBAR).setOnPreferenceClickListener(this);
@@ -365,23 +291,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
 
                 prepareToClose();
                 break;
-            case PREF_OPEN_TASKBAR_SETTINGS:
-                U.launchApp(this, () -> {
-                    Intent intent2 = new Intent(this, MainActivity.class);
-                    intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    
-                    LauncherHelper helper = LauncherHelper.getInstance();
-                    if(helper.isOnHomeScreen(this))
-                        U.applyOpenInNewWindow(this, intent2);
-
-                    try {
-                        startActivity(intent2,
-                                U.getActivityOptionsBundle(this, ApplicationType.APP_PORTRAIT, getListView().getChildAt(p.getOrder())));
-                    } catch (IllegalArgumentException ignored) {}
-                });
-
-                prepareToClose();
-                break;
             case PREF_QUIT_TASKBAR:
                 Intent quitIntent = new Intent(ACTION_QUIT);
                 quitIntent.setPackage(getPackageName());
@@ -468,10 +377,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
                 U.sendBroadcast(this, ACTION_TOGGLE_START_MENU);
             } else {
                 U.sendBroadcast(this, ACTION_RESET_START_MENU);
-
-                if(shouldHideTaskbar && U.shouldCollapse(this, true)) {
-                    U.sendBroadcast(this, ACTION_HIDE_TASKBAR);
-                }
             }
         }
 
@@ -544,7 +449,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
 
     private void prepareToClose() {
         showStartMenu = false;
-        shouldHideTaskbar = true;
         contextMenuFix = false;
     }
 }

@@ -32,12 +32,4 @@ class FreeformHackHelperTest {
         Assert.assertTrue(freeformHackHelper.isInFreeformWorkspace)
         freeformHackHelper.isInFreeformWorkspace = false
     }
-
-    @Test
-    fun testSetTouchAbsorberActive() {
-        Assert.assertFalse(freeformHackHelper.isTouchAbsorberActive)
-        freeformHackHelper.isTouchAbsorberActive = true
-        Assert.assertTrue(freeformHackHelper.isTouchAbsorberActive)
-        freeformHackHelper.isTouchAbsorberActive = false
-    }
 }

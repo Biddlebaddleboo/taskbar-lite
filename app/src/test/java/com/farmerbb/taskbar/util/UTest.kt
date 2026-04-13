@@ -438,12 +438,6 @@ class UTest {
     @Test
     @Config(qualifiers = "sw720dp")
     fun testGetBaseTaskbarSizeWithSW720dp() {
-        PowerMockito.spy(U::class.java)
-        val isSystemTrayEnabledAnswer = BooleanAnswer()
-        PowerMockito.`when`(U.isSystemTrayEnabled(context)).thenAnswer(isSystemTrayEnabledAnswer)
-        isSystemTrayEnabledAnswer.answer = false
-        // The only difference of the different screen size, is the initial taskbar size.
-        // So we only test the different in this test method.
         var initialSize = context.resources.getDimension(R.dimen.tb_base_size_start_plus_divider)
         initialSize += context.resources.getDimension(R.dimen.tb_base_size_collapse_button)
         Assert.assertEquals(initialSize, U.getBaseTaskbarSize(context), 0f)
@@ -451,18 +445,9 @@ class UTest {
 
     @Test
     fun testGetBaseTaskbarSizeWithNormalDimension() {
-        PowerMockito.spy(U::class.java)
-        val isSystemTrayEnabledAnswer = BooleanAnswer()
-        PowerMockito.`when`(U.isSystemTrayEnabled(context)).thenAnswer(isSystemTrayEnabledAnswer)
-        isSystemTrayEnabledAnswer.answer = false
         var initialSize = context.resources.getDimension(R.dimen.tb_base_size_start_plus_divider)
         initialSize += context.resources.getDimension(R.dimen.tb_base_size_collapse_button)
         Assert.assertEquals(initialSize, U.getBaseTaskbarSize(context), 0f)
-        val prefs = U.getSharedPreferences(context)
-        isSystemTrayEnabledAnswer.answer = true
-        val systemTraySize = context.resources.getDimension(R.dimen.tb_systray_size)
-        Assert.assertEquals(initialSize + systemTraySize,
-                U.getBaseTaskbarSize(context), 0f)
     }
 
     @Test
@@ -794,36 +779,6 @@ class UTest {
         canBootToFreeformAnswer.answer = true
         shouldLaunchTouchAbsorberAnswer.answer = true
         Assert.assertFalse(U.isDesktopIconsEnabled(context))
-    }
-
-    @Test
-    @Config(sdk = [22])
-    fun testIsSystemTrayEnabledForMBelowVersion() {
-        val prefs = U.getSharedPreferences(context)
-        prefs.edit()
-                .putBoolean(Constants.PREF_SYS_TRAY, true)
-                .putBoolean(Constants.PREF_FULL_LENGTH, true)
-                .apply()
-        Assert.assertFalse(U.isSystemTrayEnabled(context))
-        prefs.edit().remove(Constants.PREF_SYS_TRAY).remove(Constants.PREF_FULL_LENGTH).apply()
-    }
-
-    @Test
-    fun testIsSystemTrayEnabledForMAndAboveVersion() {
-        val prefs = U.getSharedPreferences(context)
-        Assert.assertFalse(U.isSystemTrayEnabled(context))
-        prefs.edit().putBoolean(Constants.PREF_SYS_TRAY, true).apply()
-        Assert.assertTrue(U.isSystemTrayEnabled(context))
-        prefs.edit().putBoolean(Constants.PREF_FULL_LENGTH, false).apply()
-        Assert.assertFalse(U.isSystemTrayEnabled(context))
-        prefs.edit().putBoolean(Constants.PREF_FULL_LENGTH, true).apply()
-        Assert.assertTrue(U.isSystemTrayEnabled(context))
-        prefs.edit()
-                .putString(Constants.PREF_POSITION, Constants.POSITION_BOTTOM_VERTICAL_LEFT)
-                .putBoolean(Constants.PREF_ANCHOR, false)
-                .apply()
-        Assert.assertFalse(U.isSystemTrayEnabled(context))
-        prefs.edit().remove(Constants.PREF_POSITION).remove(Constants.PREF_ANCHOR).apply()
     }
 
     @Test

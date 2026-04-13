@@ -20,7 +20,6 @@
     <string name="tb_right_arrow" translatable="false">&#10095;</string>
     <string name="tb_x" translatable="false">&#215;</string>
     <string name="tb_infinity" translatable="false">&#8734;</string>
-    <string name="tb_systray_clock" translatable="false">%1$s\n%2$s</string>
     <string name="tb_adb_shell_command" translatable="false">adb shell pm grant %1$s %2$s</string>
 
     <string-array name="tb_pref_window_size_list">

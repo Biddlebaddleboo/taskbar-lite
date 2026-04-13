@@ -24,7 +24,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.WindowManager;
 
 import com.farmerbb.taskbar.service.NotificationService;
@@ -56,13 +55,6 @@ public class InvisibleActivityFreeform extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             doNotHide = false;
-        }
-    };
-
-    private final BroadcastReceiver finishReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            reallyFinish();
         }
     };
 
@@ -111,25 +103,7 @@ public class InvisibleActivityFreeform extends Activity {
                 ACTION_START_MENU_DISAPPEARING,
                 ACTION_CONTEXT_MENU_DISAPPEARING);
 
-        U.registerReceiver(this, finishReceiver, ACTION_FINISH_FREEFORM_ACTIVITY);
-
         helper.setFreeformHackActive(true);
-
-        // Show power button warning on CyanogenMod / LineageOS devices
-        if(getPackageManager().hasSystemFeature("com.cyanogenmod.android")) {
-            SharedPreferences pref = U.getSharedPreferences(this);
-            if(!pref.getString(PREF_POWER_BUTTON_WARNING, "null").equals(Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID))) {
-                U.newHandler().postDelayed(() -> {
-                    if(helper.isInFreeformWorkspace()) {
-                        Intent intent = U.getThemedIntent(this, InvisibleActivityAlt.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        intent.putExtra("power_button_warning", true);
-
-                        U.startActivityMaximized(U.getDisplayContext(this), intent);
-                    }
-                }, 100);
-            }
-        }
 
         showTaskbar = true;
     }
@@ -160,7 +134,6 @@ public class InvisibleActivityFreeform extends Activity {
 
         U.unregisterReceiver(this, appearingReceiver);
         U.unregisterReceiver(this, disappearingReceiver);
-        U.unregisterReceiver(this, finishReceiver);
 
         cleanup();
     }
@@ -171,7 +144,7 @@ public class InvisibleActivityFreeform extends Activity {
 
         FreeformHackHelper.getInstance().setInFreeformWorkspace(true);
 
-        if(U.launcherIsDefault(this) && !U.isChromeOs(this)) {
+        if(!U.isChromeOs(this)) {
             LauncherHelper.getInstance().setOnPrimaryHomeScreen(true);
             bootToFreeform = true;
 
@@ -240,12 +213,7 @@ public class InvisibleActivityFreeform extends Activity {
     private void possiblyHideTaskbar() {
         if(!doNotHide) {
             U.newHandler().postDelayed(() -> {
-                if(U.shouldCollapse(this, false)
-                        && !LauncherHelper.getInstance().isOnHomeScreen(this)) {
-                    U.sendBroadcast(this, ACTION_HIDE_TASKBAR);
-                } else {
-                    U.sendBroadcast(this, ACTION_HIDE_START_MENU);
-                }
+                U.sendBroadcast(this, ACTION_HIDE_START_MENU);
             }, 100);
         }
     }

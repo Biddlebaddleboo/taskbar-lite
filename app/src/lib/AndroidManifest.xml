@@ -96,14 +96,6 @@
             android:documentLaunchMode="always"
             android:excludeFromRecents="true"
             android:theme="@style/Taskbar.Incognito"/>
-        <activity
-            android:name=".activity.TouchAbsorberActivity"
-            android:process=":libtaskbar"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|layoutDirection"
-            android:theme="@style/Taskbar.Incognito"/>
     </application>
 
 </manifest>

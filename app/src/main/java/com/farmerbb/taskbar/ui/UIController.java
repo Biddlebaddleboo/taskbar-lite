@@ -22,7 +22,6 @@ import android.view.View;
 import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.util.CompatUtils;
-import com.farmerbb.taskbar.util.TaskbarPosition;
 import com.farmerbb.taskbar.util.U;
 
 import static com.farmerbb.taskbar.util.Constants.*;
@@ -62,7 +61,7 @@ public abstract class UIController {
                 && U.getCurrentApiVersion() < 33.0f
                 && !U.isChromeOs(context)
                 && !U.isShowHideNavbarSupported()
-                && TaskbarPosition.isBottom(context) ? U.getNavbarHeight(context) : -1;
+                ? U.getNavbarHeight(context) : -1;
     }
 
     protected void applyMarginFix(UIHost host, View layout, ViewParams params) {

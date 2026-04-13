@@ -55,7 +55,6 @@ import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.helper.DisplayHelper;
 import com.farmerbb.taskbar.helper.GlobalHelper;
 import com.farmerbb.taskbar.util.Callbacks;
-import com.farmerbb.taskbar.util.TaskbarPosition;
 import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.service.StartMenuService;
 import com.farmerbb.taskbar.service.TaskbarService;
@@ -111,13 +110,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         @Override
         public void onReceive(Context context, Intent intent) {
             forceTaskbarStart = true;
-        }
-    };
-
-    private final BroadcastReceiver freeformToggleReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            updateWindowFlags();
         }
     };
 
@@ -219,23 +211,12 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
 
         layout.setFitsSystemWindows(true);
 
-        if((this instanceof HomeActivity
-                || U.isLauncherPermanentlyEnabled(this))) {
-            setContentView(layout);
-
-            pref.edit()
-                    .putBoolean(PREF_LAUNCHER, true)
-                    .apply();
-        } else
-            killHomeActivity();
+        setContentView(layout);
 
         updateWindowFlags();
 
         U.registerReceiver(this, killReceiver, ACTION_KILL_HOME_ACTIVITY);
         U.registerReceiver(this, forceTaskbarStartReceiver, ACTION_FORCE_TASKBAR_RESTART);
-
-        U.registerReceiver(this, freeformToggleReceiver,
-                ACTION_TOUCH_ABSORBER_STATE_CHANGED);
 
         if(isDesktopIconsEnabled) {
             U.registerReceiver(this, refreshDesktopIconsReceiver, ACTION_REFRESH_DESKTOP_ICONS);
@@ -255,22 +236,9 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
     protected void onResume() {
         super.onResume();
 
-        if(U.canBootToFreeform(this)) {
-            if(U.launcherIsDefault(this))
-                startFreeformHack();
-            else {
-                U.showToastLong(this, R.string.tb_set_as_default_home);
-
-                Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-                homeIntent.addCategory(Intent.CATEGORY_HOME);
-                homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                try {
-                    startActivity(homeIntent);
-                    finish();
-                } catch (ActivityNotFoundException ignored) {}
-            }
-        } else
+        if(U.canBootToFreeform(this))
+            startFreeformHack();
+        else
             performOnResumeLogic();
     }
 
@@ -295,7 +263,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
                     }, 250);
                 } else
                     startTaskbar();
-            } else if(U.launcherIsDefault(this))
+            } else
                 startFreeformHack();
         } else if(!waitingForPermission)
             dialog = U.showPermissionDialog(U.wrapContext(this), new Callbacks(
@@ -345,10 +313,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
 
         SharedPreferences pref = U.getSharedPreferences(this);
         if(!U.canBootToFreeform(this)) {
-            if(U.shouldCollapse(this, false)) {
-                U.sendBroadcast(this, ACTION_TEMP_HIDE_TASKBAR);
-            }
-
             // Stop the Taskbar and Start Menu services if they should normally not be active
             if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
                 stopService(new Intent(this, TaskbarService.class));
@@ -375,7 +339,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
 
         U.unregisterReceiver(this, killReceiver);
         U.unregisterReceiver(this, forceTaskbarStartReceiver);
-        U.unregisterReceiver(this, freeformToggleReceiver);
 
         if(isDesktopIconsEnabled) {
             U.unregisterReceiver(this, refreshDesktopIconsReceiver);
@@ -418,10 +381,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
 
     private void updateWindowFlags() {
         int flags = WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-        if(FreeformHackHelper.getInstance().isTouchAbsorberActive() && U.isOverridingFreeformHack(this))
-            getWindow().setFlags(flags, flags);
-        else
-            getWindow().clearFlags(flags);
+        getWindow().clearFlags(flags);
     }
 
     @Override
@@ -467,7 +427,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
     private void refreshDesktopIcons() {
         if(desktopIcons == null) return;
 
-        boolean taskbarIsVertical = TaskbarPosition.isVertical(this);
+        boolean taskbarIsVertical = false;
         int iconSize = getResources().getDimensionPixelSize(R.dimen.tb_icon_size);
         int desktopIconSize = getResources().getDimensionPixelSize(R.dimen.tb_start_menu_grid_width);
 
@@ -670,7 +630,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
     private void updateMargins() {
         if(desktopIcons == null || fab == null) return;
 
-        String position = TaskbarPosition.getTaskbarPosition(this);
         int iconSize = getResources().getDimensionPixelSize(R.dimen.tb_icon_size);
 
         int left = 0;
@@ -678,14 +637,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         int right = 0;
         int bottom = 0;
 
-        if(TaskbarPosition.isVerticalLeft(position))
-            left = iconSize;
-        else if(TaskbarPosition.isVerticalRight(position))
-            right = iconSize;
-        else if(TaskbarPosition.isBottom(position))
-            bottom = iconSize;
-        else
-            top = iconSize;
+        bottom = iconSize;
 
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,

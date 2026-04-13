@@ -19,23 +19,6 @@
     android:layout_height="wrap_content"
     android:orientation="vertical" >
 
-    <LinearLayout android:layout_width="@dimen/tb_icon_size"
-                  android:layout_height="24dp"
-                  android:layout_gravity="center_horizontal"
-                  android:clickable="true"
-                  android:id="@+id/hide_taskbar_button_layout_alt" >
-
-        <Button
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginLeft="21dp"
-            android:textSize="20dp"
-            android:background="@null"
-            android:rotation="90"
-            android:id="@+id/hide_taskbar_button_alt" />
-
-    </LinearLayout>
-
     <Space
         android:id="@+id/space_alt"
         android:layout_height="4dp"
@@ -94,23 +77,4 @@
         android:id="@+id/space"
         android:layout_height="4dp"
         android:layout_width="match_parent" />
-
-    <LinearLayout
-        android:layout_width="@dimen/tb_icon_size"
-        android:layout_height="24dp"
-        android:layout_gravity="center_horizontal"
-        android:clickable="true"
-        android:id="@+id/hide_taskbar_button_layout" >
-
-        <Button
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginLeft="21dp"
-            android:textSize="20dp"
-            android:background="@null"
-            android:rotation="90"
-            android:id="@+id/hide_taskbar_button" />
-
-    </LinearLayout>
-
 </LinearLayout>
