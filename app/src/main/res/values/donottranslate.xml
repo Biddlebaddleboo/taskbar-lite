@@ -29,29 +29,6 @@
         <item>list</item>
     </string-array>
 
-    <string-array name="tb_pref_recents_amount_values">
-        <item>past_day</item>
-        <item>app_start</item>
-        <item>show_all</item>
-    </string-array>
-    <string-array name="tb_pref_recents_amount_values_alt">
-        <item>past_day</item>
-        <item>app_start</item>
-        <item>show_all</item>
-        <item>running_apps_only</item>
-    </string-array>
-
-    <string-array name="tb_pref_sort_order_values">
-        <item>false</item>
-        <item>true</item>
-        <item>most_used_false</item>
-        <item>most_used_true</item>
-    </string-array>
-    <string-array name="tb_pref_sort_order_values_alt">
-        <item>false</item>
-        <item>true</item>
-    </string-array>
-
     <string-array name="tb_pref_position_list_values">
         <item>bottom_left</item>
         <item>bottom_vertical_left</item>
@@ -86,12 +63,6 @@
         <item>half_left</item>
         <item>half_right</item>
         <item>phone_size</item>
-    </string-array>
-
-    <string-array name="tb_pref_show_search_bar_list_values">
-        <item>always</item>
-        <item>keyboard</item>
-        <item>never</item>
     </string-array>
 
     <string-array name="tb_pref_start_button_image_list">

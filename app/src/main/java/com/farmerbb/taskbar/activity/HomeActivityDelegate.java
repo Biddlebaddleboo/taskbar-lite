@@ -40,7 +40,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.util.SparseArray;
 import android.view.Display;
 import android.view.DragEvent;
-import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -58,11 +57,9 @@ import com.farmerbb.taskbar.helper.DisplayHelper;
 import com.farmerbb.taskbar.helper.GlobalHelper;
 import com.farmerbb.taskbar.util.Callbacks;
 import com.farmerbb.taskbar.util.TaskbarPosition;
-import com.farmerbb.taskbar.service.DashboardService;
 import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.service.StartMenuService;
 import com.farmerbb.taskbar.service.TaskbarService;
-import com.farmerbb.taskbar.ui.DashboardController;
 import com.farmerbb.taskbar.ui.UIHost;
 import com.farmerbb.taskbar.ui.ViewParams;
 import com.farmerbb.taskbar.ui.StartMenuController;
@@ -90,7 +87,6 @@ import static com.farmerbb.taskbar.util.Constants.*;
 public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
     private TaskbarController taskbarController;
     private StartMenuController startMenuController;
-    private DashboardController dashboardController;
 
     private FrameLayout layout;
     private GridLayout desktopIcons;
@@ -114,8 +110,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
     private boolean isWallpaperEnabled;
     private boolean isTaskVirtualDisplay;
 
-    private GestureDetector detector;
-
     private final BroadcastReceiver killReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -135,17 +129,13 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         public void onReceive(Context context, Intent intent) {
             if(taskbarController != null) taskbarController.onRecreateHost(HomeActivityDelegate.this);
             if(startMenuController != null) startMenuController.onRecreateHost(HomeActivityDelegate.this);
-            if(dashboardController != null) dashboardController.onRecreateHost(HomeActivityDelegate.this);
         }
     };
 
     private final BroadcastReceiver freeformToggleReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(isDesktopIconsEnabled == U.isDesktopIconsEnabled(HomeActivityDelegate.this))
-                updateWindowFlags();
-            else
-                recreate();
+            updateWindowFlags();
         }
     };
 
@@ -224,7 +214,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         super.onCreate(savedInstanceState);
         SharedPreferences pref = U.getSharedPreferences(this);
 
-        isSecondaryHome = this instanceof SecondaryHomeActivity;
+        isSecondaryHome = false;
         if(isSecondaryHome) {
             windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
             Display display = windowManager.getDefaultDisplay();
@@ -232,7 +222,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
             isTaskVirtualDisplay = display.getName().startsWith("TaskVirtualDisplay");
 
             if(display.getDisplayId() == Display.DEFAULT_DISPLAY
-                    || (!U.isDesktopModeActive(this) && !U.isLibrary(this))) {
+                    || !U.isLibrary(this)) {
                 finish();
                 return;
             }
@@ -287,7 +277,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
             layout.addView(wallpaper);
         }
 
-        isDesktopIconsEnabled = !isTaskVirtualDisplay && U.isDesktopIconsEnabled(this);
+        isDesktopIconsEnabled = false;
         if(isDesktopIconsEnabled) {
             layout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
@@ -323,79 +313,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
 
         layout.setFitsSystemWindows(true);
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P 
-                && isDesktopIconsEnabled
-                && !U.isLibrary(this)) {
-            detector = new GestureDetector(this, new GestureDetector.OnGestureListener() {
-                @Override
-                public boolean onSingleTapUp(MotionEvent e) {
-                    return false;
-                }
-
-                @Override
-                public void onShowPress(MotionEvent e) {}
-
-                @Override
-                public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-                    return false;
-                }
-
-                @Override
-                public void onLongPress(MotionEvent e) {}
-
-                @Override
-                public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                    return false;
-                }
-
-                @Override
-                public boolean onDown(MotionEvent e) {
-                    return false;
-                }
-            });
-
-            detector.setOnDoubleTapListener(new GestureDetector.OnDoubleTapListener() {
-                @Override
-                public boolean onDoubleTap(MotionEvent e) {
-                    if(!pref.getBoolean(PREF_DONT_SHOW_DOUBLE_TAP_DIALOG, false)
-                            && !isSecondaryHome) {
-                        if(pref.getBoolean(PREF_DOUBLE_TAP_TO_SLEEP, false)) {
-                            U.lockDevice(HomeActivityDelegate.this);
-                        } else {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(U.wrapContext(HomeActivityDelegate.this));
-                            builder.setTitle(R.string.tb_double_tap_to_sleep)
-                                    .setMessage(R.string.tb_enable_double_tap_to_sleep)
-                                    .setNegativeButton(pref.getBoolean(PREF_DOUBLE_TAP_DIALOG_SHOWN, false)
-                                            ? R.string.tb_action_dont_show_again
-                                            : R.string.tb_action_cancel, (dialog, which) -> pref.edit().putBoolean(pref.getBoolean(PREF_DOUBLE_TAP_DIALOG_SHOWN, false)
-                                            ? PREF_DONT_SHOW_DOUBLE_TAP_DIALOG
-                                            : PREF_DOUBLE_TAP_DIALOG_SHOWN, true).apply())
-                                    .setPositiveButton(R.string.tb_action_ok, (dialog, which) -> {
-                                        pref.edit().putBoolean(PREF_DOUBLE_TAP_TO_SLEEP, true).apply();
-                                        U.lockDevice(HomeActivityDelegate.this);
-                                    });
-
-                            AlertDialog dialog = builder.create();
-                            dialog.show();
-                        }
-                    }
-
-                    return false;
-                }
-
-                @Override
-                public boolean onDoubleTapEvent(MotionEvent e) {
-                    return false;
-                }
-
-                @Override
-                public boolean onSingleTapConfirmed(MotionEvent e) {
-                    return false;
-                }
-
-            });
-        }
-
         if((this instanceof HomeActivity
                 || isSecondaryHome
                 || U.isLauncherPermanentlyEnabled(this))) {
@@ -410,8 +327,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
             }
 
             pref.edit()
-                    .putBoolean(PREF_LAUNCHER, !isSecondaryHome)
-                    .putBoolean(PREF_DESKTOP_MODE, U.isDesktopModeSupported(this) && isSecondaryHome)
+                    .putBoolean(PREF_LAUNCHER, true)
                     .apply();
         } else
             killHomeActivity();
@@ -522,31 +438,23 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
             editor.putBoolean(PREF_FIRST_RUN, false);
             editor.putBoolean(PREF_COLLAPSED, true);
             editor.apply();
-
-            dialog = U.showRecentAppsDialog(U.wrapContext(this), new Callbacks(
-                    () -> dialog = U.showErrorDialog(U.wrapContext(this), "GET_USAGE_STATS"),
-                    null));
         }
 
         if(isSecondaryHome) {
             // Stop any currently running services and switch to using HomeActivityDelegate as UI host
             stopService(new Intent(this, TaskbarService.class));
             stopService(new Intent(this, StartMenuService.class));
-            stopService(new Intent(this, DashboardService.class));
 
             taskbarController = new TaskbarController(this);
             startMenuController = new StartMenuController(this);
-            dashboardController = new DashboardController(this);
 
             taskbarController.onCreateHost(this);
             startMenuController.onCreateHost(this);
-            dashboardController.onCreateHost(this);
         } else {
             // We always start the Taskbar and Start Menu services, even if the app isn't normally running
             try {
                 startService(new Intent(this, TaskbarService.class));
                 startService(new Intent(this, StartMenuService.class));
-                startService(new Intent(this, DashboardService.class));
             } catch (IllegalStateException ignored) {}
         }
 
@@ -578,7 +486,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
             if(isSecondaryHome) {
                 if(taskbarController != null) taskbarController.onDestroyHost(this);
                 if(startMenuController != null) startMenuController.onDestroyHost(this);
-                if(dashboardController != null) dashboardController.onDestroyHost(this);
 
                 U.clearCaches(this);
 
@@ -586,16 +493,12 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
                 if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !pref.getBoolean(PREF_IS_HIDDEN, false)) {
                     startService(new Intent(this, TaskbarService.class));
                     startService(new Intent(this, StartMenuService.class));
-                    startService(new Intent(this, DashboardService.class));
                 }
             } else {
                 // Stop the Taskbar and Start Menu services if they should normally not be active
                 if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
                     stopService(new Intent(this, TaskbarService.class));
                     stopService(new Intent(this, StartMenuService.class));
-
-                    if(!pref.getBoolean(PREF_DONT_STOP_DASHBOARD, false))
-                        stopService(new Intent(this, DashboardService.class));
 
                     U.clearCaches(this);
                 }
@@ -655,7 +558,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
         if(isSecondaryHome) {
             if(taskbarController != null) taskbarController.onDestroyHost(this);
             if(startMenuController != null) startMenuController.onDestroyHost(this);
-            if(dashboardController != null) dashboardController.onDestroyHost(this);
 
             U.clearCaches(this);
             U.stopFreeformHack(this);
@@ -665,7 +567,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
             if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !pref.getBoolean(PREF_IS_HIDDEN, false)) {
                 startService(new Intent(this, TaskbarService.class));
                 startService(new Intent(this, StartMenuService.class));
-                startService(new Intent(this, DashboardService.class));
             }
         } else {
             // Stop the Taskbar and Start Menu services if they should normally not be active
@@ -673,7 +574,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
             if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
                 stopService(new Intent(this, TaskbarService.class));
                 stopService(new Intent(this, StartMenuService.class));
-                stopService(new Intent(this, DashboardService.class));
 
                 U.clearCaches(this);
                 U.stopFreeformHack(this);
@@ -843,9 +743,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
             });
 
             iconContainer.setOnTouchListener((v, event) -> {
-                if(detector != null)
-                    detector.onTouchEvent(event);
-
                 return false;
             });
 
@@ -1022,7 +919,7 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
     }
 
     private void openContextMenu(final DesktopIconInfo info, final int[] location) {
-        if(iconArrangeMode) return;
+        if(iconArrangeMode || info == null || info.entry == null) return;
 
         Bundle args = new Bundle();
         args.putSerializable("app_entry", info.entry);

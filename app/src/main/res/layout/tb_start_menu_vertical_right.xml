@@ -16,7 +16,6 @@
 
 <com.farmerbb.taskbar.widget.StartMenuLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/start_menu_layout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -52,46 +51,6 @@
                             android:textSize="@dimen/tb_start_menu_no_apps_found_text"
                             android:textColor="?tb_text_color"
                             android:text="@string/tb_loading_apps" />
-
-                </FrameLayout>
-
-                <FrameLayout
-                    android:id="@+id/search_view_layout"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="1dp"
-                    android:paddingRight="1dp"
-                    android:paddingBottom="1dp" >
-
-                        <LinearLayout
-                            android:id="@+id/search_view_child_layout"
-                            android:layout_width="@dimen/tb_start_menu_width"
-                            android:layout_height="wrap_content"
-                            android:background="?tb_start_menu_background" >
-
-                                <androidx.appcompat.widget.SearchView
-                                    android:id="@+id/search"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    app:queryBackground="@android:color/transparent"
-                                    app:iconifiedByDefault="false" />
-
-                                <LinearLayout
-                                    android:id="@+id/power_button"
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
-                                    android:clickable="true" >
-
-                                        <ImageView
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:layout_gravity="center"
-                                            android:src="@drawable/tb_more_vert" />
-
-                                </LinearLayout>
-
-                        </LinearLayout>
 
                 </FrameLayout>
 

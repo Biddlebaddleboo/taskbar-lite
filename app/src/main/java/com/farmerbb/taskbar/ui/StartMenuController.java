@@ -17,8 +17,6 @@ package com.farmerbb.taskbar.ui;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.SearchManager;
-import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -27,32 +25,21 @@ import android.content.SharedPreferences;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.UserHandle;
 import android.os.UserManager;
 
 import androidx.annotation.VisibleForTesting;
-import androidx.appcompat.widget.SearchView;
-import android.util.Patterns;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.webkit.URLUtil;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.GridView;
-import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import com.farmerbb.taskbar.R;
@@ -82,17 +69,12 @@ public class StartMenuController extends UIController {
 
     private StartMenuLayout layout;
     private GridView startMenu;
-    private SearchView searchView;
     private TextView textView;
     private PackageManager pm;
     private StartMenuAdapter adapter;
 
     private Handler handler;
     private Thread thread;
-
-    private boolean hasSubmittedQuery = false;
-    private boolean hasHardwareKeyboard = false;
-    private boolean searchViewClicked = false;
 
     private List<String> currentStartMenuIds = new ArrayList<>();
 
@@ -164,8 +146,6 @@ public class StartMenuController extends UIController {
     @TargetApi(Build.VERSION_CODES.M)
     @Override
     public void onCreateHost(UIHost host) {
-        hasHardwareKeyboard = context.getResources().getConfiguration().keyboard != Configuration.KEYBOARD_NOKEYS;
-
         init(context, host, () -> drawStartMenu(host));
     }
 
@@ -173,7 +153,6 @@ public class StartMenuController extends UIController {
         IconCache.getInstance(context).clearCache();
 
         final SharedPreferences pref = U.getSharedPreferences(context);
-        boolean shouldShowSearchBox = shouldShowSearchBox(pref, hasHardwareKeyboard);
 
         // Initialize layout params
         WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -183,7 +162,7 @@ public class StartMenuController extends UIController {
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 -1,
-                shouldShowSearchBox ? 0 : WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
                 getBottomMargin(context)
         );
 
@@ -195,11 +174,9 @@ public class StartMenuController extends UIController {
         // Initialize views
         layout = (StartMenuLayout) LayoutInflater.from(U.wrapContext(context)).inflate(layoutId, null);
         layout.setAlpha(0);
+        layout.viewHandlesBackButton();
 
         startMenu = layout.findViewById(R.id.start_menu);
-
-        if((shouldShowSearchBox && !hasHardwareKeyboard) || Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1)
-            layout.viewHandlesBackButton();
 
         boolean scrollbar = pref.getBoolean(PREF_SCROLLBAR, false);
         startMenu.setFastScrollEnabled(scrollbar);
@@ -221,120 +198,16 @@ public class StartMenuController extends UIController {
             startMenu.setLayoutParams(startMenuParams);
         }
 
-        searchView = layout.findViewById(R.id.search);
-        searchViewClicked = false;
-
         int backgroundTint = U.getBackgroundTint(context);
 
         FrameLayout startMenuFrame = layout.findViewById(R.id.start_menu_frame);
-        FrameLayout searchViewLayout = layout.findViewById(R.id.search_view_layout);
         startMenuFrame.setBackgroundColor(backgroundTint);
-        searchViewLayout.setBackgroundColor(backgroundTint);
+        startMenu.setOnItemClickListener((viewParent, view, position, id) -> {
+            hideStartMenu(true);
 
-        if(shouldShowSearchBox) {
-            if(!hasHardwareKeyboard) searchView.setIconifiedByDefault(true);
-
-            searchView.setOnTouchListener((v, event) -> {
-                searchViewClicked = true;
-                return false;
-            });
-
-            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                @Override
-                public boolean onQueryTextSubmit(String query) {
-                    if(!hasSubmittedQuery) {
-                        ListAdapter adapter = startMenu.getAdapter();
-                        if(adapter != null) {
-                            hasSubmittedQuery = true;
-
-                            if(adapter.getCount() > 0) {
-                                View view = adapter.getView(0, null, startMenu);
-                                LinearLayout layout = view.findViewById(R.id.entry);
-                                layout.performClick();
-                            } else {
-                                if(U.shouldCollapse(context, true)) {
-                                    U.sendBroadcast(context, ACTION_HIDE_TASKBAR);
-                                } else {
-                                    hideStartMenu(true);
-                                }
-
-                                Intent intent = generateQueryWebSearchIntent(query);
-                                if(intent.resolveActivity(context.getPackageManager()) != null) {
-                                    context.startActivity(intent);
-                                } else {
-                                    intent = generateQueryGoogleIntent(query);
-                                    try {
-                                        context.startActivity(intent);
-                                    } catch (ActivityNotFoundException ignored) {}
-                                }
-                            }
-                        }
-                    }
-                    return true;
-                }
-
-                @Override
-                public boolean onQueryTextChange(String newText) {
-                    searchView.setIconified(false);
-
-                    View closeButton = searchView.findViewById(com.google.android.material.R.id.search_close_btn);
-                    if(closeButton != null) closeButton.setVisibility(View.GONE);
-
-                    refreshApps(newText, false);
-
-                    if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) {
-                        U.newHandler().postDelayed(() -> {
-                            EditText editText = searchView.findViewById(com.google.android.material.R.id.search_src_text);
-                            if(editText != null) {
-                                editText.requestFocus();
-                                editText.setSelection(editText.getText().length());
-                            }
-                        }, 50);
-                    }
-
-                    return true;
-                }
-            });
-
-            searchView.setImeOptions(EditorInfo.IME_ACTION_DONE | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-
-            LinearLayout powerButton = layout.findViewById(R.id.power_button);
-            powerButton.setOnClickListener(view -> {
-                int[] location = new int[2];
-                view.getLocationOnScreen(location);
-                openContextMenu(location);
-            });
-
-            powerButton.setOnGenericMotionListener((view, motionEvent) -> {
-                if(motionEvent.getAction() == MotionEvent.ACTION_BUTTON_PRESS
-                        && motionEvent.getButtonState() == MotionEvent.BUTTON_SECONDARY) {
-                    int[] location = new int[2];
-                    view.getLocationOnScreen(location);
-                    openContextMenu(location);
-                }
-                return false;
-            });
-
-            searchViewLayout.setOnClickListener(view -> searchView.setIconified(false));
-
-            startMenu.setOnItemClickListener((viewParent, view, position, id) -> {
-                hideStartMenu(true);
-
-                AppEntry entry = (AppEntry) viewParent.getAdapter().getItem(position);
-                U.launchApp(context, entry, null, false, false, view);
-            });
-
-            View childLayout = layout.findViewById(R.id.search_view_child_layout);
-            if(pref.getBoolean(PREF_TRANSPARENT_START_MENU, false))
-                childLayout.setBackgroundColor(0);
-
-            if(isGrid) {
-                ViewGroup.LayoutParams childLayoutParams = childLayout.getLayoutParams();
-                childLayoutParams.width = (int) (childLayoutParams.width * (columns / 3f));
-                childLayout.setLayoutParams(childLayoutParams);
-            }
-        } else
-            searchViewLayout.setVisibility(View.GONE);
+            AppEntry entry = (AppEntry) viewParent.getAdapter().getItem(position);
+            U.launchApp(context, entry, null, false, false, view);
+        });
 
         applyMarginFix(host, layout, params);
 
@@ -351,23 +224,6 @@ public class StartMenuController extends UIController {
         refreshApps(true);
 
         host.addView(layout, params);
-    }
-
-    @VisibleForTesting
-    boolean shouldShowSearchBox(SharedPreferences pref, boolean hasHardwareKeyboard) {
-        boolean shouldShowSearchBox;
-        switch(pref.getString(PREF_SHOW_SEARCH_BAR, "always")) {
-            case "always":
-                shouldShowSearchBox = true;
-                break;
-            case "keyboard":
-                shouldShowSearchBox = hasHardwareKeyboard;
-                break;
-            default:
-                shouldShowSearchBox = false;
-                break;
-        }
-        return shouldShowSearchBox;
     }
 
     @VisibleForTesting
@@ -411,42 +267,7 @@ public class StartMenuController extends UIController {
         }
     }
 
-    @VisibleForTesting
-    Intent generateQueryWebSearchIntent(String query) {
-        Intent intent;
-        if(Patterns.WEB_URL.matcher(query).matches()) {
-            intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(URLUtil.guessUrl(query)));
-        } else {
-            intent = new Intent(Intent.ACTION_WEB_SEARCH);
-            intent.putExtra(SearchManager.QUERY, query);
-        }
-
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        return intent;
-    }
-
-    @VisibleForTesting
-    Intent generateQueryGoogleIntent(String query) {
-        Intent intent;
-        Uri uri = new Uri.Builder()
-                .scheme("https")
-                .authority("www.google.com")
-                .path("search")
-                .appendQueryParameter("q", query)
-                .build();
-
-        intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(uri);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        return intent;
-    }
-
     private void refreshApps(boolean firstDraw) {
-        refreshApps(null, firstDraw);
-    }
-
-    private void refreshApps(final String query, final boolean firstDraw) {
         if(thread != null) thread.interrupt();
 
         handler = U.newHandler();
@@ -494,30 +315,16 @@ public class StartMenuController extends UIController {
             list.addAll(topAppsList);
             list.addAll(allAppsList);
 
-            topAppsList.clear();
-            allAppsList.clear();
-
-            List<LauncherActivityInfo> queryList;
-            if(query == null)
-                queryList = list;
-            else {
-                queryList = new ArrayList<>();
-                for(LauncherActivityInfo appInfo : list) {
-                    if(appInfo.getLabel().toString().toLowerCase().contains(query.toLowerCase()))
-                        queryList.add(appInfo);
-                }
-            }
-
             // Now that we've generated the list of apps,
             // we need to determine if we need to redraw the start menu or not
             boolean shouldRedrawStartMenu = false;
             List<String> finalApplicationIds = new ArrayList<>();
 
-            if(query == null && !firstDraw) {
-                for(LauncherActivityInfo appInfo : queryList) {
-                    finalApplicationIds.add(appInfo.getApplicationInfo().packageName);
-                }
+            for(LauncherActivityInfo appInfo : list) {
+                finalApplicationIds.add(appInfo.getApplicationInfo().packageName);
+            }
 
+            if(!firstDraw) {
                 if(finalApplicationIds.size() != currentStartMenuIds.size())
                     shouldRedrawStartMenu = true;
                 else {
@@ -531,41 +338,34 @@ public class StartMenuController extends UIController {
             } else shouldRedrawStartMenu = true;
 
             if(shouldRedrawStartMenu) {
-                if(query == null) currentStartMenuIds = finalApplicationIds;
+                currentStartMenuIds = finalApplicationIds;
 
                 final List<AppEntry> entries =
-                        generateAppEntries(context, userManager, pm, queryList);
+                        generateAppEntries(context, userManager, pm, list);
 
                 handler.post(() -> {
-                    String queryText = searchView.getQuery().toString();
-                    if(query == null && queryText.length() == 0
-                            || query != null && query.equals(queryText)) {
+                    if(firstDraw) {
+                        SharedPreferences pref = U.getSharedPreferences(context);
+                        if(pref.getString(PREF_START_MENU_LAYOUT, "grid").equals("grid")) {
+                            startMenu.setNumColumns(context.getResources().getInteger(R.integer.tb_start_menu_columns));
+                            adapter = new StartMenuAdapter(context, R.layout.tb_row_alt, entries);
+                        } else
+                            adapter = new StartMenuAdapter(context, R.layout.tb_row, entries);
 
-                        if(firstDraw) {
-                            SharedPreferences pref = U.getSharedPreferences(context);
-                            if(pref.getString(PREF_START_MENU_LAYOUT, "grid").equals("grid")) {
-                                startMenu.setNumColumns(context.getResources().getInteger(R.integer.tb_start_menu_columns));
-                                adapter = new StartMenuAdapter(context, R.layout.tb_row_alt, entries);
-                            } else
-                                adapter = new StartMenuAdapter(context, R.layout.tb_row, entries);
-
-                            startMenu.setAdapter(adapter);
-                        }
-
-                        int position = startMenu.getFirstVisiblePosition();
-
-                        if(!firstDraw && adapter != null)
-                            adapter.updateList(entries);
-
-                        startMenu.setSelection(position);
-
-                        if(adapter != null && adapter.getCount() > 0)
-                            textView.setText(null);
-                        else if(query != null)
-                            textView.setText(context.getString(Patterns.WEB_URL.matcher(query).matches() ? R.string.tb_press_enter_alt : R.string.tb_press_enter));
-                        else
-                            textView.setText(context.getString(R.string.tb_nothing_to_see_here));
+                        startMenu.setAdapter(adapter);
                     }
+
+                    int position = startMenu.getFirstVisiblePosition();
+
+                    if(!firstDraw && adapter != null)
+                        adapter.updateList(entries);
+
+                    startMenu.setSelection(position);
+
+                    if(adapter != null && adapter.getCount() > 0)
+                        textView.setText(null);
+                    else
+                        textView.setText(context.getString(R.string.tb_nothing_to_see_here));
                 });
             }
         });
@@ -619,7 +419,7 @@ public class StartMenuController extends UIController {
             layout.setOnClickListener(ocl);
             layout.setVisibility(View.VISIBLE);
 
-            if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1 && !hasHardwareKeyboard)
+            if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1)
                 layout.setAlpha(1);
 
             MenuHelper.getInstance().setStartMenuOpen(true);
@@ -649,50 +449,11 @@ public class StartMenuController extends UIController {
                     context.startActivity(intent);
             }
 
-            EditText editText = searchView.findViewById(com.google.android.material.R.id.search_src_text);
-            if(searchView.getVisibility() == View.VISIBLE) {
-                if(hasHardwareKeyboard) {
-                    searchView.setIconifiedByDefault(true);
-
-                    if(editText != null)
-                        editText.setShowSoftInputOnFocus(false);
-                } else
-                    searchView.requestFocus();
-            }
-
             refreshApps(false);
 
             U.newHandler().postDelayed(() -> {
-                if(Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1 || hasHardwareKeyboard)
+                if(Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1)
                     layout.setAlpha(1);
-
-                if(hasHardwareKeyboard) {
-                    searchView.setIconifiedByDefault(false);
-                    if(editText != null)
-                        editText.setShowSoftInputOnFocus(true);
-
-                    searchView.requestFocus();
-                }
-
-                searchView.setOnQueryTextFocusChangeListener((view, b) -> {
-                    if(!hasHardwareKeyboard) {
-                        ViewGroup.LayoutParams params1 = startMenu.getLayoutParams();
-                        params1.height = context.getResources().getDimensionPixelSize(
-                                b && isImeFixDisabled()
-                                        ? R.dimen.tb_start_menu_height_half
-                                        : R.dimen.tb_start_menu_height);
-                        startMenu.setLayoutParams(params1);
-                    }
-
-                    if(!b && !(U.isBlissOs(context) && Build.VERSION.SDK_INT == Build.VERSION_CODES.P)) {
-                        if(hasHardwareKeyboard && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                            hideStartMenu(true);
-                        } else {
-                            InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                        }
-                    }
-                });
 
                 InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(layout.getWindowToken(), 0);
@@ -711,16 +472,6 @@ public class StartMenuController extends UIController {
 
             layout.postDelayed(() -> {
                 layout.setVisibility(View.GONE);
-
-                if(searchViewClicked || hasHardwareKeyboard) {
-                    if(!hasHardwareKeyboard)
-                        searchView.setQuery(null, false);
-
-                    searchView.setIconified(true);
-                }
-
-                searchView.setOnQueryTextFocusChangeListener(null);
-                hasSubmittedQuery = false;
 
                 if(shouldReset) {
                     startMenu.smoothScrollBy(0, 0);
@@ -769,21 +520,4 @@ public class StartMenuController extends UIController {
         }
     }
 
-    private void openContextMenu(final int[] location) {
-        hideStartMenu(false);
-
-        Bundle args = new Bundle();
-        args.putBoolean("launched_from_start_menu", true);
-        args.putBoolean("is_overflow_menu", true);
-        args.putInt("x", location[0]);
-        args.putInt("y", location[1]);
-
-        U.newHandler().postDelayed(() -> U.startContextMenuActivity(context, args), shouldDelay() ? 100 : 0);
-    }
-
-    private boolean shouldDelay() {
-        return U.hasFreeformSupport(context)
-                && U.isFreeformModeEnabled(context)
-                && !FreeformHackHelper.getInstance().isFreeformHackActive();
-    }
 }

@@ -18,14 +18,12 @@ package com.farmerbb.taskbar.fragment;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.Preference;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import com.farmerbb.taskbar.BuildConfig;
 import com.farmerbb.taskbar.R;
@@ -69,16 +67,7 @@ public class AboutFragment extends SettingsFragment {
         else
             getPreferenceScreen().removePreference(findPreference(PREF_PREF_SCREEN_FREEFORM));
 
-        if(U.isDesktopModeSupported(getActivity()) && !isLibrary) {
-            findPreference(PREF_PREF_SCREEN_DESKTOP_MODE).setOnPreferenceClickListener(this);
-            findPreference(PREF_PREF_SCREEN_DESKTOP_MODE).setIcon(getDesktopModeDrawable());
-        } else
-            getPreferenceScreen().removePreference(findPreference(PREF_PREF_SCREEN_DESKTOP_MODE));
-
         findPreference(PREF_PREF_SCREEN_GENERAL).setOnPreferenceClickListener(this);
-        findPreference(PREF_PREF_SCREEN_APPEARANCE).setOnPreferenceClickListener(this);
-        findPreference(PREF_PREF_SCREEN_RECENT_APPS).setOnPreferenceClickListener(this);
-        findPreference(PREF_PREF_SCREEN_ADVANCED).setOnPreferenceClickListener(this);
 
         if(!isLibrary) {
             Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("America/Denver"));
@@ -145,30 +134,11 @@ public class AboutFragment extends SettingsFragment {
             case PREF_PREF_SCREEN_GENERAL:
                 navigateTo(new GeneralFragment());
                 break;
-            case PREF_PREF_SCREEN_APPEARANCE:
-                navigateTo(new AppearanceFragment());
-                break;
-            case PREF_PREF_SCREEN_RECENT_APPS:
-                navigateTo(new RecentAppsFragment());
-                break;
             case PREF_PREF_SCREEN_FREEFORM:
                 navigateTo(new FreeformModeFragment());
-                break;
-            case PREF_PREF_SCREEN_DESKTOP_MODE:
-                navigateTo(new DesktopModeFragment());
-                break;
-            case PREF_PREF_SCREEN_ADVANCED:
-                navigateTo(new AdvancedFragment());
                 break;
         }
 
         return super.onPreferenceClick(p);
-    }
-
-    private Drawable getDesktopModeDrawable() {
-        Drawable loadedIcon = ContextCompat.getDrawable(getActivity(), R.drawable.tb_desktop_mode);
-        if(loadedIcon == null) return null;
-
-        return U.resizeDrawable(getActivity(), loadedIcon, R.dimen.tb_settings_icon_size);
     }
 }

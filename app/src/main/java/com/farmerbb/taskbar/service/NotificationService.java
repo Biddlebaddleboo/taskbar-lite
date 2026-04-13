@@ -29,12 +29,10 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.IBinder;
-import android.service.quicksettings.TileService;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import com.farmerbb.taskbar.activity.MainActivity;
 import com.farmerbb.taskbar.R;
-import com.farmerbb.taskbar.util.DependencyUtils;
 import com.farmerbb.taskbar.util.U;
 
 import static com.farmerbb.taskbar.util.Constants.*;
@@ -53,7 +51,6 @@ public class NotificationService extends Service {
         if(intent != null && intent.getBooleanExtra(EXTRA_START_SERVICES, false)) {
             startService(new Intent(this, TaskbarService.class));
             startService(new Intent(this, StartMenuService.class));
-            startService(new Intent(this, DashboardService.class));
         }
 
         return START_STICKY;
@@ -64,7 +61,6 @@ public class NotificationService extends Service {
         public void onReceive(Context context, Intent intent) {
             startService(new Intent(context, TaskbarService.class));
             startService(new Intent(context, StartMenuService.class));
-            startService(new Intent(context, DashboardService.class));
         }
     };
 
@@ -73,7 +69,6 @@ public class NotificationService extends Service {
         public void onReceive(Context context, Intent intent) {
             stopService(new Intent(context, TaskbarService.class));
             stopService(new Intent(context, StartMenuService.class));
-            stopService(new Intent(context, DashboardService.class));
 
             U.clearCaches(context);
         }
@@ -128,7 +123,7 @@ public class NotificationService extends Service {
 
                 String showHideLabel;
 
-                if(U.canEnableFreeform(this) && !U.isChromeOs(this) && !pref.getBoolean(PREF_DESKTOP_MODE, false)) {
+                if(U.canEnableFreeform(this) && !U.isChromeOs(this)) {
                     String freeformLabel = getString(pref.getBoolean(PREF_FREEFORM_HACK, false) ? R.string.tb_freeform_off : R.string.tb_freeform_on);
 
                     Intent freeformIntent = new Intent(ACTION_TOGGLE_FREEFORM_MODE);
@@ -149,11 +144,6 @@ public class NotificationService extends Service {
 
                 U.sendBroadcast(this, ACTION_UPDATE_SWITCH);
 
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                    TileService.requestListeningState(this, new ComponentName(getPackageName(), QuickSettingsTileService.class.getName()));
-
-                DependencyUtils.requestTaskerQuery(this);
-
                 if(!isHidden) {
                     registerReceiver(userForegroundReceiver, new IntentFilter(Intent.ACTION_USER_FOREGROUND));
                     registerReceiver(userBackgroundReceiver, new IntentFilter(Intent.ACTION_USER_BACKGROUND));
@@ -173,11 +163,6 @@ public class NotificationService extends Service {
             pref.edit().remove(PREF_IS_RESTARTING).apply();
         else {
             U.sendBroadcast(this, ACTION_UPDATE_SWITCH);
-
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                TileService.requestListeningState(this, new ComponentName(getPackageName(), QuickSettingsTileService.class.getName()));
-
-            DependencyUtils.requestTaskerQuery(this);
 
             if(!U.launcherIsDefault(this) || U.isChromeOs(this))
                 U.stopFreeformHack(this);

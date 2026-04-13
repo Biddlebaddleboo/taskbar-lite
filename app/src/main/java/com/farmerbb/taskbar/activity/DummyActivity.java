@@ -18,20 +18,14 @@ package com.farmerbb.taskbar.activity;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.UserManager;
-import android.provider.Settings;
 import android.view.View;
-import android.widget.Toast;
 
-import com.farmerbb.taskbar.R;
-import com.farmerbb.taskbar.util.ApplicationType;
 import com.farmerbb.taskbar.util.Callbacks;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.util.U;
@@ -73,33 +67,6 @@ public class DummyActivity extends Activity {
                 try {
                     startActivity(intent);
                 } catch (ActivityNotFoundException ignored) {}
-            } else if(getIntent().hasExtra("accessibility")) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(U.wrapContext(this));
-                builder.setTitle(R.string.tb_permission_dialog_title)
-                        .setMessage(R.string.tb_enable_accessibility)
-                        .setNegativeButton(R.string.tb_action_cancel, (dialog, which) -> U.newHandler().post(this::finish))
-                        .setPositiveButton(R.string.tb_action_activate, (dialog, which) -> {
-                            Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-
-                            SharedPreferences pref = U.getSharedPreferences(this);
-                            if(pref.getBoolean(PREF_DISABLE_ANIMATIONS, false))
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-
-                            U.launchApp(this, () -> {
-                                try {
-                                    startActivity(intent, U.getActivityOptionsBundle(this, ApplicationType.APP_PORTRAIT, null));
-                                    U.showToast(this, getString(R.string.tb_usage_stats_message, U.getAppName(this)), Toast.LENGTH_LONG);
-                                } catch (ActivityNotFoundException e) {
-                                    U.showToast(this, R.string.tb_lock_device_not_supported);
-
-                                    finish();
-                                }
-                            });
-                        });
-
-                AlertDialog dialog = builder.create();
-                dialog.show();
-                dialog.setCancelable(false);
             } else if(getIntent().hasExtra(EXTRA_START_FREEFORM_HACK)) {
                 if(U.hasFreeformSupport(this)
                         && U.isFreeformModeEnabled(this)
@@ -110,8 +77,6 @@ public class DummyActivity extends Activity {
                 finish();
             } else if(getIntent().hasExtra(EXTRA_SHOW_PERMISSION_DIALOG))
                 U.showPermissionDialog(U.wrapContext(this), new Callbacks(null, this::finish));
-            else if(getIntent().hasExtra(EXTRA_SHOW_RECENT_APPS_DIALOG))
-                U.showRecentAppsDialog(U.wrapContext(this), new Callbacks(null, this::finish));
             else if(!finishOnPause)
                 finish();
         }

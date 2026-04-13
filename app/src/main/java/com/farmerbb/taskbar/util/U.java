@@ -16,14 +16,12 @@
 package com.farmerbb.taskbar.util;
 
 import android.Manifest;
-import android.accessibilityservice.AccessibilityService;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityOptions;
 import android.app.AlertDialog;
-import android.app.AppOpsManager;
 import android.app.Service;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
@@ -85,9 +83,7 @@ import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.helper.MenuHelper;
 import com.farmerbb.taskbar.helper.ToastHelper;
-import com.farmerbb.taskbar.service.DashboardService;
 import com.farmerbb.taskbar.service.NotificationService;
-import com.farmerbb.taskbar.service.PowerMenuService;
 import com.farmerbb.taskbar.service.StartMenuService;
 import com.farmerbb.taskbar.service.TaskbarService;
 
@@ -215,80 +211,6 @@ public class U {
         dialog.setCancelable(false);
 
         return dialog;
-    }
-
-    @TargetApi(Build.VERSION_CODES.P)
-    public static void lockDevice(Context context) {
-        sendAccessibilityAction(context, AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN);
-    }
-
-    public static void sendAccessibilityAction(Context context, int action) {
-        sendAccessibilityAction(context, action, null);
-    }
-
-    public static void sendAccessibilityAction(Context context, int action, Runnable onComplete) {
-        setComponentEnabled(context, PowerMenuService.class, true);
-
-        boolean isAccessibilityServiceEnabled = isAccessibilityServiceEnabled(context);
-
-        if(!isAccessibilityServiceEnabled
-                && hasWriteSecureSettingsPermission(context)) {
-            String services = Settings.Secure.getString(context.getContentResolver(),
-                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
-
-            String finalServices = services == null ? "" : services;
-
-            String powerMenuService = new ComponentName(context, PowerMenuService.class).flattenToString();
-
-            if(!finalServices.contains(powerMenuService)) {
-                try {
-                    Settings.Secure.putString(context.getContentResolver(),
-                            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-                            finalServices.isEmpty()
-                                    ? powerMenuService
-                                    : finalServices + ":" + powerMenuService);
-                } catch (Exception ignored) {}
-            }
-
-            newHandler().postDelayed(() -> {
-                Intent intent = new Intent(ACTION_ACCESSIBILITY_ACTION);
-                intent.putExtra(EXTRA_ACTION, action);
-                sendBroadcast(context, intent);
-
-                try {
-                    Settings.Secure.putString(context.getContentResolver(),
-                            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-                            finalServices);
-                } catch (Exception ignored) {}
-
-                if(onComplete != null) onComplete.run();
-            }, 100);
-        } else if(isAccessibilityServiceEnabled) {
-            Intent intent = new Intent(ACTION_ACCESSIBILITY_ACTION);
-            intent.putExtra(EXTRA_ACTION, action);
-            sendBroadcast(context, intent);
-
-            if(onComplete != null) onComplete.run();
-        } else {
-            launchApp(context, () -> {
-                Intent intent = new Intent(context, DummyActivity.class);
-                intent.putExtra("accessibility", true);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-
-                try {
-                    context.startActivity(intent, getActivityOptionsBundle(context, ApplicationType.APP_PORTRAIT, null));
-                } catch (IllegalArgumentException | SecurityException ignored) {}
-            });
-        }
-    }
-
-    public static boolean isAccessibilityServiceEnabled(Context context) {
-        String accessibilityServices = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
-        ComponentName component = new ComponentName(context, PowerMenuService.class);
-
-        return accessibilityServices != null
-                && (accessibilityServices.contains(component.flattenToString())
-                || accessibilityServices.contains(component.flattenToShortString()));
     }
 
     public static boolean hasWriteSecureSettingsPermission(Context context) {
@@ -718,46 +640,13 @@ public class U {
         }
     }
 
-    private static int getMaxNumOfColumns(Context context) {
-        SharedPreferences pref = getSharedPreferences(context);
-        DisplayInfo display = getDisplayInfo(context);
-        float density = display.currentDensity / 160.0f;
-        float baseTaskbarSize = getBaseTaskbarSize(context) / density;
-        int numOfColumns = 0;
-
-        float maxScreenSize = TaskbarPosition.isVertical(context)
-                ? (display.height - getStatusBarHeight(context)) / density
-                : display.width / density;
-
-        float iconSize = context.getResources().getDimension(R.dimen.tb_icon_size) / density;
-
-        int userMaxNumOfColumns = Integer.parseInt(pref.getString(PREF_MAX_NUM_OF_RECENTS, "10"));
-
-        while(baseTaskbarSize + iconSize < maxScreenSize
-                && numOfColumns < userMaxNumOfColumns) {
-            baseTaskbarSize = baseTaskbarSize + iconSize;
-            numOfColumns++;
-        }
-
-        return numOfColumns;
-    }
-
-    public static int getMaxNumOfEntries(Context context) {
-        SharedPreferences pref = getSharedPreferences(context);
-        return pref.getBoolean(PREF_DISABLE_SCROLLING_LIST, false)
-                ? getMaxNumOfColumns(context)
-                : Integer.parseInt(pref.getString(PREF_MAX_NUM_OF_RECENTS, "10"));
-    }
-
     public static int getStatusBarHeight(Context context) {
-        return LauncherHelper.getInstance().isOnSecondaryHomeScreen(context)
-                ? 0 : getSystemDimen(context, "status_bar_height");
+        return getSystemDimen(context, "status_bar_height");
     }
 
     public static int getNavbarHeight(Context context) {
         SharedPreferences pref = getSharedPreferences(context);
         boolean isNavbarHidden = isShowHideNavbarSupported()
-                && LauncherHelper.getInstance().isOnSecondaryHomeScreen(context)
                 && pref.getBoolean(PREF_AUTO_HIDE_NAVBAR_DESKTOP_MODE, false);
 
         return isNavbarHidden ? 0 : getSystemDimen(context, "navigation_bar_height");
@@ -776,59 +665,6 @@ public class U {
 
     public static void refreshPinnedIcons(Context context) {
         IconCache.getInstance(context).clearCache();
-
-        PinnedBlockedApps pba = PinnedBlockedApps.getInstance(context);
-        List<AppEntry> pinnedAppsList = new ArrayList<>(pba.getPinnedApps());
-        List<AppEntry> blockedAppsList = new ArrayList<>(pba.getBlockedApps());
-        PackageManager pm = context.getPackageManager();
-
-        pba.clear(context);
-
-        for(AppEntry entry : pinnedAppsList) {
-            UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);
-            LauncherApps launcherApps = (LauncherApps) context.getSystemService(Context.LAUNCHER_APPS_SERVICE);
-
-            final List<UserHandle> userHandles = userManager.getUserProfiles();
-            LauncherActivityInfo appInfo = null;
-
-            for(UserHandle handle : userHandles) {
-                List<LauncherActivityInfo> list = launcherApps.getActivityList(entry.getPackageName(), handle);
-                if(!list.isEmpty()) {
-                    // Google App workaround
-                    if(!entry.getPackageName().equals("com.google.android.googlequicksearchbox"))
-                        appInfo = list.get(0);
-                    else {
-                        boolean added = false;
-                        for(LauncherActivityInfo info : list) {
-                            if(info.getName().equals("com.google.android.googlequicksearchbox.SearchActivity")) {
-                                appInfo = info;
-                                added = true;
-                            }
-                        }
-
-                        if(!added) appInfo = list.get(0);
-                    }
-
-                    break;
-                }
-            }
-
-            if(appInfo != null) {
-                AppEntry newEntry = new AppEntry(
-                        entry.getPackageName(),
-                        entry.getComponentName(),
-                        entry.getLabel(),
-                        IconCache.getInstance(context).getIcon(context, pm, appInfo),
-                        true);
-
-                newEntry.setUserId(entry.getUserId(context));
-                pba.addPinnedApp(context, newEntry);
-            }
-        }
-
-        for(AppEntry entry : blockedAppsList) {
-            pba.addBlockedApp(context, entry);
-        }
     }
 
     public static boolean canEnableFreeform(Context context) {
@@ -836,13 +672,6 @@ public class U {
     }
 
     public static boolean canEnableFreeform(Context context, boolean allowOverride) {
-        if(getCurrentApiVersion() == 31.0f && !displayDefaultsToFreeform(context, getExternalDisplay(context))) {
-            if(!allowOverride) return false;
-
-            SharedPreferences pref = getSharedPreferences(context);
-            return pref.getBoolean(PREF_OVERRIDE_FREEFORM_UNSUPPORTED, false);
-        }
-
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
     }
 
@@ -872,12 +701,6 @@ public class U {
     }
 
     public static boolean isServiceRunning(Context context, Class<? extends Service> cls) {
-        if(LauncherHelper.getInstance().isOnSecondaryHomeScreen(context)
-                && (cls.equals(TaskbarService.class)
-                || cls.equals(StartMenuService.class)
-                || cls.equals(DashboardService.class)))
-            return true;
-
         return isServiceRunning(context, cls.getName());
     }
 
@@ -1186,29 +1009,6 @@ public class U {
         baseTaskbarSize += pref.getBoolean(PREF_ALT_BUTTON_CONFIG, false)
                 ? context.getResources().getDimension(R.dimen.tb_base_size_collapse_button) : 0;
 
-        boolean navbarButtonsEnabled = false;
-
-        if(getBooleanPrefWithDefault(context, PREF_DASHBOARD))
-            baseTaskbarSize += context.getResources().getDimension(R.dimen.tb_dashboard_button_size);
-
-        if(pref.getBoolean(PREF_BUTTON_BACK, false)) {
-            navbarButtonsEnabled = true;
-            baseTaskbarSize += context.getResources().getDimension(R.dimen.tb_icon_size);
-        }
-
-        if(pref.getBoolean(PREF_BUTTON_HOME, false)) {
-            navbarButtonsEnabled = true;
-            baseTaskbarSize += context.getResources().getDimension(R.dimen.tb_icon_size);
-        }
-
-        if(pref.getBoolean(PREF_BUTTON_RECENTS, false)) {
-            navbarButtonsEnabled = true;
-            baseTaskbarSize += context.getResources().getDimension(R.dimen.tb_icon_size);
-        }
-
-        if(navbarButtonsEnabled)
-            baseTaskbarSize += context.getResources().getDimension(R.dimen.tb_navbar_buttons_margin);
-
         return baseTaskbarSize;
     }
 
@@ -1238,14 +1038,12 @@ public class U {
     private static void startTaskbarService(Context context, boolean fullRestart) {
         context.startService(new Intent(context, TaskbarService.class));
         context.startService(new Intent(context, StartMenuService.class));
-        context.startService(new Intent(context, DashboardService.class));
         if(fullRestart) context.startService(new Intent(context, NotificationService.class));
     }
 
     private static void stopTaskbarService(Context context, boolean fullRestart) {
         context.stopService(new Intent(context, TaskbarService.class));
         context.stopService(new Intent(context, StartMenuService.class));
-        context.stopService(new Intent(context, DashboardService.class));
         if(fullRestart) context.stopService(new Intent(context, NotificationService.class));
     }
 
@@ -1287,8 +1085,7 @@ public class U {
 
     public static void showHideNavigationBar(Context context, int displayID, boolean show, int delay) {
         if(!isShowHideNavbarSupported()
-                || (!isDesktopModeActive(context)
-                && !isBlissOs(context)
+                || (!isBlissOs(context)
                 && !isProjectSakura(context)
                 && !hasSupportLibrary(context, 7))) {
             return;
@@ -1365,6 +1162,10 @@ public class U {
             stopFreeformHack(context);
         }
 
+        if(!pref.contains(PREF_LAUNCHER)) {
+            pref.edit().putBoolean(PREF_LAUNCHER, true).apply();
+        }
+
         // Customizations for BlissOS
         if(isAndroidGeneric(context) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && !pref.getBoolean(PREF_BLISS_OS_PREFS, false)) {
@@ -1375,13 +1176,6 @@ public class U {
             }
 
             editor.putString(PREF_START_BUTTON_IMAGE, PREF_START_BUTTON_IMAGE_APP_LOGO);
-            editor.putString(PREF_RECENTS_AMOUNT, PREF_RECENTS_AMOUNT_RUNNING_APPS_ONLY);
-            editor.putString(PREF_REFRESH_FREQUENCY, "0");
-            editor.putString(PREF_MAX_NUM_OF_RECENTS, "2147483647");
-            editor.putString(PREF_SORT_ORDER, "true");
-            editor.putBoolean(PREF_BUTTON_BACK, true);
-            editor.putBoolean(PREF_BUTTON_HOME, true);
-            editor.putBoolean(PREF_BUTTON_RECENTS, true);
             editor.putBoolean(PREF_AUTO_HIDE_NAVBAR, true);
             editor.putBoolean(PREF_SHORTCUT_ICON, false);
             editor.putBoolean(PREF_BLISS_OS_PREFS, true);
@@ -1393,10 +1187,6 @@ public class U {
                 && isSystemApp(context)
                 && !pref.getBoolean(PREF_ANDROID_X86_PREFS, false)) {
             pref.edit()
-                    .putString(PREF_RECENTS_AMOUNT, PREF_RECENTS_AMOUNT_RUNNING_APPS_ONLY)
-                    .putString(PREF_REFRESH_FREQUENCY, "0")
-                    .putString(PREF_MAX_NUM_OF_RECENTS, "2147483647")
-                    .putString(PREF_SORT_ORDER, "true")
                     .putBoolean(PREF_SHORTCUT_ICON, false)
                     .putBoolean(PREF_ANDROID_X86_PREFS, true)
                     .apply();
@@ -1464,12 +1254,7 @@ public class U {
     }
 
     private static int getTaskbarDisplayID(Context context) {
-        LauncherHelper helper = LauncherHelper.getInstance();
-
-        if(helper.isOnSecondaryHomeScreen(context))
-            return helper.getSecondaryDisplayId();
-        else
-            return Display.DEFAULT_DISPLAY;
+        return Display.DEFAULT_DISPLAY;
     }
 
     public static void pinAppShortcut(Context context) {
@@ -1523,7 +1308,7 @@ public class U {
         SharedPreferences pref = getSharedPreferences(context);
         return (!checkPref || isFreeformModeEnabled(context))
                 && ((isChromeOs(context) && (getChromeOsContextMenuFix(context)
-                || (pref.getBoolean(PREF_LAUNCHER, false) && launcherIsDefault(context))))
+                || (pref.getBoolean(PREF_LAUNCHER, true) && launcherIsDefault(context))))
                 || (!isChromeOs(context) && getCurrentApiVersion() >= 28.0f)
                 || (isChromeOs(context) && getCurrentApiVersion() >= 30.0f));
     }
@@ -1578,88 +1363,6 @@ public class U {
         }
     }
 
-    public static void showRecentAppsDialog(Context context) {
-        Callbacks callbacks = new Callbacks();
-        callbacks.onError = () -> showErrorDialog(context, "GET_USAGE_STATS", callbacks);
-
-        showRecentAppsDialog(context, callbacks);
-    }
-
-    public static AlertDialog showRecentAppsDialog(Context context, Callbacks callbacks) {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !isSystemApp(context)) {
-            ApplicationInfo applicationInfo = null;
-            try {
-                applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0);
-            } catch (PackageManager.NameNotFoundException ignored) {}
-
-            if(applicationInfo != null) {
-                AppOpsManager appOpsManager = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
-                int mode = appOpsManager.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, applicationInfo.uid, applicationInfo.packageName);
-
-                if(mode != AppOpsManager.MODE_ALLOWED) {
-                    AlertDialog.Builder builder;
-                    if(hasAndroidTVSettings(context))
-                        builder = buildRecentAppsDialogAndroidTV(context, callbacks);
-                    else
-                        builder = buildRecentAppsDialogStandard(context, callbacks);
-
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-                    dialog.setCancelable(false);
-
-                    return dialog;
-                }
-            }
-        }
-
-        callbacks.onFinish.run();
-        return null;
-    }
-
-    private static AlertDialog.Builder buildRecentAppsDialogStandard(Context context, Callbacks callbacks) {
-        String message = context.getString(R.string.tb_enable_recent_apps, getAppName(context))
-                + context.getString(R.string.tb_enable_recent_apps_instructions_phone);
-
-        return new AlertDialog.Builder(context)
-                .setTitle(R.string.tb_pref_header_recent_apps)
-                .setMessage(message)
-                .setPositiveButton(R.string.tb_action_ok, (dialog, which) -> {
-                    try {
-                        Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-
-                        LauncherHelper helper = LauncherHelper.getInstance();
-                        if(helper.isOnHomeScreen(context))
-                            applyOpenInNewWindow(context, intent);
-
-                        context.startActivity(intent);
-                        showToast(context, context.getString(R.string.tb_usage_stats_message, getAppName(context)), Toast.LENGTH_LONG);
-
-                        callbacks.onFinish.run();
-                    } catch (ActivityNotFoundException e) {
-                        callbacks.onError.run();
-                    }
-                })
-                .setNegativeButton(R.string.tb_action_cancel, (dialog, which) -> callbacks.onFinish.run());
-    }
-
-    private static AlertDialog.Builder buildRecentAppsDialogAndroidTV(Context context, Callbacks callbacks) {
-        String message = context.getString(R.string.tb_enable_recent_apps, getAppName(context))
-                + context.getString(R.string.tb_enable_recent_apps_instructions_tv);
-
-        return new AlertDialog.Builder(context)
-                .setTitle(R.string.tb_pref_header_recent_apps)
-                .setMessage(message)
-                .setPositiveButton(R.string.tb_action_open_settings, (dialog, which) -> {
-                    try {
-                        context.startActivity(new Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS));
-                        callbacks.onFinish.run();
-                    } catch (ActivityNotFoundException e) {
-                        callbacks.onError.run();
-                    }
-                })
-                .setNegativeButton(R.string.tb_action_cancel, (dialog, which) -> callbacks.onFinish.run());
-    }
-
     public static Context wrapContext(Context context) {
         int theme;
         if(isDarkTheme(context))
@@ -1690,10 +1393,7 @@ public class U {
     }
 
     public static boolean isExternalAccessDisabled(Context context) {
-        if(isLibrary(context)) return true;
-
-        SharedPreferences pref = getSharedPreferences(context);
-        return !pref.getBoolean(PREF_TASKER_ENABLED, true);
+        return false;
     }
 
     public static boolean enableFreeformModeShortcut(Context context) {
@@ -1821,9 +1521,7 @@ public class U {
     }
 
     public static boolean isDesktopIconsEnabled(Context context) {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1
-                && !canBootToFreeform(context, false)
-                && !shouldLaunchTouchAbsorber(context);
+        return false;
     }
 
     public static boolean isSystemTrayEnabled(Context context) {
@@ -1867,29 +1565,15 @@ public class U {
     }
 
     public static boolean isDesktopModeSupported(Context context) {
-        if(isLauncherPermanentlyEnabled(context) || isChromeOs(context) || isAndroidTV(context))
-            return false;
-
-        return Build.VERSION.SDK_INT > Build.VERSION_CODES.P
-                && context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_ACTIVITIES_ON_SECONDARY_DISPLAYS);
+        return false;
     }
 
     public static boolean isDesktopModePrefEnabled(Context context) {
-        if(!isDesktopModeSupported(context)) return false;
-
-        boolean desktopModePrefEnabled;
-
-        try {
-            desktopModePrefEnabled = Settings.Global.getInt(context.getContentResolver(), "force_desktop_mode_on_external_displays") == 1;
-        } catch (Settings.SettingNotFoundException e) {
-            desktopModePrefEnabled = false;
-        }
-
-        return desktopModePrefEnabled;
+        return false;
     }
 
     public static boolean isDesktopModeActive(Context context) {
-        return isDesktopModePrefEnabled(context) && getExternalDisplayID(context) != Display.DEFAULT_DISPLAY;
+        return false;
     }
 
     private static Display getExternalDisplay(Context context) {
@@ -2129,14 +1813,11 @@ public class U {
         if(isLibrary(context)) return true;
 
         SharedPreferences pref = getSharedPreferences(context);
-        return pref.getBoolean(PREF_DESKTOP_MODE, false) || pref.getBoolean(PREF_FREEFORM_HACK, false);
+        return pref.getBoolean(PREF_FREEFORM_HACK, false);
     }
 
     public static Context getDisplayContext(Context context) {
-        if(isDesktopModeActive(context))
-            return context.createDisplayContext(getExternalDisplay(context));
-        else
-            return context.getApplicationContext();
+        return context.getApplicationContext();
     }
 
     public static int getDisplayOrientation(Context context) {

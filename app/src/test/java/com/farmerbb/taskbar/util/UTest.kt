@@ -1,12 +1,10 @@
 package com.farmerbb.taskbar.util
 
 import android.Manifest
-import android.accessibilityservice.AccessibilityService
 import android.app.ActivityOptions
 import android.app.AlertDialog
 import android.app.Application
 import android.content.BroadcastReceiver
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -21,8 +19,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.farmerbb.taskbar.R
 import com.farmerbb.taskbar.helper.FreeformHackHelper
 import com.farmerbb.taskbar.mockito.BooleanAnswer
-import com.farmerbb.taskbar.mockito.IntAnswer
-import com.farmerbb.taskbar.service.PowerMenuService
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -142,79 +138,6 @@ class UTest {
         Assert.assertFalse(shadowDialog.isCancelable)
         button.performClick()
         Assert.assertTrue(onFinish.hasRun())
-    }
-
-    @Test
-    fun testSendAccessibilityActionWithServiceNotEnabledAndGrantedPermission() {
-        testSendAccessibilityAction(false, true, true)
-    }
-
-    @Test
-    fun testSendAccessibilityActionWithServiceEnabled() {
-        testSendAccessibilityAction(true, false, true)
-    }
-
-    @Test
-    fun testSendAccessibilityActionWithServiceNotEnabledAndWithoutPermission() {
-        testSendAccessibilityAction(false, false, false)
-    }
-
-    private fun testSendAccessibilityAction(
-        serviceEnabled: Boolean,
-        hasPermission: Boolean,
-        hasRun: Boolean
-    ) {
-        PowerMockito.spy(U::class.java)
-        PowerMockito.`when`(U.isAccessibilityServiceEnabled(context)).thenReturn(serviceEnabled)
-        PowerMockito.`when`(U.hasWriteSecureSettingsPermission(context)).thenReturn(hasPermission)
-        val onComplete = RunnableHooker()
-        U.sendAccessibilityAction(
-                context, AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN, onComplete
-        )
-        // Run all delayed message.
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
-        Assert.assertEquals(hasRun, onComplete.hasRun())
-    }
-
-    @Test
-    fun testIsAccessibilityServiceEnabled() {
-        val enabledServices = Settings.Secure.getString(
-                context.contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        )
-        val componentName = ComponentName(context, PowerMenuService::class.java)
-        val flattenString = componentName.flattenToString()
-        val flattenShortString = componentName.flattenToShortString()
-        val newEnabledService =
-                enabledServices
-                        ?.replace(":" + flattenString.toRegex(), "")
-                        ?.replace(":" + flattenShortString.toRegex(), "")
-                        ?.replace(flattenString.toRegex(), "")
-                        ?.replace(flattenShortString.toRegex(), "")
-                        ?: ""
-        Settings.Secure.putString(
-                context.contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-                newEnabledService
-        )
-        Assert.assertFalse(U.isAccessibilityServiceEnabled(context))
-        Settings.Secure.putString(
-                context.contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-                "$newEnabledService:$flattenString"
-        )
-        Assert.assertTrue(U.isAccessibilityServiceEnabled(context))
-        Settings.Secure.putString(
-                context.contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-                "$newEnabledService:$flattenShortString"
-        )
-        Assert.assertTrue(U.isAccessibilityServiceEnabled(context))
-        Settings.Secure.putString(
-                context.contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-                enabledServices
-        )
     }
 
     @Test
@@ -523,7 +446,6 @@ class UTest {
         // So we only test the different in this test method.
         var initialSize = context.resources.getDimension(R.dimen.tb_base_size_start_plus_divider)
         initialSize += context.resources.getDimension(R.dimen.tb_base_size_collapse_button)
-        initialSize += context.resources.getDimension(R.dimen.tb_dashboard_button_size)
         Assert.assertEquals(initialSize, U.getBaseTaskbarSize(context), 0f)
     }
 
@@ -537,28 +459,6 @@ class UTest {
         initialSize += context.resources.getDimension(R.dimen.tb_base_size_collapse_button)
         Assert.assertEquals(initialSize, U.getBaseTaskbarSize(context), 0f)
         val prefs = U.getSharedPreferences(context)
-        prefs.edit().putBoolean(Constants.PREF_DASHBOARD, true).apply()
-        val dashboardButtonSize = context.resources.getDimension(R.dimen.tb_dashboard_button_size)
-        Assert.assertEquals(initialSize + dashboardButtonSize,
-                U.getBaseTaskbarSize(context), 0f)
-        prefs.edit().remove(Constants.PREF_DASHBOARD).apply()
-        val navbarButtonsMargin = context.resources.getDimension(R.dimen.tb_navbar_buttons_margin)
-        val iconSize = context.resources.getDimension(R.dimen.tb_icon_size)
-        prefs.edit().putBoolean(Constants.PREF_BUTTON_BACK, true).apply()
-        Assert.assertEquals(
-                initialSize + navbarButtonsMargin + iconSize,
-                U.getBaseTaskbarSize(context), 0f)
-        prefs.edit().remove(Constants.PREF_BUTTON_BACK).apply()
-        prefs.edit().putBoolean(Constants.PREF_BUTTON_HOME, true).apply()
-        Assert.assertEquals(
-                initialSize + navbarButtonsMargin + iconSize,
-                U.getBaseTaskbarSize(context), 0f)
-        prefs.edit().remove(Constants.PREF_BUTTON_HOME).apply()
-        prefs.edit().putBoolean(Constants.PREF_BUTTON_RECENTS, true).apply()
-        Assert.assertEquals(
-                initialSize + navbarButtonsMargin + iconSize,
-                U.getBaseTaskbarSize(context), 0f)
-        prefs.edit().remove(Constants.PREF_BUTTON_RECENTS).apply()
         isSystemTrayEnabledAnswer.answer = true
         val systemTraySize = context.resources.getDimension(R.dimen.tb_systray_size)
         Assert.assertEquals(initialSize + systemTraySize,
@@ -588,9 +488,6 @@ class UTest {
                 Constants.PREF_START_BUTTON_IMAGE_APP_LOGO,
                 prefs.getString(Constants.PREF_START_BUTTON_IMAGE, "")
         )
-        Assert.assertTrue(prefs.getBoolean(Constants.PREF_BUTTON_BACK, false))
-        Assert.assertTrue(prefs.getBoolean(Constants.PREF_BUTTON_HOME, false))
-        Assert.assertTrue(prefs.getBoolean(Constants.PREF_BUTTON_RECENTS, false))
         Assert.assertTrue(prefs.getBoolean(Constants.PREF_AUTO_HIDE_NAVBAR, false))
         Assert.assertFalse(prefs.getBoolean(Constants.PREF_SHORTCUT_ICON, true))
         Assert.assertTrue(prefs.getBoolean(Constants.PREF_BLISS_OS_PREFS, false))
@@ -944,39 +841,6 @@ class UTest {
     fun testApplyDisplayCutoutModeToWithBelowVersion() {
         val layoutParams = WindowManager.LayoutParams()
         Assert.assertFalse(U.applyDisplayCutoutModeTo(layoutParams))
-    }
-
-    @Test
-    fun testIsDesktopModeActive() {
-        PowerMockito.spy(U::class.java)
-        val isDesktopModeSupportedAnswer = BooleanAnswer()
-        val getExternalDisplayIdAnswer = IntAnswer()
-        PowerMockito.`when`(U.isDesktopModeSupported(context))
-                .thenAnswer(isDesktopModeSupportedAnswer)
-        PowerMockito.`when`(U.getExternalDisplayID(context))
-                .thenAnswer(getExternalDisplayIdAnswer)
-        isDesktopModeSupportedAnswer.answer = false
-        Assert.assertFalse(U.isDesktopModeActive(context))
-        isDesktopModeSupportedAnswer.answer = true
-        Settings.Global.putInt(
-                context.contentResolver,
-                "force_desktop_mode_on_external_displays",
-                0
-        )
-        Assert.assertFalse(U.isDesktopModeActive(context))
-        Settings.Global.putInt(
-                context.contentResolver,
-                "force_desktop_mode_on_external_displays",
-                1
-        )
-        Assert.assertFalse(U.isDesktopModeActive(context))
-        getExternalDisplayIdAnswer.answer = 1
-        Assert.assertTrue(U.isDesktopModeActive(context))
-        Settings.Global.putInt(
-                context.contentResolver,
-                "force_desktop_mode_on_external_displays",
-                0
-        )
     }
 
     @Test

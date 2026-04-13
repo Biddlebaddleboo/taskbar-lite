@@ -35,7 +35,6 @@ public class DisableHomeReceiver extends BroadcastReceiver {
 
             U.setComponentEnabled(context, HomeActivity.class, false);
             U.sendBroadcast(context, ACTION_KILL_HOME_ACTIVITY);
-            U.sendBroadcast(context, ACTION_LAUNCHER_PREF_CHANGED);
         }
     }
 }

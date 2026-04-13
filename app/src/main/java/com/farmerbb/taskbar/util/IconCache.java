@@ -83,44 +83,11 @@ public class IconCache {
     }
 
     private Drawable loadIcon(Context context, PackageManager pm, LauncherActivityInfo appInfo) {
-        SharedPreferences pref = U.getSharedPreferences(context);
-        String iconPackPackage = pref.getString(PREF_ICON_PACK, context.getPackageName());
-        boolean useMask = pref.getBoolean(PREF_ICON_PACK_USE_MASK, false);
-        IconPackManager iconPackManager = IconPackManager.getInstance();
-
-        try {
-            pm.getPackageInfo(iconPackPackage, 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            iconPackPackage = context.getPackageName();
-            pref.edit().putString(PREF_ICON_PACK, iconPackPackage).apply();
-            U.refreshPinnedIcons(context);
-        }
-
-        if(iconPackPackage.equals(context.getPackageName()))
-            return getIcon(pm, appInfo);
-        else {
-            IconPack iconPack = iconPackManager.getIconPack(iconPackPackage);
-            String componentName = new ComponentName(appInfo.getApplicationInfo().packageName, appInfo.getName()).toString();
-
-            if(!useMask) {
-                Drawable icon = iconPack.getDrawableIconForPackage(context, componentName);
-                return icon == null ? getIcon(pm, appInfo) : icon;
-            } else {
-                Drawable drawable = getIcon(pm, appInfo);
-                if(drawable instanceof BitmapDrawable) {
-                    return new BitmapDrawable(context.getResources(),
-                            iconPack.getIconForPackage(context, componentName, ((BitmapDrawable) drawable).getBitmap()));
-                } else {
-                    Drawable icon = iconPack.getDrawableIconForPackage(context, componentName);
-                    return icon == null ? drawable : icon;
-                }
-            }
-        }
+        return getIcon(pm, appInfo);
     }
 
     public void clearCache() {
         drawables.evictAll();
-        IconPackManager.getInstance().nullify();
         System.gc();
     }
 

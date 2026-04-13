@@ -18,13 +18,9 @@ package com.farmerbb.taskbar.helper;
 import android.content.Context;
 import android.view.Display;
 
-import com.farmerbb.taskbar.util.U;
-
 public class LauncherHelper {
 
     private boolean onPrimaryHomeScreen = false;
-    private boolean onSecondaryHomeScreen = false;
-    private int secondaryDisplayId = -1;
 
     private static LauncherHelper theInstance;
 
@@ -41,20 +37,10 @@ public class LauncherHelper {
     }
 
     public boolean isOnSecondaryHomeScreen(Context context) {
-        return isOnHomeScreen(context, false);
+        return false;
     }
 
     private boolean isOnHomeScreen(Context context, boolean checkPrimary) {
-        boolean checkSecondary = true;
-        if(U.getExternalDisplayID(context) == Display.DEFAULT_DISPLAY)
-            checkSecondary = false;
-
-        if(checkPrimary && checkSecondary)
-            return onPrimaryHomeScreen || onSecondaryHomeScreen;
-
-        if(!checkPrimary && checkSecondary)
-            return onSecondaryHomeScreen;
-
         if(checkPrimary)
             return onPrimaryHomeScreen;
 
@@ -66,11 +52,9 @@ public class LauncherHelper {
     }
 
     public void setOnSecondaryHomeScreen(boolean value, int displayId) {
-        onSecondaryHomeScreen = value;
-        secondaryDisplayId = value ? displayId : -1;
     }
 
     public int getSecondaryDisplayId() {
-        return secondaryDisplayId;
+        return Display.DEFAULT_DISPLAY;
     }
 }

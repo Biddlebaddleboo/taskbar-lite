@@ -28,15 +28,12 @@ public class EnableHomeReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         SharedPreferences pref = U.getSharedPreferences(context);
-        if(intent.hasExtra(EXTRA_SECONDSCREEN) && pref.getBoolean(PREF_LAUNCHER, false))
-            pref.edit().putBoolean(PREF_SKIP_DISABLE_HOME_RECEIVER, true).apply();
-        else if(U.canDrawOverlays(context)) {
+        if(U.canDrawOverlays(context)) {
             SharedPreferences.Editor editor = pref.edit();
             editor.putBoolean(PREF_LAUNCHER, true);
             editor.apply();
 
             U.setComponentEnabled(context, HomeActivity.class, true);
-            U.sendBroadcast(context, ACTION_LAUNCHER_PREF_CHANGED);
         }
     }
 }

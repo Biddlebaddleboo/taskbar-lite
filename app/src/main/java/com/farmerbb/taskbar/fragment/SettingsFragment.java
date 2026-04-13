@@ -34,7 +34,6 @@ import androidx.annotation.XmlRes;
 
 import com.farmerbb.taskbar.BuildConfig;
 import com.farmerbb.taskbar.R;
-import com.farmerbb.taskbar.activity.ClearDataActivity;
 import com.farmerbb.taskbar.activity.MainActivity;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.helper.LauncherHelper;
@@ -137,16 +136,6 @@ public abstract class SettingsFragment extends PreferenceFragment implements Pre
                 boolean shouldRestart = true;
 
                 switch(preference.getKey()) {
-                    case PREF_THEME:
-                        if(U.isLibrary(getActivity())) break;
-
-                        // Restart MainActivity
-                        Intent intent = new Intent(getActivity(), MainActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        intent.putExtra("theme_change", true);
-                        startActivity(intent);
-                        getActivity().overridePendingTransition(0, 0);
-                        break;
                     case PREF_CHROME_OS_CONTEXT_MENU_FIX:
                         FreeformHackHelper helper = FreeformHackHelper.getInstance();
                         helper.setFreeformHackActive(false);
@@ -164,7 +153,7 @@ public abstract class SettingsFragment extends PreferenceFragment implements Pre
                         }
                         break;
                     case PREF_DISPLAY_DENSITY:
-                        boolean isOnHomeScreen = LauncherHelper.getInstance().isOnSecondaryHomeScreen(getActivity());
+                        boolean isOnHomeScreen = LauncherHelper.getInstance().isOnHomeScreen(getActivity());
                         int displayID = U.getExternalDisplayID(getActivity());
 
                         try {
@@ -182,7 +171,6 @@ public abstract class SettingsFragment extends PreferenceFragment implements Pre
                     case PREF_HIDE_ICON_LABELS:
                         U.sendBroadcast(getActivity(), ACTION_REFRESH_DESKTOP_ICONS);
                         break;
-                    case PREF_DASHBOARD:
                     case PREF_SYS_TRAY:
                         SharedPreferences pref2 = U.getSharedPreferences(getActivity());
                         pref2.edit().putBoolean(preference.getKey() + isModified, true).apply();
@@ -232,11 +220,6 @@ public abstract class SettingsFragment extends PreferenceFragment implements Pre
     @SuppressLint("SetTextI18n")
     @Override
     public boolean onPreferenceClick(final Preference p) {
-        if(p.getKey().equals(PREF_CLEAR_PINNED_APPS)) {
-            Intent clearIntent = U.getThemedIntent(getActivity(), ClearDataActivity.class);
-            startActivity(clearIntent);
-        }
-
         return true;
     }
 

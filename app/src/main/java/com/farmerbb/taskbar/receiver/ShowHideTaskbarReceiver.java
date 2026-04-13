@@ -20,7 +20,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import com.farmerbb.taskbar.activity.DummyActivity;
-import com.farmerbb.taskbar.service.DashboardService;
 import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.service.StartMenuService;
 import com.farmerbb.taskbar.service.TaskbarService;
@@ -41,7 +40,6 @@ public class ShowHideTaskbarReceiver extends BroadcastReceiver {
 
         Intent taskbarIntent = new Intent(context, TaskbarService.class);
         Intent startMenuIntent = new Intent(context, StartMenuService.class);
-        Intent dashboardIntent = new Intent(context, DashboardService.class);
         Intent notificationIntent = new Intent(context, NotificationService.class);
 
         if(pref.getBoolean(PREF_IS_HIDDEN, false)) {
@@ -66,7 +64,6 @@ public class ShowHideTaskbarReceiver extends BroadcastReceiver {
             if(!LauncherHelper.getInstance().isOnHomeScreen(context)) {
                 context.stopService(taskbarIntent);
                 context.stopService(startMenuIntent);
-                context.stopService(dashboardIntent);
 
                 U.clearCaches(context);
                 U.sendBroadcast(context, ACTION_START_MENU_DISAPPEARING);

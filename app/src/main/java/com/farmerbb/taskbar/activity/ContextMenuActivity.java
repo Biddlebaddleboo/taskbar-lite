@@ -15,7 +15,6 @@
 
 package com.farmerbb.taskbar.activity;
 
-import android.accessibilityservice.AccessibilityService;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.ActivityNotFoundException;
@@ -24,42 +23,30 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.content.pm.ShortcutInfo;
-import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.UserManager;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 
-import com.farmerbb.taskbar.BuildConfig;
 import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.util.TaskbarPosition;
 import com.farmerbb.taskbar.util.AppEntry;
 import com.farmerbb.taskbar.util.ApplicationType;
-import com.farmerbb.taskbar.util.DesktopIconInfo;
 import com.farmerbb.taskbar.util.DisplayInfo;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.util.IconCache;
 import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.helper.MenuHelper;
-import com.farmerbb.taskbar.util.PinnedBlockedApps;
 import com.farmerbb.taskbar.util.SavedWindowSizes;
 import com.farmerbb.taskbar.util.U;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-
-import java.io.File;
 import java.util.List;
 
 import static com.farmerbb.taskbar.util.Constants.*;
@@ -67,23 +54,21 @@ import static com.farmerbb.taskbar.util.Constants.*;
 public class ContextMenuActivity extends PreferenceActivity implements Preference.OnPreferenceClickListener {
 
     private AppEntry entry;
-    private DesktopIconInfo desktopIcon;
 
     boolean showStartMenu = false;
     boolean shouldHideTaskbar = false;
     boolean isStartButton = false;
-    boolean isOverflowMenu = false;
     boolean secondaryMenu = false;
-    boolean dashboardOrStartMenuAppearing = false;
+    boolean startMenuAppearing = false;
     boolean contextMenuFix = false;
     boolean showQuitOption = false;
 
     List<ShortcutInfo> shortcuts;
 
-    private final BroadcastReceiver dashboardOrStartMenuAppearingReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver startMenuAppearingReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            dashboardOrStartMenuAppearing = true;
+            startMenuAppearing = true;
             finish();
         }
     };
@@ -106,11 +91,9 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
 
         Bundle args = getIntent().getBundleExtra("args");
         entry = (AppEntry) args.getSerializable("app_entry");
-        desktopIcon = (DesktopIconInfo) args.getSerializable("desktop_icon");
 
         showStartMenu = args.getBoolean("launched_from_start_menu", false);
         isStartButton = entry == null && args.getBoolean("is_start_button", false);
-        isOverflowMenu = entry == null && args.getBoolean("is_overflow_menu", false);
         contextMenuFix = args.containsKey(EXTRA_CONTEXT_MENU_FIX);
         showQuitOption = !args.getBoolean("dont_show_quit", false);
 
@@ -129,11 +112,10 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
 
         int contextMenuWidth = getResources().getDimensionPixelSize(R.dimen.tb_context_menu_width);
 
-        if(showStartMenu || desktopIcon != null) {
+        if(showStartMenu) {
             int x = args.getInt("x", 0);
             int y = args.getInt("y", 0);
-            int offsetResourceId = isOverflowMenu ? R.dimen.tb_context_menu_offset_overflow : R.dimen.tb_context_menu_offset;
-            int offset = getResources().getDimensionPixelSize(offsetResourceId);
+            int offset = getResources().getDimensionPixelSize(R.dimen.tb_context_menu_offset);
 
             switch(TaskbarPosition.getTaskbarPosition(this)) {
                 case POSITION_BOTTOM_LEFT:
@@ -240,9 +222,8 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
 
         generateMenu();
 
-        U.registerReceiver(this, dashboardOrStartMenuAppearingReceiver,
-                ACTION_START_MENU_APPEARING,
-                ACTION_DASHBOARD_APPEARING);
+        U.registerReceiver(this, startMenuAppearingReceiver,
+                ACTION_START_MENU_APPEARING);
 
         U.registerReceiver(this, finishReceiver, ACTION_HIDE_CONTEXT_MENU);
     }
@@ -255,7 +236,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
             findPreference(PREF_START_MENU_APPS).setOnPreferenceClickListener(this);
 
             if(U.isFreeformModeEnabled(this)
-                    && !U.isDesktopIconsEnabled(this)
                     && ((U.launcherIsDefault(this)
                     && !U.isOverridingFreeformHack(this, false)
                     && FreeformHackHelper.getInstance().isInFreeformWorkspace())
@@ -269,39 +249,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
                 addPreferencesFromResource(R.xml.tb_pref_context_menu_quit);
                 findPreference(PREF_QUIT_TASKBAR).setOnPreferenceClickListener(this);
             }
-        } else if(isOverflowMenu) {
-            if(getResources().getConfiguration().screenWidthDp >= 600
-                    && Build.VERSION.SDK_INT <= Build.VERSION_CODES.M)
-                setTitle(R.string.tb_tools);
-            else {
-                addPreferencesFromResource(R.xml.tb_pref_context_menu_header);
-                findPreference(PREF_HEADER).setTitle(R.string.tb_tools);
-            }
-
-            addPreferencesFromResource(R.xml.tb_pref_context_menu_overflow);
-            findPreference(PREF_VOLUME).setOnPreferenceClickListener(this);
-            findPreference(PREF_SYSTEM_SETTINGS).setOnPreferenceClickListener(this);
-
-            if(!U.isLibrary(this))
-                findPreference(PREF_POWER_MENU).setOnPreferenceClickListener(this);
-            else
-                getPreferenceScreen().removePreference(findPreference(PREF_POWER_MENU));
-
-            if(!U.isLibrary(this) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                findPreference(PREF_LOCK_DEVICE).setOnPreferenceClickListener(this);
-            else
-                getPreferenceScreen().removePreference(findPreference(PREF_LOCK_DEVICE));
-
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                findPreference(PREF_FILE_MANAGER).setOnPreferenceClickListener(this);
-            else
-                getPreferenceScreen().removePreference(findPreference(PREF_FILE_MANAGER));
-        } else if(desktopIcon != null && entry == null) {
-            addPreferencesFromResource(R.xml.tb_pref_context_menu_desktop_icons);
-            findPreference(PREF_ADD_ICON_TO_DESKTOP).setOnPreferenceClickListener(this);
-            findPreference(PREF_ARRANGE_ICONS).setOnPreferenceClickListener(this);
-            findPreference(PREF_SORT_BY_NAME).setOnPreferenceClickListener(this);
-            findPreference(PREF_CHANGE_WALLPAPER).setOnPreferenceClickListener(this);
         } else {
             if(getResources().getConfiguration().screenWidthDp >= 600
                     && Build.VERSION.SDK_INT <= Build.VERSION_CODES.M)
@@ -326,42 +273,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
                     findPreference(PREF_APP_SHORTCUTS).setOnPreferenceClickListener(this);
                 } else if(shortcutCount == 1)
                     generateShortcuts();
-            }
-
-            final PackageManager pm = getPackageManager();
-            Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-            homeIntent.addCategory(Intent.CATEGORY_HOME);
-            ResolveInfo defaultLauncher = pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY);
-
-            if(desktopIcon != null) {
-                addPreferencesFromResource(R.xml.tb_pref_context_menu_remove_desktop_icon);
-                findPreference(PREF_ARRANGE_ICONS).setOnPreferenceClickListener(this);
-                findPreference(PREF_REMOVE_DESKTOP_ICON).setOnPreferenceClickListener(this);
-            } else if(!entry.getPackageName().contains(BuildConfig.BASE_APPLICATION_ID)
-                    && !entry.getPackageName().equals(defaultLauncher.activityInfo.packageName)) {
-                PinnedBlockedApps pba = PinnedBlockedApps.getInstance(this);
-
-                if(pba.isPinned(entry.getComponentName())) {
-                    addPreferencesFromResource(R.xml.tb_pref_context_menu_pin);
-                    findPreference(PREF_PIN_APP).setOnPreferenceClickListener(this);
-                    findPreference(PREF_PIN_APP).setTitle(R.string.tb_unpin_app);
-                } else if(pba.isBlocked(entry.getComponentName())) {
-                    addPreferencesFromResource(R.xml.tb_pref_context_menu_block);
-                    findPreference(PREF_BLOCK_APP).setOnPreferenceClickListener(this);
-                    findPreference(PREF_BLOCK_APP).setTitle(R.string.tb_unblock_app);
-                } else {
-                    final int MAX_NUM_OF_COLUMNS = U.getMaxNumOfEntries(this);
-
-                    if(pba.getPinnedApps().size() < MAX_NUM_OF_COLUMNS) {
-                        addPreferencesFromResource(R.xml.tb_pref_context_menu_pin);
-                        findPreference(PREF_PIN_APP).setOnPreferenceClickListener(this);
-                        findPreference(PREF_PIN_APP).setTitle(R.string.tb_pin_app);
-                    }
-
-                    addPreferencesFromResource(R.xml.tb_pref_context_menu_block);
-                    findPreference(PREF_BLOCK_APP).setOnPreferenceClickListener(this);
-                    findPreference(PREF_BLOCK_APP).setTitle(R.string.tb_block_app);
-                }
             }
 
             addPreferencesFromResource(R.xml.tb_pref_context_menu);
@@ -424,27 +335,12 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
     }
 
     @SuppressWarnings("deprecation")
-    private void generateWallpaperOptions() {
-        getPreferenceScreen().removeAll();
-
-        addPreferencesFromResource(R.xml.tb_pref_context_menu_change_wallpaper_secondary);
-        findPreference(PREF_CHANGE_WALLPAPER_GLOBAL).setOnPreferenceClickListener(this);
-        findPreference(PREF_CHANGE_WALLPAPER_DESKTOP).setOnPreferenceClickListener(this);
-
-        File file = new File(getFilesDir() + "/tb_images", "desktop_wallpaper");
-        if(!file.exists()) return;
-
-        addPreferencesFromResource(R.xml.tb_pref_remove_desktop_wallpaper);
-        findPreference(PREF_REMOVE_DESKTOP_WALLPAPER).setOnPreferenceClickListener(this);
-    }
-
-    @SuppressWarnings("deprecation")
     @TargetApi(Build.VERSION_CODES.N_MR1)
     @Override
     public boolean onPreferenceClick(Preference p) {
         UserManager userManager = (UserManager) getSystemService(USER_SERVICE);
         LauncherApps launcherApps = (LauncherApps) getSystemService(LAUNCHER_APPS_SERVICE);
-        boolean appIsValid = isStartButton || isOverflowMenu || desktopIcon != null ||
+        boolean appIsValid = isStartButton ||
                 (entry != null && !launcherApps.getActivityList(entry.getPackageName(),
                         userManager.getUserForSerialNumber(entry.getUserId(this))).isEmpty());
         secondaryMenu = false;
@@ -486,7 +382,7 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
                     intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     
                     LauncherHelper helper = LauncherHelper.getInstance();
-                    if(helper.isOnHomeScreen(this) || helper.isOnSecondaryHomeScreen(this))
+                    if(helper.isOnHomeScreen(this))
                         U.applyOpenInNewWindow(this, intent2);
 
                     try {
@@ -502,35 +398,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
                 quitIntent.setPackage(getPackageName());
                 sendBroadcast(quitIntent);
                 prepareToClose();
-                break;
-            case PREF_PIN_APP:
-                PinnedBlockedApps pba = PinnedBlockedApps.getInstance(this);
-                if(pba.isPinned(entry.getComponentName()))
-                    pba.removePinnedApp(this, entry.getComponentName());
-                else {
-                    Intent intent = new Intent();
-                    intent.setComponent(ComponentName.unflattenFromString(entry.getComponentName()));
-
-                    LauncherActivityInfo appInfo = launcherApps.resolveActivity(intent, userManager.getUserForSerialNumber(entry.getUserId(this)));
-                    if(appInfo != null) {
-                        AppEntry newEntry = new AppEntry(
-                                entry.getPackageName(),
-                                entry.getComponentName(),
-                                entry.getLabel(),
-                                IconCache.getInstance(this).getIcon(this, appInfo),
-                                true);
-
-                        newEntry.setUserId(entry.getUserId(this));
-                        pba.addPinnedApp(this, newEntry);
-                    }
-                }
-                break;
-            case PREF_BLOCK_APP:
-                PinnedBlockedApps pba2 = PinnedBlockedApps.getInstance(this);
-                if(pba2.isBlocked(entry.getComponentName()))
-                    pba2.removeBlockedApp(this, entry.getComponentName());
-                else
-                    pba2.addBlockedApp(this, entry);
                 break;
             case PREF_SHOW_WINDOW_SIZES:
                 generateWindowSizes();
@@ -612,140 +479,13 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
 
                 prepareToClose();
                 break;
-            case PREF_VOLUME:
-                AudioManager audio = (AudioManager) getSystemService(AUDIO_SERVICE);
-                audio.adjustSuggestedStreamVolume(AudioManager.ADJUST_SAME, AudioManager.USE_DEFAULT_STREAM_TYPE, AudioManager.FLAG_SHOW_UI);
-
-                if(LauncherHelper.getInstance().isOnSecondaryHomeScreen(this)) {
-                    U.showToast(this, R.string.tb_opening_volume_control);
-                    U.sendBroadcast(this, ACTION_UNDIM_SCREEN);
-                }
-
-                prepareToClose();
-                break;
-            case PREF_FILE_MANAGER:
-                U.launchApp(this, () -> {
-                    Intent fileManagerIntent;
-
-                    if(Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1)
-                        fileManagerIntent = new Intent(Intent.ACTION_VIEW);
-                    else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                        fileManagerIntent = new Intent("android.provider.action.BROWSE");
-                    else {
-                        fileManagerIntent = new Intent("android.provider.action.BROWSE_DOCUMENT_ROOT");
-                        fileManagerIntent.setComponent(ComponentName.unflattenFromString("com.android.documentsui/.DocumentsActivity"));
-                    }
-
-                    fileManagerIntent.addCategory(Intent.CATEGORY_DEFAULT);
-                    fileManagerIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    fileManagerIntent.setData(Uri.parse("content://com.android.externalstorage.documents/root/primary"));
-
-                    try {
-                        startActivity(fileManagerIntent,
-                                U.getActivityOptionsBundle(this, ApplicationType.APP_PORTRAIT, getListView().getChildAt(p.getOrder())));
-                    } catch (ActivityNotFoundException e) {
-                        U.showToast(this, R.string.tb_lock_device_not_supported);
-                    } catch (IllegalArgumentException ignored) {}
-                });
-
-                prepareToClose();
-                break;
-            case PREF_SYSTEM_SETTINGS:
-                U.launchApp(this, () -> {
-                    Intent settingsIntent = new Intent(Settings.ACTION_SETTINGS);
-                    settingsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                    try {
-                        startActivity(settingsIntent,
-                                U.getActivityOptionsBundle(this, ApplicationType.APP_PORTRAIT, getListView().getChildAt(p.getOrder())));
-                    } catch (ActivityNotFoundException e) {
-                        U.showToast(this, R.string.tb_lock_device_not_supported);
-                    } catch (IllegalArgumentException ignored) {}
-                });
-
-                prepareToClose();
-                break;
-            case PREF_LOCK_DEVICE:
-                U.lockDevice(this);
-                prepareToClose();
-                break;
-            case PREF_POWER_MENU:
-                U.sendAccessibilityAction(this, AccessibilityService.GLOBAL_ACTION_POWER_DIALOG, () -> {
-                    if(LauncherHelper.getInstance().isOnSecondaryHomeScreen(this)) {
-                        U.showToast(this, R.string.tb_opening_power_menu);
-                        U.sendBroadcast(this, ACTION_UNDIM_SCREEN);
-                    }
-                });
-
-                prepareToClose();
-                break;
-            case PREF_ADD_ICON_TO_DESKTOP:
-                Intent intent2 = U.getThemedIntent(this, DesktopIconSelectAppActivity.class);
-                intent2.putExtra("desktop_icon", desktopIcon);
-
-                if(U.hasFreeformSupport(this)
-                        && U.isFreeformModeEnabled(this)
-                        && isInMultiWindowMode()) {
-                    intent2.putExtra("no_shadow", true);
-                    intent2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
-
-                    U.startActivityMaximized(U.getDisplayContext(this), intent2);
-                } else {
-                    try {
-                        startActivity(intent2);
-                    } catch (IllegalArgumentException ignored) {}
-                }
-
-                prepareToClose();
-                break;
-            case PREF_ARRANGE_ICONS:
-                U.sendBroadcast(this, ACTION_ENTER_ICON_ARRANGE_MODE);
-                break;
-            case PREF_SORT_BY_NAME:
-                U.sendBroadcast(this, ACTION_SORT_DESKTOP_ICONS);
-                break;
             case PREF_CHANGE_WALLPAPER:
-                if(LauncherHelper.getInstance().isOnSecondaryHomeScreen(this)) {
-                    generateWallpaperOptions();
-                    secondaryMenu = true;
-                } else if(U.isChromeOs(this)) {
+                if(U.isChromeOs(this)) {
                     U.sendBroadcast(this, ACTION_WALLPAPER_CHANGE_REQUESTED);
                 } else {
                     changeWallpaper();
                     prepareToClose();
                 }
-                break;
-            case PREF_REMOVE_DESKTOP_ICON:
-                try {
-                    SharedPreferences pref5 = U.getSharedPreferences(this);
-                    JSONArray jsonIcons = new JSONArray(pref5.getString(PREF_DESKTOP_ICONS, "[]"));
-                    int iconToRemove = -1;
-
-                    for(int i = 0; i < jsonIcons.length(); i++) {
-                        DesktopIconInfo info = DesktopIconInfo.fromJson(jsonIcons.getJSONObject(i));
-                        if(info != null && info.column == desktopIcon.column && info.row == desktopIcon.row) {
-                            iconToRemove = i;
-                            break;
-                        }
-                    }
-
-                    if(iconToRemove > -1) {
-                        jsonIcons.remove(iconToRemove);
-
-                        pref5.edit().putString(PREF_DESKTOP_ICONS, jsonIcons.toString()).apply();
-                        U.sendBroadcast(this, ACTION_REFRESH_DESKTOP_ICONS);
-                    }
-                } catch (JSONException ignored) {}
-                break;
-            case PREF_CHANGE_WALLPAPER_GLOBAL:
-                changeWallpaper();
-                prepareToClose();
-                break;
-            case PREF_CHANGE_WALLPAPER_DESKTOP:
-                U.sendBroadcast(this, ACTION_WALLPAPER_CHANGE_REQUESTED);
-                break;
-            case PREF_REMOVE_DESKTOP_WALLPAPER:
-                U.sendBroadcast(this, ACTION_REMOVE_DESKTOP_WALLPAPER);
                 break;
         }
 
@@ -764,7 +504,7 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
         U.sendBroadcast(this, ACTION_CONTEXT_MENU_DISAPPEARING);
         MenuHelper.getInstance().setContextMenuOpen(false);
 
-        if(!dashboardOrStartMenuAppearing) {
+        if(!startMenuAppearing) {
             if(showStartMenu) {
                 U.sendBroadcast(this, ACTION_TOGGLE_START_MENU);
             } else {
@@ -839,7 +579,7 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
     protected void onDestroy() {
         super.onDestroy();
 
-        U.unregisterReceiver(this, dashboardOrStartMenuAppearingReceiver);
+        U.unregisterReceiver(this, startMenuAppearingReceiver);
         U.unregisterReceiver(this, finishReceiver);
     }
 

@@ -22,8 +22,6 @@
      * All services and receivers are removed as they are never run
      * All components run inside a ":libtaskbar" process for isolation from the
        host application, in case of crashes, etc.
-     * SecondaryHomeActivity has its order set to 100 to prevent clashing with
-       the default Launcher3 secondary home activity
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
@@ -73,22 +71,6 @@
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|layoutDirection"
             android:theme="@style/Taskbar.InvisibleActivity"/>
         <activity
-            android:name=".activity.SecondaryHomeActivity"
-            android:process=":libtaskbar"
-            android:label="@string/tb_app_name"
-            android:enabled="true"
-            android:excludeFromRecents="true"
-            android:configChanges="screenSize|keyboard|keyboardHidden"
-            android:theme="@style/Taskbar.HomeActivity"
-            android:exported="true">
-            <intent-filter android:order="100">
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.SECONDARY_HOME"/>
-            </intent-filter>
-        </activity>
-        <activity
             android:name=".activity.ContextMenuActivity"
             android:process=":libtaskbar"
             android:documentLaunchMode="always"
@@ -109,49 +91,11 @@
             android:process=":libtaskbar"
             android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
         <activity
-            android:name=".activity.DesktopIconSelectAppActivity"
-            android:process=":libtaskbar"
-            android:theme="@style/Taskbar.Dialog.Blacklist"/>
-        <activity
-            android:name=".activity.dark.DesktopIconSelectAppActivityDark"
-            android:process=":libtaskbar"
-            android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
-        <activity
             android:name=".activity.DummyActivity"
             android:process=":libtaskbar"
             android:documentLaunchMode="always"
             android:excludeFromRecents="true"
             android:theme="@style/Taskbar.Incognito"/>
-        <activity
-            android:name=".activity.IconPackActivity"
-            android:process=":libtaskbar"
-            android:theme="@style/Taskbar.Dialog.Blacklist"/>
-        <activity
-            android:name=".activity.dark.IconPackActivityDark"
-            android:process=":libtaskbar"
-            android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
-        <activity
-            android:name=".activity.ClearDataActivity"
-            android:process=":libtaskbar"
-            android:theme="@style/Taskbar.Dialog.Blacklist"/>
-        <activity
-            android:name=".activity.dark.ClearDataActivityDark"
-            android:process=":libtaskbar"
-            android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
-        <activity
-            android:name=".activity.DashboardActivity"
-            android:process=":libtaskbar"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Taskbar.Incognito"/>
-        <activity
-            android:name=".activity.dark.DashboardActivityDark"
-            android:process=":libtaskbar"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Taskbar.Incognito.Dark"/>
         <activity
             android:name=".activity.TouchAbsorberActivity"
             android:process=":libtaskbar"

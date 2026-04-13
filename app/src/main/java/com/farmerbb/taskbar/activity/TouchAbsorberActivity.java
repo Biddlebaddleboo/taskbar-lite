@@ -15,7 +15,6 @@
 
 package com.farmerbb.taskbar.activity;
 
-import android.accessibilityservice.AccessibilityService;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -35,7 +34,6 @@ import static com.farmerbb.taskbar.util.Constants.*;
 
 public class TouchAbsorberActivity extends Activity {
 
-    private static long lastStartTime = 0;
     private static String transitionAnimScale = "";
 
     private final BroadcastReceiver finishReceiver = new BroadcastReceiver() {
@@ -60,7 +58,6 @@ public class TouchAbsorberActivity extends Activity {
         FreeformHackHelper.getInstance().setTouchAbsorberActive(true);
         U.sendBroadcast(this, ACTION_TOUCH_ABSORBER_STATE_CHANGED);
 
-        lastStartTime = System.currentTimeMillis();
     }
 
     @Override
@@ -104,17 +101,4 @@ public class TouchAbsorberActivity extends Activity {
         super.onDestroy();
     }
 
-    @Override
-    public void onBackPressed() {
-        if((!U.isAccessibilityServiceEnabled(this) && !U.hasWriteSecureSettingsPermission(this))
-                || lastStartTime > System.currentTimeMillis() - 250)
-            return;
-
-        super.onBackPressed();
-
-        U.newHandler().postDelayed(() ->
-                U.sendAccessibilityAction(this, AccessibilityService.GLOBAL_ACTION_BACK, () ->
-                        U.newHandler().postDelayed(() -> U.startTouchAbsorberActivity(this), 100)
-                ), 100);
-    }
 }

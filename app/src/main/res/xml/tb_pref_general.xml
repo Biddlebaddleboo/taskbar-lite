@@ -16,6 +16,22 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="launcher"
+        android:title="@string/tb_pref_title_launcher"
+        android:summary="@string/tb_pref_description_launcher" />
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="shortcut_icon"
+        android:title="@string/tb_pref_title_shortcut_icon" />
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="visual_feedback"
+        android:title="@string/tb_visual_feedback" />
+
     <ListPreference
         android:defaultValue="grid"
         android:entries="@array/tb_pref_start_menu_list"
@@ -33,15 +49,6 @@
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:title="@string/tb_pref_title_position"/>
-
-    <ListPreference
-        android:defaultValue="always"
-        android:entries="@array/tb_pref_show_search_bar_list"
-        android:entryValues="@array/tb_pref_show_search_bar_list_values"
-        android:key="show_search_bar"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:title="@string/tb_show_search_bar" />
 
     <Preference
         android:key="blacklist"

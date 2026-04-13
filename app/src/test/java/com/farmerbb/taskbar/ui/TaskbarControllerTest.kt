@@ -8,19 +8,16 @@ import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.SystemClock
 import android.os.UserHandle
 import android.os.UserManager
 import android.view.Gravity
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.LinearLayout
 import androidx.test.core.app.ApplicationProvider
 import com.farmerbb.taskbar.Constants
 import com.farmerbb.taskbar.LauncherAppsHelper.generateTestLauncherActivityInfo
@@ -29,7 +26,6 @@ import com.farmerbb.taskbar.activity.HomeActivity
 import com.farmerbb.taskbar.activity.HomeActivityDelegate
 import com.farmerbb.taskbar.activity.InvisibleActivityFreeform
 import com.farmerbb.taskbar.activity.MainActivity
-import com.farmerbb.taskbar.activity.SecondaryHomeActivity
 import com.farmerbb.taskbar.mockito.BooleanAnswer
 import com.farmerbb.taskbar.mockito.StringAnswer
 import com.farmerbb.taskbar.shadow.TaskbarShadowScrollView
@@ -42,10 +38,6 @@ import com.farmerbb.taskbar.util.Constants.POSITION_TOP_LEFT
 import com.farmerbb.taskbar.util.Constants.POSITION_TOP_RIGHT
 import com.farmerbb.taskbar.util.Constants.POSITION_TOP_VERTICAL_LEFT
 import com.farmerbb.taskbar.util.Constants.POSITION_TOP_VERTICAL_RIGHT
-import com.farmerbb.taskbar.util.Constants.PREF_BUTTON_BACK
-import com.farmerbb.taskbar.util.Constants.PREF_BUTTON_HOME
-import com.farmerbb.taskbar.util.Constants.PREF_BUTTON_RECENTS
-import com.farmerbb.taskbar.util.Constants.PREF_DASHBOARD
 import com.farmerbb.taskbar.util.Constants.PREF_HIDE_FOREGROUND
 import com.farmerbb.taskbar.util.Constants.PREF_RECENTS_AMOUNT
 import com.farmerbb.taskbar.util.Constants.PREF_RECENTS_AMOUNT_APP_START
@@ -188,84 +180,6 @@ class TaskbarControllerTest {
         Assert.assertEquals(
                 R.layout.tb_taskbar_left.toLong(),
                 uiController.getTaskbarLayoutId(Constants.UNSUPPORTED).toLong())
-    }
-
-    @Test
-    fun testDrawDashboardButtonWithDefaultConfig() {
-        prefs.edit().remove(PREF_DASHBOARD).apply()
-        checkDashboardEnabled(false)
-    }
-
-    @Test
-    @Config(qualifiers = "sw540dp")
-    fun testDrawDashboardButtonWithDefaultConfigForSw540dp() {
-        prefs.edit().remove(PREF_DASHBOARD).apply()
-        checkDashboardEnabled(false)
-    }
-
-    @Test
-    @Config(qualifiers = "sw720dp")
-    fun testDrawDashboardButtonWithDefaultConfigForSw720dp() {
-        prefs.edit().remove(PREF_DASHBOARD).apply()
-        checkDashboardEnabled(true)
-    }
-
-    @Test
-    fun testDrawDashboardButtonForDashboardButton() {
-        val accentColor = Color.RED
-        val layoutId = uiController.getTaskbarLayoutId(POSITION_BOTTOM_LEFT)
-        val layout = LayoutInflater.from(context).inflate(layoutId, null) as LinearLayout
-        val dashboardButton = layout.findViewById<FrameLayout>(R.id.dashboard_button)
-        prefs.edit().putBoolean(PREF_DASHBOARD, false).apply()
-        var dashboardEnabled = uiController.drawDashboardButton(context, layout,
-                dashboardButton, accentColor)
-        Assert.assertFalse(dashboardEnabled)
-        Assert.assertEquals(View.GONE.toLong(), dashboardButton.visibility.toLong())
-        prefs.edit().putBoolean(PREF_DASHBOARD, true).apply()
-        dashboardEnabled = uiController.drawDashboardButton(context, layout, dashboardButton,
-                accentColor)
-        Assert.assertTrue(dashboardEnabled)
-        Assert.assertTrue(dashboardButton.hasOnClickListeners())
-        Assert.assertEquals(View.VISIBLE.toLong(), dashboardButton.visibility.toLong())
-        var drawable = layout.findViewById<View>(R.id.square1).background
-        checkDrawableBackgroundColor(drawable, accentColor)
-        drawable = layout.findViewById<View>(R.id.square2).background
-        checkDrawableBackgroundColor(drawable, accentColor)
-        drawable = layout.findViewById<View>(R.id.square3).background
-        checkDrawableBackgroundColor(drawable, accentColor)
-        drawable = layout.findViewById<View>(R.id.square4).background
-        checkDrawableBackgroundColor(drawable, accentColor)
-        drawable = layout.findViewById<View>(R.id.square5).background
-        checkDrawableBackgroundColor(drawable, accentColor)
-        drawable = layout.findViewById<View>(R.id.square6).background
-        checkDrawableBackgroundColor(drawable, accentColor)
-    }
-
-    @Test
-    fun testDrawNavbarButtons() {
-        val layoutId = uiController.getTaskbarLayoutId(POSITION_BOTTOM_LEFT)
-        val layout = LayoutInflater.from(context).inflate(layoutId, null) as LinearLayout
-        prefs.edit()
-                .remove(PREF_BUTTON_BACK)
-                .remove(PREF_BUTTON_HOME)
-                .remove(PREF_BUTTON_RECENTS)
-                .apply()
-        Assert.assertFalse(uiController.drawNavbarButtons(context, layout, prefs, Color.RED))
-        prefs.edit().putBoolean(PREF_BUTTON_BACK, true).apply()
-        Assert.assertTrue(uiController.drawNavbarButtons(context, layout, prefs, Color.RED))
-        Assert.assertEquals(View.VISIBLE.toLong(), layout.findViewById<View>(R.id.button_back)
-                .visibility.toLong())
-        prefs.edit().remove(PREF_BUTTON_BACK).apply()
-        prefs.edit().putBoolean(PREF_BUTTON_HOME, true).apply()
-        Assert.assertTrue(uiController.drawNavbarButtons(context, layout, prefs, Color.RED))
-        Assert.assertEquals(View.VISIBLE.toLong(), layout.findViewById<View>(R.id.button_home)
-                .visibility.toLong())
-        prefs.edit().remove(PREF_BUTTON_HOME).apply()
-        prefs.edit().putBoolean(PREF_BUTTON_RECENTS, true).apply()
-        Assert.assertTrue(uiController.drawNavbarButtons(context, layout, prefs, Color.RED))
-        Assert.assertEquals(View.VISIBLE.toLong(), layout.findViewById<View>(R.id.button_recents)
-                .visibility.toLong())
-        prefs.edit().remove(PREF_BUTTON_RECENTS).apply()
     }
 
     @Test
@@ -472,18 +386,12 @@ class TaskbarControllerTest {
         Assert.assertEquals(HomeActivityDelegate::class.java.canonicalName,
                 applicationIdsToRemove.removeAt(0))
         event = buildTaskbarForegroundAppEvent(
-                SecondaryHomeActivity::class.java.canonicalName, 600L)
-        Shadows.shadowOf(usageStatsManager).addEvent(event)
-        uiController.filterForegroundApp(context, prefs, searchInterval, applicationIdsToRemove)
-        Assert.assertEquals(SecondaryHomeActivity::class.java.canonicalName,
-                applicationIdsToRemove.removeAt(0))
-        event = buildTaskbarForegroundAppEvent(
-                InvisibleActivityFreeform::class.java.canonicalName, 700L)
+                InvisibleActivityFreeform::class.java.canonicalName, 600L)
         Shadows.shadowOf(usageStatsManager).addEvent(event)
         uiController.filterForegroundApp(context, prefs, searchInterval, applicationIdsToRemove)
         Assert.assertEquals(InvisibleActivityFreeform::class.java.canonicalName,
                 applicationIdsToRemove.removeAt(0))
-        event = buildTaskbarForegroundAppEvent(Constants.UNSUPPORTED, 800L)
+        event = buildTaskbarForegroundAppEvent(Constants.UNSUPPORTED, 700L)
         Shadows.shadowOf(usageStatsManager).addEvent(event)
         uiController.filterForegroundApp(context, prefs, searchInterval, applicationIdsToRemove)
         Assert.assertEquals(Constants.UNSUPPORTED, applicationIdsToRemove.removeAt(0))
@@ -719,15 +627,6 @@ class TaskbarControllerTest {
         Assert.assertTrue(drawable is ColorDrawable)
         val colorDrawable = drawable as ColorDrawable
         Assert.assertEquals(color.toLong(), colorDrawable.color.toLong())
-    }
-
-    private fun checkDashboardEnabled(expectedDashboardEnabled: Boolean) {
-        val layoutId = uiController.getTaskbarLayoutId(POSITION_BOTTOM_LEFT)
-        val layout = LayoutInflater.from(context).inflate(layoutId, null) as LinearLayout
-        val dashboardButton = layout.findViewById<FrameLayout>(R.id.dashboard_button)
-        val dashboardEnabled = uiController.drawDashboardButton(context, layout,
-                dashboardButton, Color.RED)
-        Assert.assertEquals(expectedDashboardEnabled, dashboardEnabled)
     }
 
     private fun checkDrawSysTrayTimeVisibility(position: String, timeId: Int) {

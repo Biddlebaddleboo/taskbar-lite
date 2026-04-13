@@ -21,18 +21,6 @@
     android:padding="8dp" >
 
     <CheckBox
-        android:id="@+id/clear_pba"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:layout_marginLeft="12dp"
-        android:layout_marginRight="12dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-        android:padding="4dp"
-        android:textSize="16sp"
-        android:text="@string/tb_clear_pba"/>
-
-    <CheckBox
         android:id="@+id/clear_hidden_apps"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"

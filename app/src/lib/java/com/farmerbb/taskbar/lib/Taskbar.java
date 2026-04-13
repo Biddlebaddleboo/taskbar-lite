@@ -24,8 +24,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.StyleRes;
 
 import com.farmerbb.taskbar.activity.MainActivity;
-import com.farmerbb.taskbar.activity.SecondaryHomeActivity;
-import com.farmerbb.taskbar.util.U;
 
 @Keep public class Taskbar {
 
@@ -82,11 +80,10 @@ import com.farmerbb.taskbar.util.U;
     }
 
     /**
-     * Enables or disables Taskbar's desktop mode at runtime.
-     * @param context Context used to control component state
-     * @param enabled "true" to enable desktop mode, "false" to disable
+     * Compatibility no-op kept for callers that still invoke the old toggle API.
+     * Home replacement is always enabled in this trimmed build.
      */
     @Keep public static void setEnabled(@NonNull Context context, boolean enabled) {
-        U.setComponentEnabled(context, SecondaryHomeActivity.class, enabled);
+        // Intentionally left blank.
     }
 }

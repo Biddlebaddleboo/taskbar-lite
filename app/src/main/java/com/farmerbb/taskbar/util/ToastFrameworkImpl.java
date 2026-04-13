@@ -28,9 +28,6 @@ class ToastFrameworkImpl implements ToastInterface {
     @SuppressLint("ShowToast")
     ToastFrameworkImpl(Context context, String message, int length) {
         int offset = context.getResources().getDimensionPixelSize(R.dimen.tb_toast_y_offset);
-        if(U.getCurrentApiVersion() > 29.0 && U.isDesktopModeActive(context)) {
-            offset = offset + U.getNavbarHeight(context);
-        }
 
         toast = Toast.makeText(context, message, length);
         toast.setGravity(Gravity.BOTTOM | Gravity.CENTER_VERTICAL, 0, offset);

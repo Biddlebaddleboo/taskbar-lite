@@ -24,10 +24,6 @@
         android:key="restore_settings"
         android:title="@string/tb_restore_settings"/>
 
-    <Preference
-        android:key="clear_pinned_apps"
-        android:title="@string/tb_clear_pinned_apps"/>
-
     <PreferenceCategory android:key="dummy" android:title="\n\n" />
 
 </PreferenceScreen>

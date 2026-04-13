@@ -27,7 +27,6 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.view.WindowManager;
 
-import com.farmerbb.taskbar.service.DashboardService;
 import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.service.StartMenuService;
 import com.farmerbb.taskbar.service.TaskbarService;
@@ -106,13 +105,11 @@ public class InvisibleActivityFreeform extends Activity {
 
         U.registerReceiver(this, appearingReceiver,
                 ACTION_START_MENU_APPEARING,
-                ACTION_CONTEXT_MENU_APPEARING,
-                ACTION_DASHBOARD_APPEARING);
+                ACTION_CONTEXT_MENU_APPEARING);
 
         U.registerReceiver(this, disappearingReceiver,
                 ACTION_START_MENU_DISAPPEARING,
-                ACTION_CONTEXT_MENU_DISAPPEARING,
-                ACTION_DASHBOARD_DISAPPEARING);
+                ACTION_CONTEXT_MENU_DISAPPEARING);
 
         U.registerReceiver(this, finishReceiver, ACTION_FINISH_FREEFORM_ACTIVITY);
 
@@ -184,20 +181,11 @@ public class InvisibleActivityFreeform extends Activity {
                 editor.putBoolean(PREF_FIRST_RUN, false);
                 editor.putBoolean(PREF_COLLAPSED, true);
                 editor.apply();
-
-                U.newHandler().postDelayed(() -> {
-                    Intent intent = new Intent(this, DummyActivity.class);
-                    intent.putExtra(EXTRA_SHOW_RECENT_APPS_DIALOG, true);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                    startActivity(intent);
-                }, 250);
             }
 
             // We always start the Taskbar and Start Menu services, even if the app isn't normally running
             startService(new Intent(this, TaskbarService.class));
             startService(new Intent(this, StartMenuService.class));
-            startService(new Intent(this, DashboardService.class));
 
             if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !U.isServiceRunning(this, NotificationService.class))
                 pref.edit().putBoolean(PREF_TASKBAR_ACTIVE, false).apply();
@@ -237,13 +225,12 @@ public class InvisibleActivityFreeform extends Activity {
 
             // Stop the Taskbar and Start Menu services if they should normally not be active
             SharedPreferences pref = U.getSharedPreferences(this);
-            if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
-                stopService(new Intent(this, TaskbarService.class));
-                stopService(new Intent(this, StartMenuService.class));
-                stopService(new Intent(this, DashboardService.class));
+                if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
+                    stopService(new Intent(this, TaskbarService.class));
+                    stopService(new Intent(this, StartMenuService.class));
 
-                U.clearCaches(this);
-            }
+                    U.clearCaches(this);
+                }
         }
     }
 

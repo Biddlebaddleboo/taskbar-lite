@@ -24,9 +24,6 @@ import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.content.ContextCompat;
 
 import com.farmerbb.taskbar.R;
-import com.farmerbb.taskbar.activity.TaskerConditionActivity;
-import com.mikepenz.foundation_icons_typeface_library.FoundationIcons;
-import com.mikepenz.iconics.Iconics;
 
 // Utility class meant for abstracting out all third-party dependencies.
 // This allows the Android-x86 version of Taskbar to be built purely from AOSP source.
@@ -37,11 +34,7 @@ public class DependencyUtils {
     private DependencyUtils() {}
 
     public static CharSequence getKeyboardShortcutSummary(Context context) {
-        Iconics.registerFont(new FoundationIcons());
-        return new Iconics.IconicsBuilder()
-                .ctx(context)
-                .on(context.getString(R.string.tb_pref_description_keyboard_shortcut))
-                .build();
+        return context.getString(R.string.tb_pref_description_keyboard_shortcut_alt);
     }
 
     static ToastInterface createToast(Context context, String message, int length) {
@@ -49,12 +42,6 @@ public class DependencyUtils {
             return new ToastFrameworkImpl(context, message, length);
         else
             return new ToastCompatImpl(context, message, length);
-    }
-
-    public static void requestTaskerQuery(Context context) {
-        Intent query = new Intent(com.twofortyfouram.locale.api.Intent.ACTION_REQUEST_QUERY);
-        query.putExtra(com.twofortyfouram.locale.api.Intent.EXTRA_STRING_ACTIVITY_CLASS_NAME, TaskerConditionActivity.class.getName());
-        context.sendBroadcast(query);
     }
 
     public static void openChromeCustomTab(Context context, Uri uri) {

@@ -17,12 +17,9 @@ package com.farmerbb.taskbar.ui;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.provider.Settings;
 import android.view.View;
 
-import com.farmerbb.taskbar.BuildConfig;
 import com.farmerbb.taskbar.R;
-import com.farmerbb.taskbar.activity.SecondaryHomeActivity;
 import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.util.CompatUtils;
 import com.farmerbb.taskbar.util.TaskbarPosition;
@@ -46,11 +43,7 @@ public abstract class UIController {
         SharedPreferences pref = U.getSharedPreferences(context);
         LauncherHelper helper = LauncherHelper.getInstance();
 
-        boolean shouldProceed;
-        if(helper.isOnSecondaryHomeScreen(context))
-            shouldProceed = host instanceof SecondaryHomeActivity;
-        else
-            shouldProceed = true;
+        boolean shouldProceed = true;
 
         if(shouldProceed && (pref.getBoolean(PREF_TASKBAR_ACTIVE, false)
                 || helper.isOnHomeScreen(context))) {
@@ -83,14 +76,6 @@ public abstract class UIController {
 
                 ViewParams newParams = isImeVisible ? params.updateBottomMargin(0) : params;
                 host.updateViewLayout(layout, newParams);
-
-                if(isImeFixDisabled() && !U.isLibrary(context)) {
-                    SharedPreferences pref = U.getSharedPreferences(context);
-                    if(!pref.getBoolean(PREF_DESKTOP_MODE_IME_FIX, false)) {
-                        pref.edit().putBoolean(PREF_DESKTOP_MODE_IME_FIX, true).apply();
-                        U.showToastLong(context, R.string.tb_desktop_mode_ime_fix_toast);
-                    }
-                }
             }
 
             return insets;
@@ -98,7 +83,6 @@ public abstract class UIController {
     }
 
     protected boolean isImeFixDisabled() {
-        String ime = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD);
-        return !ime.startsWith(BuildConfig.BASE_APPLICATION_ID) && !ime.startsWith("com.farmerbb.secondscreen");
+        return false;
     }
 }

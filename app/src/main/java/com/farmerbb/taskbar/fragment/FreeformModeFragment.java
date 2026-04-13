@@ -69,9 +69,8 @@ public class FreeformModeFragment extends SettingsFragment {
         SharedPreferences pref = U.getSharedPreferences(getActivity());
         boolean isLibrary = U.isLibrary(getActivity());
         boolean freeformHackEnabled = pref.getBoolean(PREF_FREEFORM_HACK, false);
-        boolean lockFreeformToggle = pref.getBoolean(PREF_DESKTOP_MODE, false)
-                || (freeformHackEnabled && U.isChromeOs(getActivity())
-                || isLibrary);
+        boolean lockFreeformToggle = (freeformHackEnabled && U.isChromeOs(getActivity()))
+                || isLibrary;
 
         if(!lockFreeformToggle) {
             findPreference(PREF_SAVE_WINDOW_SIZES).setDependency(PREF_FREEFORM_HACK);

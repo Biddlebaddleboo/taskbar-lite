@@ -23,28 +23,8 @@
         android:title="@string/tb_pref_header_general" />
 
     <Preference
-        android:key="pref_screen_appearance"
-        android:icon="@drawable/tb_brush"
-        android:title="@string/tb_pref_header_appearance" />
-
-    <Preference
-        android:key="pref_screen_recent_apps"
-        android:icon="@drawable/tb_apps"
-        android:title="@string/tb_pref_header_recent_apps" />
-
-    <Preference
         android:key="pref_screen_freeform"
         android:icon="@drawable/tb_web_asset"
         android:title="@string/tb_pref_header_freeform" />
-
-    <Preference
-        android:key="pref_screen_desktop_mode"
-        tools:icon="@drawable/tb_desktop_mode"
-        android:title="@string/tb_pref_header_desktop_mode" />
-
-    <Preference
-        android:key="pref_screen_advanced"
-        android:icon="@drawable/tb_error_outline"
-        android:title="@string/tb_pref_header_advanced" />
 
 </PreferenceScreen>

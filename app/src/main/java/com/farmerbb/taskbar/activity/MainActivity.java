@@ -24,8 +24,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
 import android.graphics.drawable.Icon;
@@ -44,13 +42,8 @@ import androidx.appcompat.widget.SwitchCompat;
 import com.farmerbb.taskbar.BuildConfig;
 import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.fragment.AboutFragment;
-import com.farmerbb.taskbar.fragment.AdvancedFragment;
-import com.farmerbb.taskbar.fragment.AppearanceFragment;
-import com.farmerbb.taskbar.fragment.DesktopModeFragment;
 import com.farmerbb.taskbar.fragment.FreeformModeFragment;
-import com.farmerbb.taskbar.fragment.ManageAppDataFragment;
 import com.farmerbb.taskbar.fragment.SettingsFragment;
-import com.farmerbb.taskbar.service.DashboardService;
 import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.service.StartMenuService;
 import com.farmerbb.taskbar.service.TaskbarService;
@@ -62,7 +55,6 @@ import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.util.U;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -109,15 +101,12 @@ public class MainActivity extends AppCompatActivity {
         if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !U.isServiceRunning(this, NotificationService.class))
             editor.putBoolean(PREF_TASKBAR_ACTIVE, false);
 
-        // Ensure that components that should be enabled are enabled properly
-        boolean launcherEnabled = (pref.getBoolean(PREF_LAUNCHER, false) && U.canDrawOverlays(this))
+        boolean launcherPrefDefined = pref.contains(PREF_LAUNCHER);
+        boolean launcherEnabled = (pref.getBoolean(PREF_LAUNCHER, true) && U.canDrawOverlays(this))
                 || U.isLauncherPermanentlyEnabled(this);
 
-        boolean desktopModeEnabled = U.isDesktopModeSupported(this)
-                && pref.getBoolean(PREF_DESKTOP_MODE, false);
-
-        editor.putBoolean(PREF_LAUNCHER, launcherEnabled);
-        editor.putBoolean(PREF_DESKTOP_MODE, desktopModeEnabled);
+        if(launcherPrefDefined || launcherEnabled)
+            editor.putBoolean(PREF_LAUNCHER, launcherEnabled);
         editor.apply();
 
         boolean isLibrary = U.isLibrary(this);
@@ -125,26 +114,13 @@ public class MainActivity extends AppCompatActivity {
             U.setComponentEnabled(this, HomeActivity.class,
                     launcherEnabled && !U.isDelegatingHomeActivity(this));
 
-            U.setComponentEnabled(this, KeyboardShortcutActivity.class,
-                    pref.getBoolean(PREF_KEYBOARD_SHORTCUT, false));
-
             U.setComponentEnabled(this, ShortcutActivity.class,
                     U.enableFreeformModeShortcut(this));
 
             U.setComponentEnabled(this, StartTaskbarActivity.class, true);
-
-            if(!getPackageName().equals(BuildConfig.ANDROIDX86_APPLICATION_ID)) {
-                U.setComponentEnabled(this, SecondaryHomeActivity.class, desktopModeEnabled);
-                U.setComponentEnabled(this, HSLActivity.class, desktopModeEnabled);
-            }
-
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                U.setComponentEnabled(this, KeyboardShortcutActivityLockDevice.class,
-                        pref.getBoolean(PREF_KEYBOARD_SHORTCUT, false));
-            }
         }
 
-        if(!launcherEnabled && !desktopModeEnabled && !isLibrary) {
+        if(!launcherEnabled && !isLibrary) {
             U.sendBroadcast(this, ACTION_KILL_HOME_ACTIVITY);
         }
 
@@ -155,27 +131,7 @@ public class MainActivity extends AppCompatActivity {
             U.newHandler().postDelayed(() -> pref.edit().putBoolean(PREF_HAS_CAPTION, hasCaption).apply(), 500);
         }
 
-        if(getPackageName().equals(BuildConfig.PAID_APPLICATION_ID)) {
-            File file = new File(getFilesDir() + File.separator + "imported_successfully");
-            if(freeVersionInstalled() && !file.exists()) {
-                startActivity(new Intent(this, ImportSettingsActivity.class));
-                finish();
-            } else
-                proceedWithAppLaunch(savedInstanceState);
-        } else
-            proceedWithAppLaunch(savedInstanceState);
-    }
-
-    private boolean freeVersionInstalled() {
-        PackageManager pm = getPackageManager();
-        try {
-            PackageInfo pInfo = pm.getPackageInfo(BuildConfig.BASE_APPLICATION_ID, 0);
-            return pInfo.versionCode >= 68
-                    && pm.checkSignatures(BuildConfig.BASE_APPLICATION_ID, getPackageName())
-                    == PackageManager.SIGNATURE_MATCH;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
+        proceedWithAppLaunch(savedInstanceState);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -206,11 +162,7 @@ public class MainActivity extends AppCompatActivity {
             theSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
                 if(b) {
                     if(U.canDrawOverlays(this)) {
-                        boolean firstRun = pref.getBoolean(PREF_FIRST_RUN, true);
                         startTaskbarService();
-
-                        if(firstRun)
-                            U.showRecentAppsDialog(this);
                     } else {
                         U.showPermissionDialog(this);
                         compoundButton.setChecked(false);
@@ -222,70 +174,13 @@ public class MainActivity extends AppCompatActivity {
 
         if(savedInstanceState == null) {
             U.initPrefs(this);
+            CompatUtils.grantNotificationPermissionIfNeeded(this);
 
-            File restoreInProgress = new File(getFilesDir(), "restore_in_progress");
-            File restoreSuccessful = new File(getFilesDir(), "restore_successful");
-
-            if(restoreInProgress.exists() || restoreSuccessful.exists()) {
-                if(restoreInProgress.exists()) {
-                    U.showToastLong(this, R.string.tb_restore_failed);
-                    restoreInProgress.delete();
-                }
-
-                if(restoreSuccessful.exists()) {
-                    U.showToastLong(this, R.string.tb_restore_successful);
-                    restoreSuccessful.delete();
-                }
-
-                navigateTo(new ManageAppDataFragment());
-            } else if(!getIntent().hasExtra("theme_change")) {
-                CompatUtils.grantNotificationPermissionIfNeeded(this);
-                navigateTo(new AboutFragment());
-            } else
-                navigateTo(new AppearanceFragment());
+            navigateTo(new AboutFragment());
         } else try {
             Fragment oldFragment = getFragmentManager().findFragmentById(R.id.fragmentContainer);
             navigateTo(oldFragment.getClass().newInstance());
         } catch (IllegalAccessException | InstantiationException ignored) {}
-
-        SharedPreferences pref = U.getSharedPreferences(this);
-        if(!getPackageName().equals(BuildConfig.BASE_APPLICATION_ID) && freeVersionInstalled()) {
-            if(!pref.getBoolean(PREF_DONT_SHOW_UNINSTALL_DIALOG, false)) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle(R.string.tb_settings_imported_successfully)
-                        .setMessage(R.string.tb_import_dialog_message)
-                        .setPositiveButton(R.string.tb_action_uninstall, (dialog, which) -> {
-                            pref.edit().putBoolean(PREF_UNINSTALL_DIALOG_SHOWN, true).apply();
-
-                            try {
-                                startActivity(new Intent(Intent.ACTION_DELETE, Uri.parse("package:" + BuildConfig.BASE_APPLICATION_ID)));
-                            } catch (ActivityNotFoundException ignored) {}
-                        });
-
-                if(pref.getBoolean(PREF_UNINSTALL_DIALOG_SHOWN, false))
-                    builder.setNegativeButton(R.string.tb_action_dont_show_again, (dialogInterface, i) -> pref.edit().putBoolean(PREF_DONT_SHOW_UNINSTALL_DIALOG, true).apply());
-
-                AlertDialog dialog = builder.create();
-                dialog.show();
-                dialog.setCancelable(false);
-            }
-
-            if(!pref.getBoolean(PREF_UNINSTALL_DIALOG_SHOWN, false)) {
-                if(theSwitch != null) theSwitch.setChecked(false);
-
-                SharedPreferences.Editor editor = pref.edit();
-
-                String iconPack = pref.getString(PREF_ICON_PACK, BuildConfig.BASE_APPLICATION_ID);
-                if(iconPack.contains(BuildConfig.BASE_APPLICATION_ID)) {
-                    editor.putString(PREF_ICON_PACK, getPackageName());
-                } else {
-                    U.refreshPinnedIcons(this);
-                }
-
-                editor.putBoolean(PREF_FIRST_RUN, true);
-                editor.apply();
-            }
-        }
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1 && !U.isLibrary(this)) {
             ShortcutManager shortcutManager = getSystemService(ShortcutManager.class);
@@ -317,6 +212,8 @@ public class MainActivity extends AppCompatActivity {
                     shortcutManager.setDynamicShortcuts(Collections.singletonList(shortcut));
             }
         }
+
+        SharedPreferences pref = U.getSharedPreferences(this);
 
         if(pref.getInt("show_changelog", 0) < latestChangelogVersion
                 && U.isConsumerBuild(this)) {
@@ -400,7 +297,6 @@ public class MainActivity extends AppCompatActivity {
 
         startService(new Intent(this, TaskbarService.class));
         startService(new Intent(this, StartMenuService.class));
-        startService(new Intent(this, DashboardService.class));
         startService(new Intent(this, NotificationService.class));
     }
 
@@ -411,7 +307,6 @@ public class MainActivity extends AppCompatActivity {
         if(!LauncherHelper.getInstance().isOnHomeScreen(this)) {
             stopService(new Intent(this, TaskbarService.class));
             stopService(new Intent(this, StartMenuService.class));
-            stopService(new Intent(this, DashboardService.class));
 
             U.clearCaches(this);
             U.sendBroadcast(this, ACTION_START_MENU_DISAPPEARING);
@@ -435,10 +330,7 @@ public class MainActivity extends AppCompatActivity {
             super.onBackPressed();
         else {
             Fragment newFragment;
-            if(oldFragment instanceof ManageAppDataFragment)
-                newFragment = new AdvancedFragment();
-            else
-                newFragment = new AboutFragment();
+            newFragment = new AboutFragment();
 
             getFragmentManager()
                     .beginTransaction()
@@ -469,9 +361,6 @@ public class MainActivity extends AppCompatActivity {
         if(fragment instanceof FreeformModeFragment) {
             helpButton.setVisibility(View.VISIBLE);
             helpButton.setOnClickListener(v -> showHelpDialog(R.string.tb_freeform_help_dialog_message));
-        } else if(fragment instanceof DesktopModeFragment) {
-            helpButton.setVisibility(View.VISIBLE);
-            helpButton.setOnClickListener(v -> showHelpDialog(R.string.tb_desktop_mode_help));
         } else {
             helpButton.setVisibility(View.INVISIBLE);
             helpButton.setOnClickListener(null);

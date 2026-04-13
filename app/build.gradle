@@ -36,20 +36,20 @@ android {
     namespace "com.farmerbb.taskbar"
 
     defaultConfig {
-        applicationId "com.farmerbb.taskbar"
+        applicationId "com.jcdigitalsolutions.taskbarlite"
 
         minSdkVersion MIN_SDK_VERSION
         targetSdkVersion TARGET_SDK_VERSION
         versionCode VERSION_CODE
         versionName VERSION_NAME
 
-        resConfigs "en", "es", "ja", "ru", "de", "zh-rCN", "tr", "nl", "pl"
+        resConfigs "en"
         vectorDrawables.generatedDensities = []
 
-        buildConfigField "String", "BASE_APPLICATION_ID", "\"com.farmerbb.taskbar\""
-        buildConfigField "String", "PAID_APPLICATION_ID", "\"com.farmerbb.taskbar.paid\""
-        buildConfigField "String", "SUPPORT_APPLICATION_ID", "\"com.farmerbb.taskbar.support\""
-        buildConfigField "String", "ANDROIDX86_APPLICATION_ID", "\"com.farmerbb.taskbar.androidx86\""
+        buildConfigField "String", "BASE_APPLICATION_ID", "\"com.jcdigitalsolutions.taskbarlite\""
+        buildConfigField "String", "PAID_APPLICATION_ID", "\"com.jcdigitalsolutions.taskbarlite.paid\""
+        buildConfigField "String", "SUPPORT_APPLICATION_ID", "\"com.jcdigitalsolutions.taskbarlite.support\""
+        buildConfigField "String", "ANDROIDX86_APPLICATION_ID", "\"com.jcdigitalsolutions.taskbarlite.androidx86\""
 
         buildConfigField "long", "TIMESTAMP", "${System.currentTimeMillis()}L"
     }
@@ -95,7 +95,7 @@ android {
 
             applicationVariants.all { variant ->
                 variant.outputs.all {
-                    outputFileName = "${project.parent.name}-${defaultConfig.versionName}.apk"
+                    outputFileName = "Taskbar Lite Stable-${defaultConfig.versionName}.apk"
                 }
             }
         }
@@ -104,8 +104,8 @@ android {
     flavorDimensions "default"
 
     productFlavors {
-        paid { applicationId "com.farmerbb.taskbar.paid" }
-        free { applicationId "com.farmerbb.taskbar" }
+        paid { applicationId "com.jcdigitalsolutions.taskbarlite.paid" }
+        free { applicationId "com.jcdigitalsolutions.taskbarlite" }
     }
 
     sourceSets {
@@ -154,12 +154,7 @@ dependencies {
     implementation "androidx.browser:browser:$BROWSER_VERSION"
     implementation "com.google.android.material:material:$MATERIAL_VERSION"
     //noinspection GradleDependency
-    implementation 'com.mikepenz:iconics-core:3.2.5'
-    implementation 'com.mikepenz:foundation-icons-typeface:3.0.0.5'
-    implementation "dev.rikka.shizuku:api:$SHIZUKU_VERSION"
-    implementation "dev.rikka.shizuku:provider:$SHIZUKU_VERSION"
     implementation 'moe.banana:toast-compat:1.0.5'
-    implementation group:'com.twofortyfouram', name:'android-plugin-api-for-locale', version:'[1.0.2,2.0['
     implementation "org.lsposed.hiddenapibypass:hiddenapibypass:$HIDDEN_API_BYPASS_VERSION"
 
     testImplementation "com.google.truth:truth:1.1.3"

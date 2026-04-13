@@ -25,13 +25,13 @@
           xmlns:tools="http://schemas.android.com/tools"
           package="com.farmerbb.taskbar">
 
-    <permission android:name="com.farmerbb.taskbar.androidx86.START_STOP_TASKBAR"
+    <permission android:name="com.jcdigitalsolutions.taskbarlite.androidx86.START_STOP_TASKBAR"
         android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="com.farmerbb.taskbar.androidx86.START_STOP_TASKBAR" />
+    <uses-permission android:name="com.jcdigitalsolutions.taskbarlite.androidx86.START_STOP_TASKBAR" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
     <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
@@ -131,39 +131,6 @@
             android:launchMode="singleTask"
             android:theme="@style/Taskbar.HomeActivity" />
         <activity
-            android:name=".activity.KeyboardShortcutActivity"
-            android:label="@string/tb_app_name"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:enabled="false"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <action android:name="android.intent.action.ASSIST" />
-
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.APP_MAPS" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".activity.KeyboardShortcutActivityLockDevice"
-            android:label="@string/tb_app_name"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:enabled="false"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.APP_CALENDAR" />
-            </intent-filter>
-        </activity>
-        <activity
             android:name=".activity.ContextMenuActivity"
             android:documentLaunchMode="always"
             android:excludeFromRecents="true"
@@ -180,25 +147,10 @@
             android:name=".activity.dark.SelectAppActivityDark"
             android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
         <activity
-            android:name=".activity.DesktopIconSelectAppActivity"
-            android:theme="@style/Taskbar.Dialog.Blacklist"/>
-        <activity
-            android:name=".activity.dark.DesktopIconSelectAppActivityDark"
-            android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
-        <activity
             android:name=".activity.DummyActivity"
             android:documentLaunchMode="always"
             android:excludeFromRecents="true"
             android:theme="@style/Taskbar.Incognito"/>
-        <activity
-            android:name=".activity.ImportSettingsActivity"
-            android:theme="@style/Taskbar.Dialog"/>
-        <activity
-            android:name=".activity.IconPackActivity"
-            android:theme="@style/Taskbar.Dialog.Blacklist"/>
-        <activity
-            android:name=".activity.dark.IconPackActivityDark"
-            android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
         <activity
             android:name=".activity.ShortcutActivity"
             android:icon="@mipmap/tb_freeform_mode"
@@ -230,30 +182,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".activity.ClearDataActivity"
-            android:theme="@style/Taskbar.Dialog.Blacklist"/>
-        <activity
-            android:name=".activity.dark.ClearDataActivityDark"
-            android:theme="@style/Taskbar.Dialog.Blacklist.Dark"/>
-        <activity
-            android:name=".activity.DashboardActivity"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Taskbar.Incognito"/>
-        <activity
-            android:name=".activity.dark.DashboardActivityDark"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Taskbar.Incognito.Dark"/>
-        <activity
-            android:name=".activity.NavigationBarButtonsActivity"
-            android:theme="@style/Taskbar.Dialog.Preference"/>
-        <activity
-            android:name=".activity.dark.NavigationBarButtonsActivityDark"
-            android:theme="@style/Taskbar.Dialog.Preference.Dark"/>
         <activity
             android:name=".activity.TouchAbsorberActivity"
             android:documentLaunchMode="always"
@@ -293,109 +221,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".activity.BackupRestoreActivity"
-            android:theme="@style/Taskbar.Dialog"/>
-
         <service android:name=".service.TaskbarService"/>
         <service android:name=".service.StartMenuService"/>
         <service android:name=".service.NotificationService"/>
-        <service android:name=".service.DashboardService"/>
-        <service
-            android:name=".service.PowerMenuService"
-            android:enabled="true"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data android:name="android.accessibilityservice"
-                       android:resource="@xml/tb_accessibility_service" />
-        </service>
-        <service
-            android:name=".service.QuickSettingsTileService"
-            android:label="@string/tb_app_name"
-            android:icon="@drawable/tb_allapps"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-            <meta-data android:name="android.service.quicksettings.ACTIVE_TILE"
-                       android:value="true" />
-        </service>
-        <service
-            android:name=".service.FavoriteApp1"
-            android:label="@string/tb_new_shortcut"
-            android:icon="@drawable/tb_favorite_app_tile"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-            <meta-data android:name="android.service.quicksettings.ACTIVE_TILE"
-                       android:value="true" />
-        </service>
-        <service
-            android:name=".service.FavoriteApp2"
-            android:label="@string/tb_new_shortcut"
-            android:icon="@drawable/tb_favorite_app_tile"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-            <meta-data android:name="android.service.quicksettings.ACTIVE_TILE"
-                       android:value="true" />
-        </service>
-        <service
-            android:name=".service.FavoriteApp3"
-            android:label="@string/tb_new_shortcut"
-            android:icon="@drawable/tb_favorite_app_tile"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-            <meta-data android:name="android.service.quicksettings.ACTIVE_TILE"
-                       android:value="true" />
-        </service>
-        <service
-            android:name=".service.FavoriteApp4"
-            android:label="@string/tb_new_shortcut"
-            android:icon="@drawable/tb_favorite_app_tile"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-            <meta-data android:name="android.service.quicksettings.ACTIVE_TILE"
-                       android:value="true" />
-        </service>
-        <service
-            android:name=".service.FavoriteApp5"
-            android:label="@string/tb_new_shortcut"
-            android:icon="@drawable/tb_favorite_app_tile"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-            <meta-data android:name="android.service.quicksettings.ACTIVE_TILE"
-                       android:value="true" />
-        </service>
-        <service
-            android:name=".service.NotificationCountService"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
-
         <receiver
             android:name=".receiver.ShowHideTaskbarReceiver"
-            android:permission="com.farmerbb.taskbar.androidx86.START_STOP_TASKBAR"
+            android:permission="com.jcdigitalsolutions.taskbarlite.androidx86.START_STOP_TASKBAR"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.farmerbb.taskbar.SHOW_HIDE_TASKBAR"/>
@@ -404,7 +235,7 @@
         <receiver
             android:name=".receiver.StartReceiver"
             android:enabled="true"
-            android:permission="com.farmerbb.taskbar.androidx86.START_STOP_TASKBAR"
+            android:permission="com.jcdigitalsolutions.taskbarlite.androidx86.START_STOP_TASKBAR"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.farmerbb.taskbar.START"/>
@@ -413,7 +244,7 @@
         <receiver
             android:name=".receiver.QuitReceiver"
             android:enabled="true"
-            android:permission="com.farmerbb.taskbar.androidx86.START_STOP_TASKBAR"
+            android:permission="com.jcdigitalsolutions.taskbarlite.androidx86.START_STOP_TASKBAR"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.farmerbb.taskbar.QUIT"/>
@@ -446,7 +277,7 @@
         </receiver>
         <receiver
             android:name=".receiver.ToggleFreeformModeReceiver"
-            android:permission="com.farmerbb.taskbar.androidx86.START_STOP_TASKBAR"
+            android:permission="com.jcdigitalsolutions.taskbarlite.androidx86.START_STOP_TASKBAR"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.farmerbb.taskbar.TOGGLE_FREEFORM_MODE"/>
@@ -455,7 +286,7 @@
 
         <provider
             android:name=".provider.Kustom5SecsProvider"
-            android:authorities="com.farmerbb.taskbar.androidx86.kustom5secsprovider"
+            android:authorities="com.jcdigitalsolutions.taskbarlite.androidx86.kustom5secsprovider"
             android:grantUriPermissions="true"
             android:exported="true"
             android:enabled="true"/>
