@@ -194,15 +194,6 @@ public class InvisibleActivityFreeform extends Activity {
         if(bootToFreeform && !finish) {
             LauncherHelper.getInstance().setOnPrimaryHomeScreen(false);
             bootToFreeform = false;
-
-            // Stop the Taskbar and Start Menu services if they should normally not be active
-            SharedPreferences pref = U.getSharedPreferences(this);
-                if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
-                    stopService(new Intent(this, TaskbarService.class));
-                    stopService(new Intent(this, StartMenuService.class));
-
-                    U.clearCaches(this);
-                }
         }
     }
 

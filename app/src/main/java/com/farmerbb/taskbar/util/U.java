@@ -38,7 +38,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ShortcutInfo;
-import android.content.pm.ShortcutManager;
 import android.content.pm.Signature;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -67,13 +66,11 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.farmerbb.taskbar.BuildConfig;
 import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.activity.ContextMenuActivity;
-import com.farmerbb.taskbar.activity.DummyActivity;
 import com.farmerbb.taskbar.activity.InvisibleActivityFreeform;
 import com.farmerbb.taskbar.activity.MainActivity;
 import com.farmerbb.taskbar.helper.DisplayHelper;
@@ -506,21 +503,10 @@ public class U {
     private static void prepareToStartActivity(Context context, boolean openInNewWindow, Runnable runnable) {
         sendBroadcast(context, ACTION_HIDE_CONTEXT_MENU);
 
-        if(openInNewWindow && needsInvisibleActivityHacks()) {
-            Intent intent = new Intent(context, DummyActivity.class);
-            intent.putExtra("finish_on_pause", true);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                    | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-            startActivityLowerRight(context, intent);
-
+        if(openInNewWindow) {
             newHandler().postDelayed(runnable, 100);
         } else
             runnable.run();
-    }
-
-    public static void startActivityMaximized(Context context, Intent intent) {
-        Bundle bundle = launchMode2(context, MAXIMIZED, ApplicationType.CONTEXT_MENU, null);
-        prepareToStartActivity(context, false, () -> context.startActivity(intent, bundle));
     }
 
     public static void startActivityLowerRight(Context context, Intent intent) {
@@ -537,7 +523,7 @@ public class U {
     }
 
     public static void startContextMenuActivity(Context context, Bundle args) {
-        Intent intent = getThemedIntent(context, ContextMenuActivity.class);
+        Intent intent = new Intent(context, ContextMenuActivity.class);
         intent.putExtra("args", args);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
@@ -580,11 +566,7 @@ public class U {
     }
 
     public static int getNavbarHeight(Context context) {
-        SharedPreferences pref = getSharedPreferences(context);
-        boolean isNavbarHidden = isShowHideNavbarSupported()
-                && pref.getBoolean(PREF_AUTO_HIDE_NAVBAR_DESKTOP_MODE, false);
-
-        return isNavbarHidden ? 0 : getSystemDimen(context, "navigation_bar_height");
+        return getSystemDimen(context, "navigation_bar_height");
     }
 
     private static int getSystemDimen(Context context, String id) {
@@ -621,14 +603,6 @@ public class U {
 
     private static boolean canBootToFreeform(Context context, boolean checkPref) {
         return hasFreeformSupport(context) && !isOverridingFreeformHack(context, checkPref);
-    }
-
-    public static boolean isSamsungDevice() {
-        return Build.MANUFACTURER.equalsIgnoreCase("Samsung");
-    }
-
-    private static boolean isNvidiaDevice() {
-        return Build.MANUFACTURER.equalsIgnoreCase("NVIDIA");
     }
 
     public static boolean isServiceRunning(Context context, Class<? extends Service> cls) {
@@ -813,9 +787,7 @@ public class U {
             }
         } catch (PackageManager.NameNotFoundException ignored) {}
 
-        return context.getPackageName().equals(BuildConfig.ANDROIDX86_APPLICATION_ID)
-                ? ApplicationType.APP_LANDSCAPE
-                : ApplicationType.APP_PORTRAIT;
+        return ApplicationType.APP_PORTRAIT;
     }
 
     public static boolean isSystemApp(Context context) {
@@ -835,45 +807,6 @@ public class U {
     @TargetApi(Build.VERSION_CODES.O)
     public static boolean isAndroidTV(Context context) {
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK_ONLY);
-    }
-
-    public static boolean isBlissOs(Context context) {
-        boolean validBlissOsBuildProp = false;
-
-        String blissVersion = getSystemProperty("ro.bliss.version");
-        if(blissVersion != null && !blissVersion.isEmpty())
-            validBlissOsBuildProp = true;
-
-        return validBlissOsBuildProp
-                && context.getPackageName().equals(BuildConfig.BASE_APPLICATION_ID)
-                && isSystemApp(context);
-    }
-
-    public static boolean isProjectSakura(Context context) {
-        boolean validSakuraBuildProp = false;
-
-        // TODO replace with more specific logic for Project Sakura
-        String sakuraVersion = getSystemProperty("ro.lineage.build.version");
-        if(sakuraVersion != null && !sakuraVersion.isEmpty())
-            validSakuraBuildProp = true;
-
-        return validSakuraBuildProp
-                && context.getPackageName().equals(BuildConfig.BASE_APPLICATION_ID)
-                && isSystemApp(context);
-    }
-
-    public static boolean isAndroidGeneric(Context context) {
-        if(isBlissOs(context) || isProjectSakura(context)) return true;
-
-        boolean validAndroidGenericBuildProp = false;
-
-        String manufacturer = getSystemProperty("ro.ag.product.manufacturer");
-        if(manufacturer != null && manufacturer.equals("Android-Generic"))
-            validAndroidGenericBuildProp = true;
-
-        return validAndroidGenericBuildProp
-                && context.getPackageName().equals(BuildConfig.BASE_APPLICATION_ID)
-                && isSystemApp(context);
     }
 
     public static boolean hasSupportLibrary(Context context, int minVersion) {
@@ -912,8 +845,7 @@ public class U {
 
     public static void restartTaskbar(Context context) {
         SharedPreferences pref = getSharedPreferences(context);
-        if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false)
-                && !pref.getBoolean(PREF_IS_HIDDEN, false)) {
+        if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false)) {
             pref.edit()
                     .putBoolean(PREF_IS_RESTARTING, true)
                     .putBoolean(PREF_SKIP_AUTO_HIDE_NAVBAR, true)
@@ -947,10 +879,7 @@ public class U {
     }
 
     public static void showHideNavigationBar(Context context, int displayID, boolean show, int delay) {
-        if(!isShowHideNavbarSupported()
-                || (!isBlissOs(context)
-                && !isProjectSakura(context)
-                && !hasSupportLibrary(context, 7))) {
+        if(!isShowHideNavbarSupported()) {
             return;
         }
 
@@ -981,16 +910,6 @@ public class U {
             context.sendBroadcast(intent);
             return;
         }
-
-        // Show or hide the system navigation bar on Bliss-x86 and Project Sakura
-        if(!isBlissOs(context) || !isProjectSakura(context)) return;
-
-        try {
-            if(getCurrentApiVersion() >= 28.0f)
-                Settings.Secure.putInt(context.getContentResolver(), "navigation_bar_visible", show ? 1 : 0);
-            else
-                Settings.System.putInt(context.getContentResolver(), "navigation_bar_show", show ? 1 : 0);
-        } catch (Exception ignored) {}
     }
 
     public static boolean isShowHideNavbarSupported() {
@@ -998,28 +917,8 @@ public class U {
     }
 
     public static void initPrefs(Context context) {
-        SharedPreferences pref = getSharedPreferences(context);
         if(!canEnableFreeform(context))
             stopFreeformHack(context);
-
-        // Customizations for BlissOS
-        if(isAndroidGeneric(context) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && !pref.getBoolean(PREF_BLISS_OS_PREFS, false)) {
-            SharedPreferences.Editor editor = pref.edit();
-
-            editor.putBoolean(PREF_AUTO_HIDE_NAVBAR, true);
-            editor.putBoolean(PREF_BLISS_OS_PREFS, true);
-            editor.apply();
-        }
-
-        // Customizations for Android-x86 devices (non-Bliss)
-        if(context.getPackageName().equals(BuildConfig.ANDROIDX86_APPLICATION_ID)
-                && isSystemApp(context)
-                && !pref.getBoolean(PREF_ANDROID_X86_PREFS, false)) {
-            pref.edit()
-                    .putBoolean(PREF_ANDROID_X86_PREFS, true)
-                    .apply();
-        }
     }
 
     public static DisplayInfo getDisplayInfo(Context context) {
@@ -1049,8 +948,7 @@ public class U {
         DisplayMetrics realMetrics = new DisplayMetrics();
         currentDisplay.getRealMetrics(realMetrics);
 
-        boolean displayDefaultsToFreeform = canEnableFreeform(context) && displayDefaultsToFreeform(context, currentDisplay);
-        DisplayInfo info = new DisplayInfo(metrics.widthPixels, metrics.heightPixels, metrics.densityDpi, 0, displayDefaultsToFreeform);
+        DisplayInfo info = new DisplayInfo(metrics.widthPixels, metrics.heightPixels, metrics.densityDpi, 0, false);
 
         if(isChromeOs(context)) {
             SharedPreferences pref = getSharedPreferences(context);
@@ -1086,32 +984,6 @@ public class U {
         return Display.DEFAULT_DISPLAY;
     }
 
-    public static void pinAppShortcut(Context context) {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            ShortcutManager mShortcutManager = context.getSystemService(ShortcutManager.class);
-
-            if(mShortcutManager.isRequestPinShortcutSupported()) {
-                ShortcutInfo pinShortcutInfo = new ShortcutInfo.Builder(context, "freeform_mode").build();
-
-                mShortcutManager.requestPinShortcut(pinShortcutInfo, null);
-            } else
-                showToastLong(context, R.string.tb_pin_shortcut_not_supported);
-        } else {
-            Intent intent = ShortcutUtils.getShortcutIntent(context);
-            intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
-            intent.putExtra("duplicate", false);
-
-            Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-            homeIntent.addCategory(Intent.CATEGORY_HOME);
-            ResolveInfo defaultLauncher = context.getPackageManager().resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY);
-
-            intent.setPackage(defaultLauncher.activityInfo.packageName);
-            context.sendBroadcast(intent);
-
-            showToast(context, R.string.tb_shortcut_created);
-        }
-    }
-
     public static boolean isOverridingFreeformHack(Context context) {
         return isOverridingFreeformHack(context, true);
     }
@@ -1139,9 +1011,7 @@ public class U {
 
     public static boolean hasBrokenSetLaunchBoundsApi() {
         return getCurrentApiVersion() >= 26.0f
-                && getCurrentApiVersion() < 28.0f
-                && !isSamsungDevice()
-                && !isNvidiaDevice();
+                && getCurrentApiVersion() < 28.0f;
     }
 
     // Returns the name of an installed package from a list of package names, in order of preference
@@ -1166,13 +1036,7 @@ public class U {
     }
 
     public static Context wrapContext(Context context) {
-        int theme;
-        if(isDarkTheme(context))
-            theme = R.style.Taskbar_Dark;
-        else
-            theme = R.style.Taskbar;
-
-        return new ContextThemeWrapper(context, theme);
+        return new ContextThemeWrapper(context, R.style.Taskbar_Dark);
     }
 
     public static boolean isPlayStoreRelease(Context context) {
@@ -1318,8 +1182,7 @@ public class U {
             defaultDensity = 0;
         }
 
-        boolean displayDefaultsToFreeform = canEnableFreeform(context) && displayDefaultsToFreeform(context, display);
-        return new DisplayInfo(metrics.widthPixels, metrics.heightPixels, metrics.densityDpi, defaultDensity, displayDefaultsToFreeform);
+        return new DisplayInfo(metrics.widthPixels, metrics.heightPixels, metrics.densityDpi, defaultDensity, false);
     }
 
     @SuppressLint("PrivateApi")
@@ -1452,20 +1315,6 @@ public class U {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !isChromeOs(context) && !isLibrary(context);
     }
 
-    public static Intent getThemedIntent(Context context, Class<?> clazz) {
-        Class<?> newClass;
-
-        if(!isDarkTheme(context))
-            newClass = clazz;
-        else try {
-            newClass = Class.forName(clazz.getPackage().getName() + ".dark." + clazz.getSimpleName() + "Dark");
-        } catch (ClassNotFoundException | NullPointerException e) {
-            newClass = clazz;
-        }
-
-        return new Intent(context, newClass);
-    }
-
     public static boolean isDarkTheme(Context context) {
         return true;
     }
@@ -1530,9 +1379,7 @@ public class U {
     }
 
     public static boolean isConsumerBuild(Context context) {
-        return !BuildConfig.DEBUG
-                && !context.getPackageName().equals(BuildConfig.ANDROIDX86_APPLICATION_ID)
-                && !isLibrary(context);
+        return !BuildConfig.DEBUG && !isLibrary(context);
     }
 
     @TargetApi(Build.VERSION_CODES.P)
@@ -1565,19 +1412,6 @@ public class U {
         return pref.getBoolean(PREF_CHROME_OS_CONTEXT_MENU_FIX, true);
     }
 
-    private static boolean displayDefaultsToFreeform(Context context, Display display) {
-        DisplayHelper helper = DisplayHelper.getInstance();
-        int id = display.getDisplayId();
-        if(helper.get(id)) return true;
-
-        Context dispContext = context.createDisplayContext(display);
-        String configString = dispContext.getResources().getConfiguration().toString();
-        boolean value = configString.contains("mDisplayWindowingMode=freeform");
-
-        if(value) helper.put(id);
-        return value;
-    }
-
     public static void clearCaches(Context context) {
         IconCache.getInstance(context).clearCache();
         DisplayHelper.getInstance().clear();
@@ -1594,24 +1428,4 @@ public class U {
         return configString;
     }
 
-    public static boolean relaunchActivityIfNeeded(Activity activity) {
-        if(isLibrary(activity)) return false;
-
-        Intent intent = activity.getIntent();
-        if(getCurrentApiVersion() != 30.0f
-                || !displayDefaultsToFreeform(activity, getExternalDisplay(activity))
-                || intent.hasExtra("is_relaunched")) {
-            return false;
-        }
-
-        intent.putExtra("is_relaunched", true);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        newHandler().post(() -> startActivityMaximized(activity, intent));
-        activity.finish();
-        return true;
-    }
-
-    public static boolean needsInvisibleActivityHacks() {
-        return getCurrentApiVersion() < 32.0f;
-    }
 }

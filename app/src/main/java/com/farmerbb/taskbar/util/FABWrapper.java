@@ -17,47 +17,26 @@ package com.farmerbb.taskbar.util;
 
 import android.content.Context;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import androidx.core.content.ContextCompat;
 import android.view.View;
-import android.widget.ImageView;
 
-import com.farmerbb.taskbar.BuildConfig;
 import com.farmerbb.taskbar.R;
 
 public class FABWrapper {
     public View view;
 
     public FABWrapper(Context context) {
-        view = context.getPackageName().equals(BuildConfig.ANDROIDX86_APPLICATION_ID)
-                ? new ImageView(context)
-                : new FloatingActionButton(context);
-
-        if(view instanceof ImageView) {
-            view.setBackground(ContextCompat.getDrawable(context, R.drawable.tb_circle));
-
-            int padding = context.getResources().getDimensionPixelSize(R.dimen.tb_fake_fab_padding);
-            view.setPadding(padding, padding, padding, padding);
-        }
+        view = new FloatingActionButton(context);
     }
 
     public void setImageResource(int resource) {
-        if(view instanceof FloatingActionButton)
-            ((FloatingActionButton) view).setImageResource(resource);
-        else if(view instanceof ImageView)
-            ((ImageView) view).setImageResource(resource);
+        ((FloatingActionButton) view).setImageResource(resource);
     }
 
     public void show() {
-        if(view instanceof FloatingActionButton)
-            ((FloatingActionButton) view).show();
-        else if(view instanceof ImageView)
-            view.setVisibility(View.VISIBLE);
+        ((FloatingActionButton) view).show();
     }
 
     public void hide() {
-        if(view instanceof FloatingActionButton)
-            ((FloatingActionButton) view).hide();
-        else if(view instanceof ImageView)
-            view.setVisibility(View.GONE);
+        ((FloatingActionButton) view).hide();
     }
 }

@@ -31,13 +31,11 @@ import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Process;
 import android.os.SystemClock;
@@ -51,7 +49,6 @@ import android.telephony.PhoneStateListener;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -76,7 +73,6 @@ import com.farmerbb.taskbar.util.AppEntry;
 import com.farmerbb.taskbar.util.DisplayInfo;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.util.IconCache;
-import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.helper.MenuHelper;
 import com.farmerbb.taskbar.util.U;
 
@@ -196,18 +192,6 @@ public class TaskbarController extends UIController {
         int padding = context.getResources().getDimensionPixelSize(R.dimen.tb_app_drawer_icon_padding);
         startButton.setPadding(padding, padding, padding, padding);
         startButton.setOnClickListener(ocl);
-        startButton.setOnLongClickListener(view -> {
-            openContextMenu();
-            return true;
-        });
-
-        startButton.setOnGenericMotionListener((view, motionEvent) -> {
-            if(motionEvent.getAction() == MotionEvent.ACTION_BUTTON_PRESS
-                    && motionEvent.getButtonState() == MotionEvent.BUTTON_SECONDARY)
-                openContextMenu();
-
-            return false;
-        });
     }
 
     private void showTaskbar() {
@@ -243,18 +227,6 @@ public class TaskbarController extends UIController {
         U.unregisterReceiver(context, tempShowReceiver);
 
         isFirstStart = true;
-    }
-
-    private void openContextMenu() {
-        SharedPreferences pref = U.getSharedPreferences(context);
-
-        Bundle args = new Bundle();
-        args.putBoolean("dont_show_quit",
-                LauncherHelper.getInstance().isOnHomeScreen(context)
-                        && !pref.getBoolean(PREF_TASKBAR_ACTIVE, false));
-        args.putBoolean("is_start_button", true);
-
-        U.startContextMenuActivity(context, args);
     }
 
     @TargetApi(Build.VERSION_CODES.M)

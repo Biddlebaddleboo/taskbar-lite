@@ -27,10 +27,6 @@ import com.farmerbb.taskbar.util.Constants.PREF_RECENTS_AMOUNT
 import com.farmerbb.taskbar.util.Constants.PREF_RECENTS_AMOUNT_APP_START
 import com.farmerbb.taskbar.util.Constants.PREF_RECENTS_AMOUNT_RUNNING_APPS_ONLY
 import com.farmerbb.taskbar.util.Constants.PREF_RECENTS_AMOUNT_SHOW_ALL
-import com.farmerbb.taskbar.util.Constants.PREF_START_BUTTON_IMAGE
-import com.farmerbb.taskbar.util.Constants.PREF_START_BUTTON_IMAGE_APP_LOGO
-import com.farmerbb.taskbar.util.Constants.PREF_START_BUTTON_IMAGE_CUSTOM
-import com.farmerbb.taskbar.util.Constants.PREF_START_BUTTON_IMAGE_DEFAULT
 import com.farmerbb.taskbar.util.Constants.PREF_TIME_OF_SERVICE_START
 import com.farmerbb.taskbar.util.U
 import org.junit.After
@@ -68,7 +64,6 @@ class TaskbarControllerTest {
 
     @After
     fun tearDown() {
-        prefs.edit().remove(PREF_START_BUTTON_IMAGE).apply()
         uiController.onDestroyHost(host)
     }
 
@@ -80,25 +75,9 @@ class TaskbarControllerTest {
     @Test
     fun testDrawStartButtonPadding() {
         val startButton = ImageView(context)
-        prefs = U.getSharedPreferences(context)
-        prefs.edit().putString(PREF_START_BUTTON_IMAGE, PREF_START_BUTTON_IMAGE_DEFAULT).apply()
         uiController.drawStartButton(context, startButton, prefs)
         var padding = context.resources.getDimensionPixelSize(R.dimen.tb_app_drawer_icon_padding)
         checkStartButtonPadding(padding, startButton)
-        PowerMockito.spy(U::class.java)
-        // Use bliss os logic to avoid using LauncherApps, that robolectric doesn't support
-        PowerMockito.`when`(U.isBlissOs(context)).thenReturn(true)
-        prefs.edit().putString(PREF_START_BUTTON_IMAGE, PREF_START_BUTTON_IMAGE_APP_LOGO).apply()
-        uiController.drawStartButton(context, startButton, prefs)
-        padding = context.resources.getDimensionPixelSize(R.dimen.tb_app_drawer_icon_padding_alt)
-        checkStartButtonPadding(padding, startButton)
-        prefs.edit().putString(PREF_START_BUTTON_IMAGE, PREF_START_BUTTON_IMAGE_CUSTOM).apply()
-        uiController.drawStartButton(context, startButton, prefs)
-        padding = context.resources.getDimensionPixelSize(R.dimen.tb_app_drawer_icon_padding)
-        checkStartButtonPadding(padding, startButton)
-        prefs.edit().putString(PREF_START_BUTTON_IMAGE, "non-support").apply()
-        uiController.drawStartButton(context, startButton, prefs)
-        checkStartButtonPadding(0, startButton)
     }
 
     @Test

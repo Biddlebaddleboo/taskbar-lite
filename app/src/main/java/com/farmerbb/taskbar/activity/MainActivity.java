@@ -19,6 +19,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.farmerbb.taskbar.util.Callbacks;
 import com.farmerbb.taskbar.util.U;
 
 import static com.farmerbb.taskbar.util.Constants.*;
@@ -29,15 +30,15 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if(U.relaunchActivityIfNeeded(this)) return;
-
         U.initPrefs(this);
+
+        if(getIntent().hasExtra(EXTRA_SHOW_PERMISSION_DIALOG)) {
+            U.showPermissionDialog(this, new Callbacks(null, this::finish));
+            return;
+        }
 
         if(!U.isLibrary(this)) {
             U.setComponentEnabled(this, HomeActivity.class, true);
-            U.setComponentEnabled(this, ShortcutActivity.class,
-                    U.enableFreeformModeShortcut(this));
-            U.setComponentEnabled(this, StartTaskbarActivity.class, true);
         }
 
         Intent intent = new Intent(ACTION_START);

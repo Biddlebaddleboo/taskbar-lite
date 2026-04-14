@@ -39,8 +39,6 @@ import static com.farmerbb.taskbar.util.Constants.*;
 
 public class NotificationService extends Service {
 
-    private boolean isHidden = true;
-
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -82,20 +80,10 @@ public class NotificationService extends Service {
         SharedPreferences pref = U.getSharedPreferences(this);
         if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false)) {
             if(U.canDrawOverlays(this)) {
-                isHidden = U.getSharedPreferences(this).getBoolean(PREF_IS_HIDDEN, false);
-
                 Intent intent = new Intent(this, MainActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
-                Intent receiverIntent = new Intent(ACTION_SHOW_HIDE_TASKBAR);
-                receiverIntent.setPackage(getPackageName());
-
-                Intent receiverIntent2 = new Intent(ACTION_QUIT);
-                receiverIntent2.setPackage(getPackageName());
-
                 PendingIntent contentIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                PendingIntent receiverPendingIntent = PendingIntent.getBroadcast(this, 0, receiverIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                PendingIntent receiverPendingIntent2 = PendingIntent.getBroadcast(this, 0, receiverIntent2, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
                 String id = "taskbar_notification_channel";
 
@@ -117,17 +105,10 @@ public class NotificationService extends Service {
                         .setShowWhen(false)
                         .setOngoing(true);
 
-                String showHideLabel = getString(isHidden ? R.string.tb_action_show : R.string.tb_action_hide);
-
-                mBuilder.addAction(0, showHideLabel, receiverPendingIntent)
-                        .addAction(0, getString(R.string.tb_action_quit), receiverPendingIntent2);
-
                 startForeground(8675309, mBuilder.build());
 
-                if(!isHidden) {
-                    registerReceiver(userForegroundReceiver, new IntentFilter(Intent.ACTION_USER_FOREGROUND));
-                    registerReceiver(userBackgroundReceiver, new IntentFilter(Intent.ACTION_USER_BACKGROUND));
-                }
+                registerReceiver(userForegroundReceiver, new IntentFilter(Intent.ACTION_USER_FOREGROUND));
+                registerReceiver(userBackgroundReceiver, new IntentFilter(Intent.ACTION_USER_BACKGROUND));
             } else {
                 pref.edit().putBoolean(PREF_TASKBAR_ACTIVE, false).apply();
 
@@ -148,9 +129,7 @@ public class NotificationService extends Service {
 
         super.onDestroy();
 
-        if(!isHidden) {
-            unregisterReceiver(userForegroundReceiver);
-            unregisterReceiver(userBackgroundReceiver);
-        }
+        unregisterReceiver(userForegroundReceiver);
+        unregisterReceiver(userBackgroundReceiver);
     }
 }

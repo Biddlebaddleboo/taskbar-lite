@@ -42,27 +42,6 @@
             android:process=":libtaskbar"
             android:label="@string/tb_app_name"/>
         <activity
-            android:name=".activity.InvisibleActivity"
-            android:process=":libtaskbar"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Taskbar.InvisibleActivity"/>
-        <activity
-            android:name=".activity.InvisibleActivityAlt"
-            android:process=":libtaskbar"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Taskbar.Incognito"/>
-        <activity
-            android:name=".activity.dark.InvisibleActivityAltDark"
-            android:process=":libtaskbar"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Taskbar.Incognito.Dark"/>
-        <activity
             android:name=".activity.InvisibleActivityFreeform"
             android:process=":libtaskbar"
             android:documentLaunchMode="always"
@@ -77,25 +56,9 @@
             android:excludeFromRecents="true"
             android:theme="@style/Taskbar.Dialog"/>
         <activity
-            android:name=".activity.dark.ContextMenuActivityDark"
-            android:process=":libtaskbar"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:theme="@style/Taskbar.Dialog.Dark"/>
-        <activity
             android:name=".activity.SelectAppActivity"
             android:process=":libtaskbar"
             android:theme="@style/Taskbar.Dialog"/>
-        <activity
-            android:name=".activity.dark.SelectAppActivityDark"
-            android:process=":libtaskbar"
-            android:theme="@style/Taskbar.Dialog.Dark"/>
-        <activity
-            android:name=".activity.DummyActivity"
-            android:process=":libtaskbar"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:theme="@style/Taskbar.Incognito"/>
     </application>
 
 </manifest>

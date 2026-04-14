@@ -20,7 +20,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
-import com.farmerbb.taskbar.activity.DummyActivity;
 import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.util.U;
 
@@ -31,21 +30,15 @@ public class PackageUpgradeReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if(Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())) {
             SharedPreferences pref = U.getSharedPreferences(context);
-            boolean startServices = false;
+            boolean startServices = pref.getBoolean(PREF_TASKBAR_ACTIVE, false);
 
-            if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !pref.getBoolean(PREF_IS_HIDDEN, false)) {
+            if(startServices) {
                 if(U.hasFreeformSupport(context)) {
-                    Intent intent2 = new Intent(context, DummyActivity.class);
-                    intent2.putExtra(EXTRA_START_FREEFORM_HACK, true);
-                    intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                    context.startActivity(intent2);
+                    U.startFreeformHack(context, true);
                 }
-
-                startServices = true;
             }
 
-            if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false)) {
+            if(startServices) {
                 Intent notificationIntent = new Intent(context, NotificationService.class);
                 notificationIntent.putExtra(EXTRA_START_SERVICES, startServices);
 

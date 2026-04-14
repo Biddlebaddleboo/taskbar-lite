@@ -313,14 +313,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
 
         SharedPreferences pref = U.getSharedPreferences(this);
         if(!U.canBootToFreeform(this)) {
-            // Stop the Taskbar and Start Menu services if they should normally not be active
-            if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
-                stopService(new Intent(this, TaskbarService.class));
-                stopService(new Intent(this, StartMenuService.class));
-
-                U.clearCaches(this);
-            }
-
             if(isChangingConfigurations())
                 setOnHomeScreen(false);
             else
@@ -363,16 +355,6 @@ public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
     }
 
     private void killHomeActivity() {
-        // Stop the Taskbar and Start Menu services if they should normally not be active
-        SharedPreferences pref = U.getSharedPreferences(this);
-        if(!pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || pref.getBoolean(PREF_IS_HIDDEN, false)) {
-            stopService(new Intent(this, TaskbarService.class));
-            stopService(new Intent(this, StartMenuService.class));
-
-            U.clearCaches(this);
-            U.stopFreeformHack(this);
-        }
-
         U.newHandler().post(() -> {
             setOnHomeScreen(false);
             finish();

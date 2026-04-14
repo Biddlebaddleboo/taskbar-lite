@@ -25,7 +25,6 @@
     <string name="tb_action_hide">Hide Taskbar Lite</string>
     <string name="tb_action_show_alt">Show</string>
     <string name="tb_action_hide_alt">Hide</string>
-    <string name="tb_action_quit">Quit</string>
     <string name="tb_action_grant_permission">Grant permission</string>
     <string name="tb_action_open_settings">Open Settings</string>
 
@@ -40,8 +39,6 @@
 
     <string name="tb_app_info">App info</string>
     <string name="tb_uninstall">Uninstall</string>
-    <string name="tb_quit_taskbar">Quit</string>
-
     <string name="tb_loading_apps">Loading apps&#8230;</string>
     <string name="tb_nothing_to_see_here">Nothing to see here, move along&#8230;</string>
 
@@ -52,8 +49,6 @@
 
     <string name="tb_action_developer_options">Open Developer Options</string>
     <string name="tb_action_close">Close</string>
-
-    <string name="tb_pref_header_freeform">Freeform mode</string>
 
     <string name="tb_window_size_standard">Standard</string>
     <string name="tb_window_size_fullscreen">Maximized</string>
@@ -66,11 +61,6 @@
 
     <string name="tb_show_window_sizes">New window&#8230;</string>
 
-    <string name="tb_add_shortcut">Add shortcut to home screen</string>
-    <string name="tb_shortcut_created">Freeform mode shortcut created</string>
-
-    <string name="tb_start_taskbar">Start/stop Taskbar Lite</string>
-    <string name="tb_no_freeform_support">Freeform mode is not enabled on your device &#8211; open Taskbar Lite and enable it first</string>
     <string name="tb_app_shortcuts">More actions&#8230;</string>
 
     <string name="tb_usage_stats_message">Please ensure that %s is set to \"On\"</string>
@@ -83,8 +73,6 @@
 
     <string name="tb_auto_hide_navbar">Automatically control the system navigation bar</string>
     <string name="tb_auto_hide_navbar_description">Hide the navigation bar when Taskbar Lite is active, and show it when Taskbar Lite is inactive</string>
-
-    <string name="tb_pin_shortcut_not_supported">Your launcher doesn\'t support adding shortcuts from other apps.\n\nPlease manually add the shortcut from your launcher\'s \"Widgets\" menu.</string>
 
     <string name="tb_use_default">Use default</string>
 
@@ -107,9 +95,6 @@
     <string name="tb_no_icons_to_sort">No icons to sort</string>
     <string name="tb_pref_centered_icons">Centered app icons</string>
     <string name="tb_powered_by_taskbar">Powered by Taskbar Lite</string>
-
-    <string name="tb_new_shortcut">Launch app</string>
-    <string name="tb_invalid_shortcut">Invalid shortcut</string>
 
     <string name="tb_backing_up_settings">Backing up settings&#8230;</string>
     <string name="tb_restoring_settings">Restoring settings&#8230;</string>

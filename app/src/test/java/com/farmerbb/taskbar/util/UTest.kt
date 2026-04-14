@@ -24,7 +24,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
 import org.powermock.api.mockito.PowerMockito
 import org.powermock.core.classloader.annotations.PowerMockIgnore
 import org.powermock.core.classloader.annotations.PrepareForTest
@@ -33,7 +32,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.LooperMode
-import org.robolectric.shadows.ShadowBuild
 import org.robolectric.shadows.ShadowLooper
 import org.robolectric.shadows.ShadowSettings
 import org.robolectric.shadows.ShadowToast
@@ -266,16 +264,6 @@ class UTest {
     }
 
     @Test
-    fun testIsSamsungDevice() {
-        ShadowBuild.setManufacturer("Samsung")
-        Assert.assertTrue(U.isSamsungDevice())
-        ShadowBuild.setManufacturer("samsung")
-        Assert.assertTrue(U.isSamsungDevice())
-        ShadowBuild.setManufacturer("UnSamsung")
-        Assert.assertFalse(U.isSamsungDevice())
-    }
-
-    @Test
     fun testGetBackgroundTint() {
         val prefs = U.getSharedPreferences(context)
         prefs.edit()
@@ -451,50 +439,6 @@ class UTest {
     }
 
     @Test
-    fun testInitPrefsForBlissOS() {
-        PowerMockito.spy(U::class.java)
-        PowerMockito.`when`(U.isBlissOs(ArgumentMatchers.any(Context::class.java)))
-                .thenReturn(true)
-        Assert.assertTrue(U.isBlissOs(context))
-        val prefs = U.getSharedPreferences(context)
-        Assert.assertFalse(prefs.getBoolean(Constants.PREF_BLISS_OS_PREFS, false))
-        U.initPrefs(context)
-        Assert.assertEquals(
-                Constants.PREF_RECENTS_AMOUNT_RUNNING_APPS_ONLY,
-                prefs.getString(Constants.PREF_RECENTS_AMOUNT, "")
-        )
-        Assert.assertEquals("0",
-                prefs.getString(Constants.PREF_REFRESH_FREQUENCY, ""))
-        Assert.assertEquals("2147483647",
-                prefs.getString(Constants.PREF_MAX_NUM_OF_RECENTS, ""))
-        Assert.assertEquals("true",
-                prefs.getString(Constants.PREF_SORT_ORDER, ""))
-        Assert.assertEquals(
-                Constants.PREF_START_BUTTON_IMAGE_APP_LOGO,
-                prefs.getString(Constants.PREF_START_BUTTON_IMAGE, "")
-        )
-        Assert.assertTrue(prefs.getBoolean(Constants.PREF_AUTO_HIDE_NAVBAR, false))
-        Assert.assertFalse(prefs.getBoolean(Constants.PREF_SHORTCUT_ICON, true))
-        Assert.assertTrue(prefs.getBoolean(Constants.PREF_BLISS_OS_PREFS, false))
-        prefs.edit().putBoolean(Constants.PREF_BLISS_OS_PREFS, false)
-    }
-
-    @Test
-    fun testInitPrefsForNormalWithCanEnableFreeformAndHackOverrideFalse() {
-        PowerMockito.spy(U::class.java)
-        PowerMockito.`when`(U.canEnableFreeform(context)).thenReturn(true)
-        val prefs = U.getSharedPreferences(context)
-        prefs.edit().putBoolean(Constants.PREF_FREEFORM_HACK_OVERRIDE, false).apply()
-        U.initPrefs(context)
-        Assert.assertEquals(
-                U.hasFreeformSupport(context) && !U.isSamsungDevice(),
-                prefs.getBoolean(Constants.PREF_FREEFORM_HACK, false)
-        )
-        Assert.assertFalse(prefs.getBoolean(Constants.PREF_SAVE_WINDOW_SIZES, true))
-        Assert.assertTrue(prefs.getBoolean(Constants.PREF_FREEFORM_HACK_OVERRIDE, false))
-    }
-
-    @Test
     fun testInitPrefsForNormalWithCanEnableFreeformAndHackOverrideTrueButNoSupport() {
         PowerMockito.spy(U::class.java)
         PowerMockito.`when`(U.canEnableFreeform(context)).thenReturn(true)
@@ -619,17 +563,14 @@ class UTest {
 
     @Test
     @Config(sdk = [26])
-    @Throws(Exception::class)
     fun testHasBrokenSetLaunchBoundsApiForApi26() {
-        testHasBrokenSetLaunchBoundsApiWithValidApiVersion()
+        Assert.assertTrue(U.hasBrokenSetLaunchBoundsApi())
     }
 
     @Test
     @Config(sdk = [27])
-    @Throws(Exception::class)
     fun testHasBrokenSetLaunchBoundsApiForApi27() {
-        testHasBrokenSetLaunchBoundsApiWithValidApiVersion()
-        testHasBrokenSetLaunchBoundsApiWithValidApiVersion()
+        Assert.assertTrue(U.hasBrokenSetLaunchBoundsApi())
     }
 
     @Test
@@ -638,49 +579,13 @@ class UTest {
         Assert.assertFalse(U.hasBrokenSetLaunchBoundsApi())
     }
 
-    @Throws(Exception::class)
-    private fun testHasBrokenSetLaunchBoundsApiWithValidApiVersion() {
-        PowerMockito.spy(U::class.java)
-        val isSamsungDeviceAnswer = BooleanAnswer()
-        val isNvidiaDevice = BooleanAnswer()
-        PowerMockito.`when`(U.isSamsungDevice()).thenAnswer(isSamsungDeviceAnswer)
-        PowerMockito.`when`<Any>(U::class.java, "isNvidiaDevice")
-                .thenAnswer(isNvidiaDevice)
-        isSamsungDeviceAnswer.answer = false
-        isNvidiaDevice.answer = false
-        Assert.assertTrue(U.hasBrokenSetLaunchBoundsApi())
-        isSamsungDeviceAnswer.answer = false
-        isNvidiaDevice.answer = true
-        Assert.assertFalse(U.hasBrokenSetLaunchBoundsApi())
-        isSamsungDeviceAnswer.answer = true
-        isNvidiaDevice.answer = false
-        Assert.assertFalse(U.hasBrokenSetLaunchBoundsApi())
-        isSamsungDeviceAnswer.answer = true
-        isNvidiaDevice.answer = true
-        Assert.assertFalse(U.hasBrokenSetLaunchBoundsApi())
-    }
-
     @Test
     fun testWrapContext() {
-        val prefs = U.getSharedPreferences(context)
-        prefs.edit().putString(Constants.PREF_THEME, "light").apply()
-        var newContext = U.wrapContext(context)
-        var themeResource = ReflectionHelpers.getField<Int>(newContext, "mThemeResource")
-        Assert.assertNotNull(themeResource)
-        Assert.assertEquals(R.style.Taskbar.toLong(), (themeResource as Int).toLong())
-        prefs.edit().putString(Constants.PREF_THEME, "dark").apply()
-        newContext = U.wrapContext(context)
-        themeResource = ReflectionHelpers.getField(newContext, "mThemeResource")
+        val newContext = U.wrapContext(context)
+        val themeResource = ReflectionHelpers.getField<Int>(newContext, "mThemeResource")
+        Assert.assertTrue(newContext is ContextThemeWrapper)
         Assert.assertNotNull(themeResource)
         Assert.assertEquals(R.style.Taskbar_Dark.toLong(), (themeResource as Int).toLong())
-        prefs.edit().putString(Constants.PREF_THEME, "non-support").apply()
-        newContext = U.wrapContext(context)
-        Assert.assertTrue(newContext is ContextThemeWrapper)
-        prefs.edit().remove(Constants.PREF_THEME).apply()
-        newContext = U.wrapContext(context)
-        themeResource = ReflectionHelpers.getField(newContext, "mThemeResource")
-        Assert.assertNotNull(themeResource)
-        Assert.assertEquals(R.style.Taskbar.toLong(), (themeResource as Int).toLong())
     }
 
     @Test
@@ -744,40 +649,7 @@ class UTest {
     }
 
     @Test
-    fun testGetDefaultStartButtonImage() {
-        val prefs = U.getSharedPreferences(context)
-        prefs.edit().putBoolean(Constants.PREF_APP_DRAWER_ICON, true).apply()
-        Assert.assertEquals(Constants.PREF_START_BUTTON_IMAGE_APP_LOGO,
-                U.getDefaultStartButtonImage(context))
-        prefs.edit().putBoolean(Constants.PREF_APP_DRAWER_ICON, false).apply()
-        Assert.assertEquals(Constants.PREF_START_BUTTON_IMAGE_DEFAULT,
-                U.getDefaultStartButtonImage(context))
-        prefs.edit().remove(Constants.PREF_APP_DRAWER_ICON).apply()
-        Assert.assertEquals(Constants.PREF_START_BUTTON_IMAGE_DEFAULT,
-                U.getDefaultStartButtonImage(context))
-    }
-
-    @Test
-    @Throws(Exception::class)
     fun testIsDesktopIconEnabled() {
-        PowerMockito.spy(U::class.java)
-        val canBootToFreeformAnswer = BooleanAnswer()
-        val shouldLaunchTouchAbsorberAnswer = BooleanAnswer()
-        PowerMockito.`when`<Any>(U::class.java, "canBootToFreeform", context, false)
-                .thenAnswer(canBootToFreeformAnswer)
-        PowerMockito.`when`<Any>(U::class.java, "shouldLaunchTouchAbsorber", context)
-                .thenAnswer(shouldLaunchTouchAbsorberAnswer)
-        canBootToFreeformAnswer.answer = false
-        shouldLaunchTouchAbsorberAnswer.answer = false
-        Assert.assertTrue(U.isDesktopIconsEnabled(context))
-        canBootToFreeformAnswer.answer = false
-        shouldLaunchTouchAbsorberAnswer.answer = true
-        Assert.assertFalse(U.isDesktopIconsEnabled(context))
-        canBootToFreeformAnswer.answer = true
-        shouldLaunchTouchAbsorberAnswer.answer = false
-        Assert.assertFalse(U.isDesktopIconsEnabled(context))
-        canBootToFreeformAnswer.answer = true
-        shouldLaunchTouchAbsorberAnswer.answer = true
         Assert.assertFalse(U.isDesktopIconsEnabled(context))
     }
 

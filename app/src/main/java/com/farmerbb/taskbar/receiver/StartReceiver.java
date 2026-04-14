@@ -20,7 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
-import com.farmerbb.taskbar.activity.DummyActivity;
+import com.farmerbb.taskbar.activity.MainActivity;
 import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.util.U;
 
@@ -32,42 +32,30 @@ public class StartReceiver extends BroadcastReceiver {
         SharedPreferences pref = U.getSharedPreferences(context);
 
         boolean taskbarNotActive = !U.isServiceRunning(context, NotificationService.class);
-        boolean taskbarActiveButHidden = !taskbarNotActive && pref.getBoolean(PREF_IS_HIDDEN, false);
 
         if(!U.canDrawOverlays(context)) {
             U.newHandler().postDelayed(() -> {
-                Intent intent2 = new Intent(context, DummyActivity.class);
+                Intent intent2 = new Intent(context, MainActivity.class);
                 intent2.putExtra(EXTRA_SHOW_PERMISSION_DIALOG, true);
                 intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
                 context.startActivity(intent2);
             }, 250);
-        } else if(taskbarNotActive || taskbarActiveButHidden) {
+        } else if(taskbarNotActive) {
             U.initPrefs(context);
 
             SharedPreferences.Editor editor = pref.edit();
-            editor.putBoolean(PREF_IS_HIDDEN, false);
 
-            if(taskbarNotActive) {
-                if(pref.getBoolean(PREF_FIRST_RUN, true)) {
-                    editor.putBoolean(PREF_FIRST_RUN, false);
-                }
-
-                editor.putBoolean(PREF_TASKBAR_ACTIVE, true);
-                editor.putLong(PREF_TIME_OF_SERVICE_START, System.currentTimeMillis());
+            if(pref.getBoolean(PREF_FIRST_RUN, true)) {
+                editor.putBoolean(PREF_FIRST_RUN, false);
             }
 
+            editor.putBoolean(PREF_TASKBAR_ACTIVE, true);
+            editor.putLong(PREF_TIME_OF_SERVICE_START, System.currentTimeMillis());
             editor.apply();
 
-            if(taskbarActiveButHidden)
-                context.stopService(new Intent(context, NotificationService.class));
-
             if(U.hasFreeformSupport(context)) {
-                Intent intent2 = new Intent(context, DummyActivity.class);
-                intent2.putExtra(EXTRA_START_FREEFORM_HACK, true);
-                intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                context.startActivity(intent2);
+                U.startFreeformHack(context, true);
             }
 
             Intent notificationIntent = new Intent(context, NotificationService.class);

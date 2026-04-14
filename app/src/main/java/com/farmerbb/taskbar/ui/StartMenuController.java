@@ -42,13 +42,10 @@ import android.widget.GridView;
 import android.widget.TextView;
 
 import com.farmerbb.taskbar.R;
-import com.farmerbb.taskbar.activity.InvisibleActivity;
-import com.farmerbb.taskbar.activity.InvisibleActivityAlt;
 import com.farmerbb.taskbar.adapter.StartMenuAdapter;
 import com.farmerbb.taskbar.util.AppEntry;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.util.IconCache;
-import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.helper.MenuHelper;
 import com.farmerbb.taskbar.util.U;
 import com.farmerbb.taskbar.widget.StartMenuLayout;
@@ -330,29 +327,6 @@ public class StartMenuController extends UIController {
             MenuHelper.getInstance().setStartMenuOpen(true);
 
             U.sendBroadcast(context, ACTION_START_MENU_APPEARING);
-
-            boolean onHomeScreen = LauncherHelper.getInstance().isOnHomeScreen(context);
-            boolean inFreeformMode = FreeformHackHelper.getInstance().isInFreeformWorkspace();
-
-            if(!U.isChromeOs(context)
-                    && U.needsInvisibleActivityHacks()
-                    && (!onHomeScreen || inFreeformMode)) {
-                Class<?> clazz = inFreeformMode && !U.hasBrokenSetLaunchBoundsApi()
-                        ? InvisibleActivityAlt.class
-                        : InvisibleActivity.class;
-
-                Intent intent = new Intent(context, clazz);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-
-                if(inFreeformMode) {
-                    if(clazz.equals(InvisibleActivity.class))
-                        U.startActivityLowerRight(context, intent);
-                    else if(clazz.equals(InvisibleActivityAlt.class))
-                        U.startActivityMaximized(context, intent);
-                } else
-                    context.startActivity(intent);
-            }
 
             refreshApps(false);
 

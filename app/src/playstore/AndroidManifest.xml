@@ -74,24 +74,6 @@
             android:label="${appName}"
             android:launchMode="singleTask"/>
         <activity
-            android:name=".activity.InvisibleActivity"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Taskbar.InvisibleActivity"/>
-        <activity
-            android:name=".activity.InvisibleActivityAlt"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Taskbar.Incognito"/>
-        <activity
-            android:name=".activity.dark.InvisibleActivityAltDark"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:theme="@style/Taskbar.Incognito.Dark"/>
-        <activity
             android:name=".activity.InvisibleActivityFreeform"
             android:documentLaunchMode="always"
             android:excludeFromRecents="true"
@@ -127,78 +109,6 @@
             android:documentLaunchMode="always"
             android:excludeFromRecents="true"
             android:theme="@style/Taskbar.Dialog"/>
-        <activity
-            android:name=".activity.dark.ContextMenuActivityDark"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:theme="@style/Taskbar.Dialog.Dark"/>
-        <activity
-            android:name=".activity.DummyActivity"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:theme="@style/Taskbar.Incognito"/>
-        <activity
-            android:name=".activity.ShortcutActivity"
-            android:label="@string/tb_pref_header_freeform"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:enabled="false"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <action android:name="android.intent.action.CREATE_SHORTCUT" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".activity.StartTaskbarActivity"
-            android:label="@string/tb_start_taskbar"
-            android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
-            android:enabled="true"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <action android:name="android.intent.action.CREATE_SHORTCUT" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".activity.PersistentShortcutSelectAppActivity"
-            android:label="@string/tb_new_shortcut"
-            android:excludeFromRecents="true"
-            android:launchMode="singleInstance"
-            android:theme="@style/Taskbar.Dialog"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <action android:name="android.intent.action.CREATE_SHORTCUT" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".activity.dark.PersistentShortcutSelectAppActivityDark"
-            android:label="@string/tb_new_shortcut"
-            android:excludeFromRecents="true"
-            android:launchMode="singleInstance"
-            android:theme="@style/Taskbar.Dialog.Dark"/>
-        <activity
-            android:name=".activity.PersistentShortcutLaunchActivity"
-            android:launchMode="singleInstance"
-            android:excludeFromRecents="true"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
         <service android:name=".service.TaskbarService"/>
         <service android:name=".service.StartMenuService"/>
 
@@ -210,29 +120,12 @@
                 android:value="This foreground service is required because the app\'s core functionality draws an overlay over other apps, displaying UI that is hosted inside of services instead of an activity"/>
         </service>
         <receiver
-            android:name=".receiver.ShowHideTaskbarReceiver"
-            android:permission="${applicationId}.START_STOP_TASKBAR"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.farmerbb.taskbar.SHOW_HIDE_TASKBAR"/>
-            </intent-filter>
-        </receiver>
-        <receiver
             android:name=".receiver.StartReceiver"
             android:enabled="true"
             android:permission="${applicationId}.START_STOP_TASKBAR"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.farmerbb.taskbar.START"/>
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".receiver.QuitReceiver"
-            android:enabled="true"
-            android:permission="${applicationId}.START_STOP_TASKBAR"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.farmerbb.taskbar.QUIT"/>
             </intent-filter>
         </receiver>
         <receiver

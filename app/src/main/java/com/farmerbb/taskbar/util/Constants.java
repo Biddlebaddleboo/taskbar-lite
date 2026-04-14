@@ -31,11 +31,9 @@ public class Constants {
     public static final String ACTION_HIDE_START_MENU_NO_RESET = "com.farmerbb.taskbar.HIDE_START_MENU_NO_RESET";
     public static final String ACTION_HIDE_START_MENU_SPACE = "com.farmerbb.taskbar.HIDE_START_MENU_SPACE";
     public static final String ACTION_KILL_HOME_ACTIVITY = "com.farmerbb.taskbar.KILL_HOME_ACTIVITY";
-    public static final String ACTION_QUIT = "com.farmerbb.taskbar.QUIT";
     public static final String ACTION_REFRESH_DESKTOP_ICONS = "com.farmerbb.taskbar.REFRESH_DESKTOP_ICONS";
     public static final String ACTION_RESET_START_MENU = "com.farmerbb.taskbar.RESET_START_MENU";
     public static final String ACTION_RESTART = "com.farmerbb.taskbar.RESTART";
-    public static final String ACTION_SHOW_HIDE_TASKBAR = "com.farmerbb.taskbar.SHOW_HIDE_TASKBAR";
     public static final String ACTION_SHOW_START_MENU_SPACE = "com.farmerbb.taskbar.SHOW_START_MENU_SPACE";
     public static final String ACTION_SHOW_TASKBAR = "com.farmerbb.taskbar.SHOW_TASKBAR";
     public static final String ACTION_SORT_DESKTOP_ICONS = "com.farmerbb.taskbar.SORT_DESKTOP_ICONS";
@@ -51,14 +49,11 @@ public class Constants {
 
     public static final String PREF_ADD_ICON_TO_DESKTOP = "add_icon_to_desktop";
     public static final String PREF_ADD_SHORTCUT = "add_shortcut";
-    public static final String PREF_ANDROID_X86_PREFS = "android_x86_prefs";
     public static final String PREF_APP_INFO = "app_info";
     public static final String PREF_APP_SHORTCUTS = "app_shortcuts";
     public static final String PREF_ARRANGE_ICONS = "arrange_icons";
     public static final String PREF_AUTO_HIDE_NAVBAR = "auto_hide_navbar";
     public static final String PREF_AUTO_HIDE_NAVBAR_CATEGORY = "auto_hide_navbar_category";
-    public static final String PREF_AUTO_HIDE_NAVBAR_DESKTOP_MODE = "auto_hide_navbar_desktop_mode";
-    public static final String PREF_BLISS_OS_PREFS = "bliss_os_prefs";
     public static final String PREF_CENTERED_ICONS = "centered_icons";
     public static final String PREF_CHROME_OS_CONTEXT_MENU_FIX = "chrome_os_context_menu_fix";
     public static final String PREF_DEFAULT_NULL = "null";
@@ -72,9 +67,7 @@ public class Constants {
     public static final String PREF_HIDE_ICON_LABELS = "hide_icon_labels";
     public static final String PREF_HSL_ID = "hsl_id";
     public static final String PREF_HSL_NAME = "hsl_name";
-    public static final String PREF_IS_HIDDEN = "is_hidden";
     public static final String PREF_IS_RESTARTING = "is_restarting";
-    public static final String PREF_QUIT_TASKBAR = "quit_taskbar";
     public static final String PREF_REMOVE_DESKTOP_ICON = "remove_desktop_icon";
     public static final String PREF_RESET_COLORS = "reset_colors";
     public static final String PREF_SAMSUNG_DIALOG_SHOWN = "samsung_dialog_shown";
@@ -86,7 +79,6 @@ public class Constants {
     public static final String PREF_SHOW_WINDOW_SIZES = "show_window_sizes";
     public static final String PREF_SKIP_AUTO_HIDE_NAVBAR = "skip_auto_hide_navbar";
     public static final String PREF_SKIP_DISABLE_FREEFORM_RECEIVER = "skip_disable_freeform_receiver";
-    public static final String PREF_SKIP_QUIT_RECEIVER = "skip_quit_receiver";
     public static final String PREF_SORT_BY_NAME = "sort_by_name";
     public static final String PREF_TASKBAR_ACTIVE = "taskbar_active";
     public static final String PREF_TIME_OF_SERVICE_START = "time_of_service_start";
@@ -116,11 +108,9 @@ public class Constants {
     public static final String EXTRA_COMPONENT_NAME = "component_name";
     public static final String EXTRA_CONTEXT_MENU_FIX = "context_menu_fix";
     public static final String EXTRA_COUNT = "count";
-    public static final String EXTRA_IS_LAUNCHING_SHORTCUT = "is_launching_shortcut";
     public static final String EXTRA_PACKAGE_NAME = "package_name";
     public static final String EXTRA_START_SERVICES = "start_services";
     public static final String EXTRA_USER_ID = "user_id";
     public static final String EXTRA_WINDOW_SIZE = "window_size";
-    public static final String EXTRA_START_FREEFORM_HACK = "start_freeform_hack";
     public static final String EXTRA_SHOW_PERMISSION_DIALOG = "show_permission_dialog";
 }

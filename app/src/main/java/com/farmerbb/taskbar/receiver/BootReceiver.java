@@ -20,7 +20,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
-import com.farmerbb.taskbar.activity.DummyActivity;
 import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.util.U;
 
@@ -30,23 +29,17 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if(Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
-            // Initialize preferences on BlissOS
+            U.initPrefs(context);
+
             SharedPreferences pref = U.getSharedPreferences(context);
-            if(U.isAndroidGeneric(context) && !pref.getBoolean(PREF_BLISS_OS_PREFS, false))
-                U.initPrefs(context);
 
             SharedPreferences.Editor editor = pref.edit();
-            editor.putBoolean(PREF_IS_HIDDEN, false);
             editor.putBoolean(PREF_TASKBAR_ACTIVE, true);
             editor.putLong(PREF_TIME_OF_SERVICE_START, System.currentTimeMillis());
             editor.apply();
 
             if(U.hasFreeformSupport(context)) {
-                Intent intent2 = new Intent(context, DummyActivity.class);
-                intent2.putExtra(EXTRA_START_FREEFORM_HACK, true);
-                intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                context.startActivity(intent2);
+                U.startFreeformHack(context, true);
             }
 
             Intent notificationIntent = new Intent(context, NotificationService.class);

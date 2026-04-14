@@ -93,8 +93,8 @@ public class IconCache {
 
     private Drawable getIcon(PackageManager pm, LauncherActivityInfo appInfo) {
         try {
-            return appInfo.getBadgedIcon(0);
-        } catch (NullPointerException e) {
+            return appInfo.getIcon(0);
+        } catch (NullPointerException | IllegalArgumentException | SecurityException e) {
             return pm.getDefaultActivityIcon();
         }
     }

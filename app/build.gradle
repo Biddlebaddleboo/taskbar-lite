@@ -49,7 +49,6 @@ android {
         buildConfigField "String", "BASE_APPLICATION_ID", "\"com.jcdigitalsolutions.taskbarlite\""
         buildConfigField "String", "PAID_APPLICATION_ID", "\"com.jcdigitalsolutions.taskbarlite.paid\""
         buildConfigField "String", "SUPPORT_APPLICATION_ID", "\"com.jcdigitalsolutions.taskbarlite.support\""
-        buildConfigField "String", "ANDROIDX86_APPLICATION_ID", "\"com.jcdigitalsolutions.taskbarlite.androidx86\""
 
         buildConfigField "long", "TIMESTAMP", "${System.currentTimeMillis()}L"
     }

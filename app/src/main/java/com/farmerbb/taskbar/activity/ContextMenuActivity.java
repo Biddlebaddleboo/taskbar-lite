@@ -28,6 +28,7 @@ import android.content.pm.ShortcutInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.UserHandle;
 import android.os.UserManager;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -58,7 +59,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
     boolean secondaryMenu = false;
     boolean startMenuAppearing = false;
     boolean contextMenuFix = false;
-    boolean showQuitOption = false;
 
     List<ShortcutInfo> shortcuts;
 
@@ -92,7 +92,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
         showStartMenu = args.getBoolean("launched_from_start_menu", false);
         isStartButton = entry == null && args.getBoolean("is_start_button", false);
         contextMenuFix = args.containsKey(EXTRA_CONTEXT_MENU_FIX);
-        showQuitOption = !args.getBoolean("dont_show_quit", false);
 
         // Determine where to position the dialog on screen
         WindowManager.LayoutParams params = getWindow().getAttributes();
@@ -159,12 +158,7 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
 
     @SuppressWarnings("deprecation")
     private void generateMenu() {
-        if(isStartButton) {
-            if(showQuitOption) {
-                addPreferencesFromResource(R.xml.tb_pref_context_menu_quit);
-                findPreference(PREF_QUIT_TASKBAR).setOnPreferenceClickListener(this);
-            }
-        } else {
+        if(!isStartButton) {
             if(getResources().getConfiguration().screenWidthDp >= 600
                     && Build.VERSION.SDK_INT <= Build.VERSION_CODES.M)
                 setTitle(entry.getLabel());
@@ -255,9 +249,7 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
     public boolean onPreferenceClick(Preference p) {
         UserManager userManager = (UserManager) getSystemService(USER_SERVICE);
         LauncherApps launcherApps = (LauncherApps) getSystemService(LAUNCHER_APPS_SERVICE);
-        boolean appIsValid = isStartButton ||
-                (entry != null && !launcherApps.getActivityList(entry.getPackageName(),
-                        userManager.getUserForSerialNumber(entry.getUserId(this))).isEmpty());
+        boolean appIsValid = isStartButton || isEntryAvailable(userManager, launcherApps);
         secondaryMenu = false;
 
         if(appIsValid) switch(p.getKey()) {
@@ -273,10 +265,9 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
                 break;
             case PREF_UNINSTALL:
                 if(U.hasFreeformSupport(this) && isInMultiWindowMode()) {
-                    Intent intent2 = new Intent(this, DummyActivity.class);
-                    intent2.putExtra("uninstall", entry.getPackageName());
-                    intent2.putExtra("user_id", entry.getUserId(this));
-
+                    Intent intent2 = new Intent(Intent.ACTION_DELETE,
+                            Uri.parse("package:" + entry.getPackageName()));
+                    intent2.putExtra(Intent.EXTRA_USER, userManager.getUserForSerialNumber(entry.getUserId(this)));
                     try {
                         startActivity(intent2);
                     } catch (IllegalArgumentException ignored) {}
@@ -289,12 +280,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
                     } catch (ActivityNotFoundException | IllegalArgumentException ignored) {}
                 }
 
-                prepareToClose();
-                break;
-            case PREF_QUIT_TASKBAR:
-                Intent quitIntent = new Intent(ACTION_QUIT);
-                quitIntent.setPackage(getPackageName());
-                sendBroadcast(quitIntent);
                 prepareToClose();
                 break;
             case PREF_SHOW_WINDOW_SIZES:
@@ -390,21 +375,43 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
     @TargetApi(Build.VERSION_CODES.N_MR1)
     private int getLauncherShortcuts() {
         LauncherApps launcherApps = (LauncherApps) getSystemService(LAUNCHER_APPS_SERVICE);
-        if(launcherApps.hasShortcutHostPermission()) {
-            UserManager userManager = (UserManager) getSystemService(USER_SERVICE);
+        UserManager userManager = (UserManager) getSystemService(USER_SERVICE);
+        UserHandle user = userManager.getUserForSerialNumber(entry.getUserId(this));
 
+        if(launcherApps.hasShortcutHostPermission()
+                && user != null
+                && userManager.isUserUnlocked(user)) {
             LauncherApps.ShortcutQuery query = new LauncherApps.ShortcutQuery();
             query.setActivity(ComponentName.unflattenFromString(entry.getComponentName()));
             query.setQueryFlags(LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC
                     | LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST
                     | LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED);
 
-            shortcuts = launcherApps.getShortcuts(query, userManager.getUserForSerialNumber(entry.getUserId(this)));
-            if(shortcuts != null)
-                return shortcuts.size();
+            try {
+                shortcuts = launcherApps.getShortcuts(query, user);
+                if(shortcuts != null)
+                    return shortcuts.size();
+            } catch (IllegalStateException | SecurityException ignored) {
+                shortcuts = null;
+            }
         }
 
         return 0;
+    }
+
+    private boolean isEntryAvailable(UserManager userManager, LauncherApps launcherApps) {
+        if(entry == null)
+            return false;
+
+        UserHandle user = userManager.getUserForSerialNumber(entry.getUserId(this));
+        if(user == null || !userManager.isUserUnlocked(user))
+            return false;
+
+        try {
+            return !launcherApps.getActivityList(entry.getPackageName(), user).isEmpty();
+        } catch (IllegalStateException | SecurityException ignored) {
+            return false;
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.N_MR1)
