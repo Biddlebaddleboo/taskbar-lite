@@ -20,8 +20,6 @@ import android.view.WindowManager;
 
 import com.farmerbb.taskbar.util.U;
 
-import java.lang.reflect.Field;
-
 public class ViewParams {
     public int width;
     public int height;
@@ -51,20 +49,6 @@ public class ViewParams {
 
         if(bottomMargin > -1)
             wmParams.y = bottomMargin;
-
-        U.allowReflection();
-        try {
-            Class<?> layoutParamsClass = Class.forName("android.view.WindowManager$LayoutParams");
-
-            Field privateFlags = layoutParamsClass.getField("privateFlags");
-            Field noAnim = layoutParamsClass.getField("PRIVATE_FLAG_NO_MOVE_ANIMATION");
-
-            int privateFlagsValue = privateFlags.getInt(wmParams);
-            int noAnimFlag = noAnim.getInt(wmParams);
-            privateFlagsValue |= noAnimFlag;
-
-            privateFlags.setInt(wmParams, privateFlagsValue);
-        } catch (Exception ignored) {}
 
         return wmParams;
     }

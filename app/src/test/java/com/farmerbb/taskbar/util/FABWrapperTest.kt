@@ -7,7 +7,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import com.farmerbb.taskbar.R
 import com.farmerbb.taskbar.activity.MainActivity
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import android.widget.ImageButton
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -36,7 +36,7 @@ class FABWrapperTest {
 
     @Test
     fun testViewForNonAndroidX86Version() {
-        Assert.assertTrue(wrapper.view is FloatingActionButton)
+        Assert.assertTrue(wrapper.view is ImageButton)
         val padding = context.resources.getDimensionPixelSize(R.dimen.tb_fake_fab_padding)
         Assert.assertEquals(padding.toLong(), wrapper.view.paddingLeft.toLong())
         Assert.assertEquals(padding.toLong(), wrapper.view.paddingTop.toLong())

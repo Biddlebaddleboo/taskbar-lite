@@ -74,7 +74,6 @@ import com.farmerbb.taskbar.activity.ContextMenuActivity;
 import com.farmerbb.taskbar.activity.InvisibleActivityFreeform;
 import com.farmerbb.taskbar.activity.MainActivity;
 import com.farmerbb.taskbar.helper.DisplayHelper;
-import com.farmerbb.taskbar.helper.GlobalHelper;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.helper.MenuHelper;
@@ -90,7 +89,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -99,8 +97,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.farmerbb.taskbar.util.Constants.*;
-
-import org.lsposed.hiddenapibypass.HiddenApiBypass;
 
 public class U {
 
@@ -116,14 +112,6 @@ public class U {
 
     public static final int HIDDEN = 0;
     public static final int TOP_APPS = 1;
-
-    // From android.app.ActivityManager.StackId
-    private static final int FULLSCREEN_WORKSPACE_STACK_ID = 1;
-    private static final int FREEFORM_WORKSPACE_STACK_ID = 2;
-
-    // From android.app.WindowConfiguration
-    private static final int WINDOWING_MODE_FULLSCREEN = 1;
-    private static final int WINDOWING_MODE_FREEFORM = 5;
 
     public static final int EXPORT = 123;
     public static final int IMPORT = 456;
@@ -658,63 +646,7 @@ public class U {
             }
         }
 
-        if(applicationType == null)
-            return options;
-
-        int stackId = -1;
-
-        switch(applicationType) {
-            case APP_PORTRAIT:
-            case APP_LANDSCAPE:
-                if(FreeformHackHelper.getInstance().isFreeformHackActive())
-                    stackId = getFreeformWindowModeId();
-                else
-                    stackId = getFullscreenWindowModeId();
-                break;
-            case APP_FULLSCREEN:
-                stackId = getFullscreenWindowModeId();
-                break;
-            case FREEFORM_HACK:
-                stackId = getFreeformWindowModeId();
-                break;
-            case CONTEXT_MENU:
-                if(hasBrokenSetLaunchBoundsApi()
-                        || (!isChromeOs(context) && getCurrentApiVersion() >= 28.0f)
-                        || (isChromeOs(context) && getCurrentApiVersion() >= 30.0f))
-                    stackId = getFullscreenWindowModeId();
-                break;
-        }
-
-        if(stackId != -1) {
-            allowReflection();
-            try {
-                Method method = ActivityOptions.class.getMethod(getWindowingModeMethodName(), int.class);
-                method.invoke(options, stackId);
-            } catch (Exception ignored) {}
-        }
-
         return options;
-    }
-
-    private static int getFullscreenWindowModeId() {
-        if(getCurrentApiVersion() >= 28.0f)
-            return WINDOWING_MODE_FULLSCREEN;
-        else
-            return FULLSCREEN_WORKSPACE_STACK_ID;
-    }
-
-    private static int getFreeformWindowModeId() {
-        if(getCurrentApiVersion() >= 28.0f)
-            return WINDOWING_MODE_FREEFORM;
-        else
-            return FREEFORM_WORKSPACE_STACK_ID;
-    }
-
-    private static String getWindowingModeMethodName() {
-        if(getCurrentApiVersion() >= 28.0f)
-            return "setLaunchWindowingMode";
-        else
-            return "setLaunchStackId";
     }
 
     public static Bundle getActivityOptionsBundle(Context context, ApplicationType type, View view) {
@@ -884,21 +816,6 @@ public class U {
         }
 
         Lazy<Integer> value = () -> show ? 0 : getSystemDimen(context, "navigation_bar_height") * -1;
-
-        if(hasWriteSecureSettingsPermission(context)) {
-            Runnable runnable = () -> {
-                try {
-                    setOverscan(displayID, value.get());
-                } catch (Exception ignored) {}
-            };
-
-            if(delay == 0)
-                runnable.run();
-            else
-                newHandler().postDelayed(runnable, delay);
-
-            return;
-        }
 
         if(hasSupportLibrary(context, 7)) {
             Intent intent = new Intent(BuildConfig.SUPPORT_APPLICATION_ID + ".CHANGE_OVERSCAN");
@@ -1094,17 +1011,6 @@ public class U {
         return false;
     }
 
-    @SuppressLint("PrivateApi")
-    public static String getSystemProperty(String key) {
-        allowReflection();
-        try {
-            Class<?> cls = Class.forName("android.os.SystemProperties");
-            return cls.getMethod("get", String.class).invoke(null, key).toString();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     public static int getStartButtonIcon() {
         return HARD_CODED_START_BUTTON_ICON;
     }
@@ -1154,78 +1060,6 @@ public class U {
 
     public static boolean isDesktopModeActive(Context context) {
         return false;
-    }
-
-    private static Display getExternalDisplay(Context context) {
-        DisplayManager dm = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
-        Display[] displays = dm.getDisplays();
-
-        return displays[displays.length - 1];
-    }
-
-    public static int getExternalDisplayID(Context context) {
-        return getExternalDisplay(context).getDisplayId();
-    }
-
-    public static DisplayInfo getExternalDisplayInfo(Context context) {
-        Display display = getExternalDisplay(context);
-        if(display == null)
-            return new DisplayInfo(0, 0, 0, 0, false);
-
-        DisplayMetrics metrics = new DisplayMetrics();
-        display.getRealMetrics(metrics);
-
-        int defaultDensity;
-        try {
-            defaultDensity = getDefaultDensity(display.getDisplayId());
-        } catch (Exception e) {
-            defaultDensity = 0;
-        }
-
-        return new DisplayInfo(metrics.widthPixels, metrics.heightPixels, metrics.densityDpi, defaultDensity, false);
-    }
-
-    @SuppressLint("PrivateApi")
-    private static Object getWindowManagerService() throws Exception {
-        allowReflection();
-        return Class.forName("android.view.WindowManagerGlobal")
-                .getMethod("getWindowManagerService")
-                .invoke(null);
-    }
-
-    @SuppressLint("PrivateApi")
-    public static void setDensity(int displayID, String value) throws Exception {
-        // From android.os.UserHandle
-        final int USER_CURRENT_OR_SELF = -3;
-
-        allowReflection();
-        if(value.equals("reset")) {
-            Class.forName("android.view.IWindowManager")
-                    .getMethod("clearForcedDisplayDensityForUser", int.class, int.class)
-                    .invoke(getWindowManagerService(), displayID, USER_CURRENT_OR_SELF);
-        } else {
-            int density = Integer.parseInt(value);
-
-            Class.forName("android.view.IWindowManager")
-                    .getMethod("setForcedDisplayDensityForUser", int.class, int.class, int.class)
-                    .invoke(getWindowManagerService(), displayID, density, USER_CURRENT_OR_SELF);
-        }
-    }
-
-    @SuppressLint("PrivateApi")
-    private static void setOverscan(int displayID, int value) throws Exception {
-        allowReflection();
-        Class.forName("android.view.IWindowManager")
-                .getMethod("setOverscan", int.class, int.class, int.class, int.class, int.class)
-                .invoke(getWindowManagerService(), displayID, 0, 0, 0, value);
-    }
-
-    @SuppressLint("PrivateApi")
-    private static Integer getDefaultDensity(int displayID) throws Exception {
-        allowReflection();
-        return (Integer) Class.forName("android.view.IWindowManager")
-                .getMethod("getInitialDisplayDensity", int.class)
-                .invoke(getWindowManagerService(), displayID);
     }
 
     public static void registerReceiver(Context context, BroadcastReceiver receiver, String... actions) {
@@ -1380,21 +1214,6 @@ public class U {
 
     public static boolean isConsumerBuild(Context context) {
         return !BuildConfig.DEBUG && !isLibrary(context);
-    }
-
-    @TargetApi(Build.VERSION_CODES.P)
-    public static void allowReflection() {
-        GlobalHelper helper = GlobalHelper.getInstance();
-        if(helper.isReflectionAllowed()) return;
-
-        // Workaround since HiddenApiBypass can't be mocked
-        try {
-            Class.forName("org.junit.Test");
-        } catch (ClassNotFoundException e) {
-            HiddenApiBypass.addHiddenApiExemptions("");
-        }
-
-        helper.setReflectionAllowed(true);
     }
 
     public static Handler newHandler() {

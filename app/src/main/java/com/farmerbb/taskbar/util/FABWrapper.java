@@ -16,7 +16,7 @@
 package com.farmerbb.taskbar.util;
 
 import android.content.Context;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import android.widget.ImageButton;
 import android.view.View;
 
 import com.farmerbb.taskbar.R;
@@ -25,18 +25,22 @@ public class FABWrapper {
     public View view;
 
     public FABWrapper(Context context) {
-        view = new FloatingActionButton(context);
+        ImageButton button = new ImageButton(context);
+        int padding = context.getResources().getDimensionPixelSize(R.dimen.tb_fake_fab_padding);
+        button.setPadding(padding, padding, padding, padding);
+        button.setBackgroundResource(R.drawable.tb_circle_dark);
+        view = button;
     }
 
     public void setImageResource(int resource) {
-        ((FloatingActionButton) view).setImageResource(resource);
+        ((ImageButton) view).setImageResource(resource);
     }
 
     public void show() {
-        ((FloatingActionButton) view).show();
+        view.setVisibility(View.VISIBLE);
     }
 
     public void hide() {
-        ((FloatingActionButton) view).hide();
+        view.setVisibility(View.GONE);
     }
 }

@@ -15,12 +15,9 @@
 
 package com.farmerbb.taskbar.helper;
 
-import android.os.Build;
-
 public class GlobalHelper {
 
     private int onMainActivity = 0;
-    private boolean reflectionAllowed = Build.VERSION.SDK_INT < Build.VERSION_CODES.P;
 
     private static GlobalHelper theInstance;
 
@@ -39,13 +36,5 @@ public class GlobalHelper {
     public void setOnMainActivity(boolean value) {
         int factor = value ? 1 : -1;
         onMainActivity = Math.max(0, onMainActivity + factor);
-    }
-
-    public boolean isReflectionAllowed() {
-        return reflectionAllowed;
-    }
-
-    public void setReflectionAllowed(boolean value) {
-        reflectionAllowed = value;
     }
 }
