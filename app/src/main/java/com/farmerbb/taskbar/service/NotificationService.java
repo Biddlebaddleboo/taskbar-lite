@@ -76,6 +76,7 @@ public class NotificationService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        U.setServiceRunning(getClass(), true);
 
         SharedPreferences pref = U.getSharedPreferences(this);
         if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false)) {
@@ -119,6 +120,8 @@ public class NotificationService extends Service {
 
     @Override
     public void onDestroy() {
+        U.setServiceRunning(getClass(), false);
+
         SharedPreferences pref = U.getSharedPreferences(this);
         if(pref.getBoolean(PREF_IS_RESTARTING, false))
             pref.edit().remove(PREF_IS_RESTARTING).apply();

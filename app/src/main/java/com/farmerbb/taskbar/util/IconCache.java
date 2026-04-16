@@ -88,7 +88,6 @@ public class IconCache {
 
     public void clearCache() {
         drawables.evictAll();
-        System.gc();
     }
 
     private Drawable getIcon(PackageManager pm, LauncherActivityInfo appInfo) {

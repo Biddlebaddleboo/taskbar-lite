@@ -25,7 +25,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.UserHandle;
 import android.os.UserManager;
-import androidx.appcompat.app.AppCompatActivity;
+import android.app.Activity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ListView;
@@ -44,7 +44,7 @@ import java.util.List;
 
 import static com.farmerbb.taskbar.util.Constants.*;
 
-public abstract class AbstractSelectAppActivity extends AppCompatActivity {
+public abstract class AbstractSelectAppActivity extends Activity {
 
     private DesktopIconAppListGenerator appListGenerator;
     private ProgressBar progressBar;

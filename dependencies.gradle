@@ -12,6 +12,5 @@ allprojects {
         APPCOMPAT_VERSION = "1.7.0"
         POWERMOCK_VERSION = "2.0.9"
         AGP_VERSION = "8.5.2"
-        SHIZUKU_VERSION = "12.1.0"
     }
 }

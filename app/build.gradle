@@ -146,7 +146,7 @@ android {
 
     dependencies {
     implementation "androidx.localbroadcastmanager:localbroadcastmanager:$LOCALBROADCASTMANAGER_VERSION"
-    implementation "androidx.appcompat:appcompat:$APPCOMPAT_VERSION"
+    implementation "androidx.core:core:1.13.0"
     testImplementation "com.google.truth:truth:1.1.3"
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'androidx.test:core:1.4.0'

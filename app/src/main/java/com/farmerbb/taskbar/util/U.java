@@ -61,7 +61,7 @@ import android.provider.Settings;
 import androidx.annotation.DimenRes;
 import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.appcompat.view.ContextThemeWrapper;
+import android.view.ContextThemeWrapper;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.View;
@@ -91,8 +91,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -101,6 +103,8 @@ import static com.farmerbb.taskbar.util.Constants.*;
 public class U {
 
     private U() {}
+
+    private static final Set<String> runningServices = new HashSet<>();
 
     private static final int MAXIMIZED = 0;
     private static final int LEFT = -1;
@@ -598,6 +602,11 @@ public class U {
     }
 
     private static boolean isServiceRunning(Context context, String className) {
+        synchronized(runningServices) {
+            if(runningServices.contains(className))
+                return true;
+        }
+
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for(ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if(className.equals(service.service.getClassName()))
@@ -605,6 +614,15 @@ public class U {
         }
 
         return false;
+    }
+
+    public static void setServiceRunning(Class<? extends Service> cls, boolean running) {
+        synchronized(runningServices) {
+            if(running)
+                runningServices.add(cls.getName());
+            else
+                runningServices.remove(cls.getName());
+        }
     }
 
     public static int getBackgroundTint(Context context) {
@@ -1107,26 +1125,6 @@ public class U {
         drawable.draw(canvas);
 
         return new BitmapDrawable(context.getResources(), bitmap);
-    }
-
-    public static BitmapDrawable convertToMonochrome(Context context, Drawable drawable, float threshold) {
-        Bitmap bitmap = convertToBitmapDrawable(context, drawable).getBitmap();
-        Bitmap monoBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-
-        // From https://stackoverflow.com/a/38635239
-        float[] hsv = new float[3];
-        for(int col = 0; col < bitmap.getWidth(); col++) {
-            for(int row = 0; row < bitmap.getHeight(); row++) {
-                Color.colorToHSV(bitmap.getPixel(col, row), hsv);
-                if(hsv[2] > threshold) {
-                    monoBitmap.setPixel(col, row, 0xffffffff);
-                } else {
-                    monoBitmap.setPixel(col, row, 0x00000000);
-                }
-            }
-        }
-
-        return new BitmapDrawable(context.getResources(), monoBitmap);
     }
 
     public static BitmapDrawable resizeDrawable(Context context, Drawable drawable, @DimenRes int iconSizeRes) {

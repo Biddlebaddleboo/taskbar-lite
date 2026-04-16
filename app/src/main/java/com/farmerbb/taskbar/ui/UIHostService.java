@@ -43,6 +43,7 @@ public abstract class UIHostService extends Service implements UIHost {
     @Override
     public void onCreate() {
         super.onCreate();
+        U.setServiceRunning(getClass(), true);
 
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         configString = U.getConfigString(this);
@@ -62,6 +63,7 @@ public abstract class UIHostService extends Service implements UIHost {
 
     @Override
     public void onDestroy() {
+        U.setServiceRunning(getClass(), false);
         super.onDestroy();
         controller.onDestroyHost(this);
     }

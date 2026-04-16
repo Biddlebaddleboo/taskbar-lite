@@ -35,7 +35,7 @@ import android.os.UserManager;
 
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
-import androidx.appcompat.app.AppCompatActivity;
+import android.app.Activity;
 import android.util.SparseArray;
 import android.view.Display;
 import android.view.DragEvent;
@@ -82,7 +82,7 @@ import java.util.List;
 
 import static com.farmerbb.taskbar.util.Constants.*;
 
-public class HomeActivityDelegate extends AppCompatActivity implements UIHost {
+public class HomeActivityDelegate extends Activity implements UIHost {
     private FrameLayout layout;
     private GridLayout desktopIcons;
     private FABWrapper fab;
