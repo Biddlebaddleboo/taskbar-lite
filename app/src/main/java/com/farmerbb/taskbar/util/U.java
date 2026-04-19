@@ -1044,10 +1044,6 @@ public class U {
         return HARD_CODED_START_BUTTON_ICON;
     }
 
-    public static boolean isDesktopIconsEnabled(Context context) {
-        return false;
-    }
-
     public static boolean isLibrary(Context context) {
         return !context.getPackageName().equals(BuildConfig.APPLICATION_ID);
     }

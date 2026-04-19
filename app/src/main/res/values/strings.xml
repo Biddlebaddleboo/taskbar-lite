@@ -85,14 +85,6 @@
     <string name="tb_force_activities_resizable">Force activities to be resizable</string>
     <string name="tb_enable_freeform_windows">Enable freeform windows</string>
 
-    <string name="tb_add_icon_to_desktop">Add icon to desktop</string>
-    <string name="tb_arrange_icons">Move icons</string>
-    <string name="tb_arrange_icons_alt">Move icon</string>
-    <string name="tb_select_an_app">Select an app</string>
-    <string name="tb_remove_desktop_icon">Remove from desktop</string>
-    <string name="tb_sort_by_name">Sort icons by name</string>
-    <string name="tb_no_icons_to_arrange">No icons to move</string>
-    <string name="tb_no_icons_to_sort">No icons to sort</string>
     <string name="tb_pref_centered_icons">Centered app icons</string>
     <string name="tb_powered_by_taskbar">Powered by Taskbar Lite</string>
 

@@ -40,7 +40,4 @@
     <color name="tb_navbar_divider_color_light">#DCDCDC</color>
     <color name="tb_navbar_divider_color_dark">#00000000</color>
 
-    <color name="tb_desktop_icon_text">#FFFFFF</color>
-    <color name="tb_desktop_icon_shadow">#000000</color>
-
 </resources>

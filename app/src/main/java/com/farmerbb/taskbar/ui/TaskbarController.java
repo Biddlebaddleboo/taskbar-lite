@@ -164,7 +164,6 @@ public class TaskbarController extends UIController {
         drawStartButton(context, startButton, pref);
 
         U.sendBroadcast(context, ACTION_HIDE_START_MENU);
-        U.sendBroadcast(context, ACTION_UPDATE_HOME_SCREEN_MARGINS);
 
         if(scrollView != null)
             scrollView.setVisibility(View.VISIBLE);

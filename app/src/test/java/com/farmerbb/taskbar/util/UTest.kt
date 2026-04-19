@@ -649,11 +649,6 @@ class UTest {
     }
 
     @Test
-    fun testIsDesktopIconEnabled() {
-        Assert.assertFalse(U.isDesktopIconsEnabled(context))
-    }
-
-    @Test
     fun testApplyDisplayCutoutModeToWithPAndAboveVersion() {
         val layoutParams = WindowManager.LayoutParams()
         Assert.assertTrue(U.applyDisplayCutoutModeTo(layoutParams))

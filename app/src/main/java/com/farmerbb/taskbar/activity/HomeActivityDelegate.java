@@ -25,20 +25,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.LauncherApps;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.UserHandle;
 import android.os.UserManager;
 
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.ColorUtils;
 import android.app.Activity;
-import android.util.SparseArray;
-import android.view.Display;
-import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -47,9 +40,6 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
-import android.widget.GridLayout;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.helper.DisplayHelper;
@@ -62,39 +52,23 @@ import com.farmerbb.taskbar.ui.ViewParams;
 import com.farmerbb.taskbar.ui.StartMenuController;
 import com.farmerbb.taskbar.ui.TaskbarController;
 import com.farmerbb.taskbar.util.AppEntry;
-import com.farmerbb.taskbar.util.DesktopIconInfo;
 import com.farmerbb.taskbar.util.DisplayInfo;
-import com.farmerbb.taskbar.util.FABWrapper;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.helper.LauncherHelper;
-import com.farmerbb.taskbar.helper.MenuHelper;
 import com.farmerbb.taskbar.util.U;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-
 import java.io.File;
-import java.text.Collator;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static com.farmerbb.taskbar.util.Constants.*;
 
 public class HomeActivityDelegate extends Activity implements UIHost {
     private FrameLayout layout;
-    private GridLayout desktopIcons;
-    private FABWrapper fab;
     private boolean forceTaskbarStart = false;
     private AlertDialog dialog;
 
     private boolean shouldDelayFreeformHack;
     private int hits;
-
-    private boolean isDesktopIconsEnabled;
-    private boolean iconArrangeMode = false;
-    private int startDragIndex;
-    private int endDragIndex;
 
     private boolean waitingForPermission;
 
@@ -109,61 +83,6 @@ public class HomeActivityDelegate extends Activity implements UIHost {
         @Override
         public void onReceive(Context context, Intent intent) {
             forceTaskbarStart = true;
-        }
-    };
-
-    private final BroadcastReceiver refreshDesktopIconsReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            refreshDesktopIcons();
-        }
-    };
-
-    private final BroadcastReceiver iconArrangeModeReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            enterIconArrangeMode();
-        }
-    };
-
-    private final BroadcastReceiver sortDesktopIconsReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            sortDesktopIcons();
-        }
-    };
-
-    private final BroadcastReceiver updateMarginsReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            updateMargins();
-        }
-    };
-
-    private final LauncherApps.Callback callback = new LauncherApps.Callback() {
-        @Override
-        public void onPackageRemoved(String packageName, UserHandle user) {
-            refreshDesktopIcons();
-        }
-
-        @Override
-        public void onPackageAdded(String packageName, UserHandle user) {
-            refreshDesktopIcons();
-        }
-
-        @Override
-        public void onPackageChanged(String packageName, UserHandle user) {
-            refreshDesktopIcons();
-        }
-
-        @Override
-        public void onPackagesAvailable(String[] packageNames, UserHandle user, boolean replacing) {
-            refreshDesktopIcons();
-        }
-
-        @Override
-        public void onPackagesUnavailable(String[] packageNames, UserHandle user, boolean replacing) {
-            refreshDesktopIcons();
         }
     };
 
@@ -193,21 +112,6 @@ public class HomeActivityDelegate extends Activity implements UIHost {
             }
         };
 
-        isDesktopIconsEnabled = true;
-        if(isDesktopIconsEnabled) {
-            layout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    layout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-
-                    if(savedInstanceState != null)
-                        iconArrangeMode = savedInstanceState.getBoolean("icon_arrange_mode");
-
-                    initDesktopIcons();
-                }
-            });
-        }
-
         layout.setFitsSystemWindows(true);
 
         setContentView(layout);
@@ -216,16 +120,6 @@ public class HomeActivityDelegate extends Activity implements UIHost {
 
         U.registerReceiver(this, killReceiver, ACTION_KILL_HOME_ACTIVITY);
         U.registerReceiver(this, forceTaskbarStartReceiver, ACTION_FORCE_TASKBAR_RESTART);
-
-        if(isDesktopIconsEnabled) {
-            U.registerReceiver(this, refreshDesktopIconsReceiver, ACTION_REFRESH_DESKTOP_ICONS);
-            U.registerReceiver(this, iconArrangeModeReceiver, ACTION_ENTER_ICON_ARRANGE_MODE);
-            U.registerReceiver(this, sortDesktopIconsReceiver, ACTION_SORT_DESKTOP_ICONS);
-            U.registerReceiver(this, updateMarginsReceiver, ACTION_UPDATE_HOME_SCREEN_MARGINS);
-
-            LauncherApps launcherApps = (LauncherApps) getSystemService(LAUNCHER_APPS_SERVICE);
-            launcherApps.registerCallback(callback);
-        }
 
         U.initPrefs(this);
     }
@@ -330,22 +224,6 @@ public class HomeActivityDelegate extends Activity implements UIHost {
 
         U.unregisterReceiver(this, killReceiver);
         U.unregisterReceiver(this, forceTaskbarStartReceiver);
-
-        if(isDesktopIconsEnabled) {
-            U.unregisterReceiver(this, refreshDesktopIconsReceiver);
-            U.unregisterReceiver(this, iconArrangeModeReceiver);
-            U.unregisterReceiver(this, sortDesktopIconsReceiver);
-            U.unregisterReceiver(this, updateMarginsReceiver);
-
-            LauncherApps launcherApps = (LauncherApps) getSystemService(LAUNCHER_APPS_SERVICE);
-            launcherApps.unregisterCallback(callback);
-        }
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putBoolean("icon_arrange_mode", iconArrangeMode);
-        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -383,368 +261,6 @@ public class HomeActivityDelegate extends Activity implements UIHost {
     @Override
     public void updateViewLayout(View view, ViewParams params) {
         // no-op
-    }
-
-    private void initDesktopIcons() {
-        desktopIcons = new GridLayout(this);
-        fab = new FABWrapper(this);
-
-        updateMargins();
-        refreshDesktopIcons();
-
-        fab.setImageResource(R.drawable.tb_done);
-        fab.view.setOnClickListener(v -> {
-            iconArrangeMode = false;
-            fab.hide();
-            refreshDesktopIcons();
-        });
-
-        if(!iconArrangeMode) fab.hide();
-
-        layout.addView(desktopIcons);
-        layout.addView(fab.view);
-    }
-
-    private void refreshDesktopIcons() {
-        if(desktopIcons == null) return;
-
-        boolean taskbarIsVertical = false;
-        int iconSize = getResources().getDimensionPixelSize(R.dimen.tb_icon_size);
-        int desktopIconSize = getResources().getDimensionPixelSize(R.dimen.tb_start_menu_grid_width);
-
-        int columns = (layout.getWidth() - (taskbarIsVertical ? iconSize : 0)) / desktopIconSize;
-        int rows = (layout.getHeight() - (!taskbarIsVertical ? iconSize : 0)) / desktopIconSize;
-
-        desktopIcons.removeAllViews();
-        desktopIcons.setOrientation(GridLayout.VERTICAL);
-        desktopIcons.setColumnCount(columns);
-        desktopIcons.setRowCount(rows);
-
-        LauncherApps launcherApps = (LauncherApps) getSystemService(LAUNCHER_APPS_SERVICE);
-        UserManager userManager = (UserManager) getSystemService(USER_SERVICE);
-
-        SparseArray<DesktopIconInfo> icons = new SparseArray<>();
-        List<Integer> iconsToRemove = new ArrayList<>();
-
-        try {
-            SharedPreferences pref = U.getSharedPreferences(this);
-            JSONArray jsonIcons = new JSONArray(pref.getString(PREF_DESKTOP_ICONS, "[]"));
-
-            for(int i = 0; i < jsonIcons.length(); i++) {
-                DesktopIconInfo info = DesktopIconInfo.fromJson(jsonIcons.getJSONObject(i));
-                if(info != null) {
-                    if(launcherApps.isActivityEnabled(
-                            ComponentName.unflattenFromString(info.entry.getComponentName()),
-                            userManager.getUserForSerialNumber(info.entry.getUserId(this))))
-                        icons.put(getIndex(info), info);
-                    else
-                        iconsToRemove.add(i);
-                }
-            }
-
-            if(!iconsToRemove.isEmpty()) {
-                for(int i : iconsToRemove) {
-                    jsonIcons.remove(i);
-                }
-
-                pref.edit().putString(PREF_DESKTOP_ICONS, jsonIcons.toString()).apply();
-            }
-        } catch (JSONException ignored) {}
-
-        for(int i = 0; i < columns * rows; i++) {
-            GridLayout.LayoutParams params = new GridLayout.LayoutParams(
-                    GridLayout.spec(GridLayout.UNDEFINED, GridLayout.FILL, 1f),
-                    GridLayout.spec(GridLayout.UNDEFINED, GridLayout.FILL, 1f));
-
-            params.width = 0;
-            params.height = 0;
-
-            FrameLayout iconContainer = new FrameLayout(this);
-            iconContainer.setLayoutParams(params);
-            iconContainer.setOnDragListener(new DesktopIconDragListener());
-
-            int index = i;
-
-            iconContainer.setOnClickListener(view -> {
-                boolean isStartMenuOpen = MenuHelper.getInstance().isStartMenuOpen();
-                U.sendBroadcast(this, ACTION_HIDE_START_MENU);
-
-                DesktopIconInfo info = icons.get(index);
-                if(!isStartMenuOpen && info != null && info.entry != null) {
-                    U.launchApp(
-                            this,
-                            info.entry,
-                            null,
-                            false,
-                            false,
-                            view
-                    );
-                }
-            });
-
-            iconContainer.setOnLongClickListener(view -> {
-                int[] location = new int[2];
-                view.getLocationOnScreen(location);
-
-                DesktopIconInfo info = icons.get(index);
-                if(info == null) info = getDesktopIconInfo(index);
-
-                openContextMenu(info, location);
-                return true;
-            });
-
-            iconContainer.setOnGenericMotionListener((view, motionEvent) -> {
-                int action = motionEvent.getAction();
-
-                if(action == MotionEvent.ACTION_BUTTON_PRESS
-                        && motionEvent.getButtonState() == MotionEvent.BUTTON_SECONDARY) {
-                    int[] location = new int[2];
-                    view.getLocationOnScreen(location);
-
-                    DesktopIconInfo info = icons.get(index);
-                    if(info == null) info = getDesktopIconInfo(index);
-
-                    openContextMenu(info, location);
-                }
-
-                return false;
-            });
-
-            iconContainer.setOnTouchListener((v, event) -> {
-                return false;
-            });
-
-            iconContainer.setFocusable(false);
-
-            DesktopIconInfo info = icons.get(index);
-            if(info != null && info.entry != null && info.column < columns && info.row < rows)
-                iconContainer.addView(inflateDesktopIcon(iconContainer, info.entry));
-
-            desktopIcons.addView(iconContainer);
-        }
-    }
-
-    private void sortDesktopIcons() {
-        try {
-            SharedPreferences pref = U.getSharedPreferences(this);
-            JSONArray jsonIcons = new JSONArray(pref.getString(PREF_DESKTOP_ICONS, "[]"));
-
-            if(jsonIcons.length() == 0) {
-                U.showToast(this, R.string.tb_no_icons_to_sort);
-                return;
-            }
-
-            List<DesktopIconInfo> icons = new ArrayList<>();
-
-            for(int i = 0; i < jsonIcons.length(); i++) {
-                DesktopIconInfo info = DesktopIconInfo.fromJson(jsonIcons.getJSONObject(i));
-                if(info != null)
-                    icons.add(info);
-            }
-
-            Collections.sort(icons, (o1, o2) -> Collator.getInstance().compare(o1.entry.getLabel(), o2.entry.getLabel()));
-
-            jsonIcons = new JSONArray();
-
-            for(int i = 0; i < icons.size(); i++) {
-                DesktopIconInfo oldInfo = icons.get(i);
-                DesktopIconInfo newInfo = getDesktopIconInfo(i);
-
-                oldInfo.column = newInfo.column;
-                oldInfo.row = newInfo.row;
-
-                jsonIcons.put(oldInfo.toJson(this));
-            }
-
-            pref.edit().putString(PREF_DESKTOP_ICONS, jsonIcons.toString()).apply();
-            refreshDesktopIcons();
-        } catch (JSONException ignored) {}
-    }
-
-    private void reassignDroppedIcon() {
-        if(startDragIndex == endDragIndex) return;
-
-        try {
-            SharedPreferences pref = U.getSharedPreferences(this);
-            JSONArray jsonIcons = new JSONArray(pref.getString(PREF_DESKTOP_ICONS, "[]"));
-            int iconToRemove = -1;
-
-            DesktopIconInfo oldInfo = getDesktopIconInfo(startDragIndex);
-            DesktopIconInfo newInfo = getDesktopIconInfo(endDragIndex);
-
-            for(int i = 0; i < jsonIcons.length(); i++) {
-                DesktopIconInfo info = DesktopIconInfo.fromJson(jsonIcons.getJSONObject(i));
-                if(info != null && info.column == oldInfo.column && info.row == oldInfo.row) {
-                    newInfo.entry = info.entry;
-                    iconToRemove = i;
-                    break;
-                }
-            }
-
-            if(iconToRemove > -1) {
-                jsonIcons.remove(iconToRemove);
-                jsonIcons.put(newInfo.toJson(this));
-
-                pref.edit().putString(PREF_DESKTOP_ICONS, jsonIcons.toString()).apply();
-            }
-        } catch (JSONException ignored) {}
-    }
-
-    private void enterIconArrangeMode() {
-        try {
-            SharedPreferences pref = U.getSharedPreferences(this);
-            JSONArray jsonIcons = new JSONArray(pref.getString(PREF_DESKTOP_ICONS, "[]"));
-
-            if(jsonIcons.length() == 0) {
-                U.showToast(this, R.string.tb_no_icons_to_arrange);
-                return;
-            }
-
-            fab.view.setBackgroundTintList(
-                    ColorStateList.valueOf(ColorUtils.setAlphaComponent(U.getAccentColor(this), 255)));
-
-            iconArrangeMode = true;
-            fab.show();
-        } catch (JSONException ignored) {}
-    }
-
-    private void updateMargins() {
-        if(desktopIcons == null || fab == null) return;
-
-        int iconSize = getResources().getDimensionPixelSize(R.dimen.tb_icon_size);
-
-        int left = 0;
-        int top = 0;
-        int right = 0;
-        int bottom = 0;
-
-        bottom = iconSize;
-
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-        );
-
-        params.setMargins(left, top, right, bottom);
-        desktopIcons.setLayoutParams(params);
-
-        int fabMargin = getResources().getDimensionPixelSize(R.dimen.tb_desktop_icon_fab_margin);
-        left += fabMargin;
-        top += fabMargin;
-        right += fabMargin;
-        bottom += fabMargin;
-
-        FrameLayout.LayoutParams params2 = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-        );
-
-        params2.gravity = Gravity.BOTTOM | Gravity.END;
-        params2.setMargins(left, top, right, bottom);
-        fab.view.setLayoutParams(params2);
-    }
-
-    private int getIndex(DesktopIconInfo info) {
-        return (info.column * desktopIcons.getRowCount()) + info.row;
-    }
-
-    private DesktopIconInfo getDesktopIconInfo(int index) {
-        int row = index % desktopIcons.getRowCount();
-
-        int pos = index;
-        int column = -1;
-
-        while(pos >= 0) {
-            pos -= desktopIcons.getRowCount();
-            column++;
-        }
-
-        return new DesktopIconInfo(column, row, null);
-    }
-
-    private View inflateDesktopIcon(ViewGroup parent, AppEntry entry) {
-        View icon = LayoutInflater.from(this).inflate(R.layout.tb_row_alt, parent, false);
-
-        TextView textView = icon.findViewById(R.id.name);
-        textView.setText(entry.getLabel());
-        textView.setTextColor(ContextCompat.getColor(this, R.color.tb_desktop_icon_text));
-        textView.setShadowLayer(10, 0, 0, R.color.tb_desktop_icon_shadow);
-
-        ImageView imageView = icon.findViewById(R.id.icon);
-        imageView.setImageDrawable(entry.getIcon(this));
-
-        icon.setOnTouchListener(new DesktopIconTouchListener());
-        return icon;
-    }
-
-    private void openContextMenu(final DesktopIconInfo info, final int[] location) {
-        if(iconArrangeMode || info == null || info.entry == null) return;
-
-        Bundle args = new Bundle();
-        args.putSerializable("app_entry", info.entry);
-        args.putSerializable("desktop_icon", info);
-        args.putInt("x", location[0]);
-        args.putInt("y", location[1]);
-
-        U.startContextMenuActivity(this, args);
-    }
-
-    private final class DesktopIconTouchListener implements View.OnTouchListener {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            if(iconArrangeMode && motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                startDragIndex = desktopIcons.indexOfChild((ViewGroup) view.getParent());
-
-                ClipData data = ClipData.newPlainText("", "");
-                View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view);
-                view.startDrag(data, shadowBuilder, view, 0);
-                view.setVisibility(View.INVISIBLE);
-                return true;
-            } else
-                return false;
-        }
-    }
-
-    private final class DesktopIconDragListener implements View.OnDragListener {
-        @Override
-        public boolean onDrag(View v, DragEvent event) {
-            switch(event.getAction()) {
-                case DragEvent.ACTION_DRAG_STARTED:
-                default:
-                    // do nothing
-                    break;
-                case DragEvent.ACTION_DRAG_ENTERED:
-                    FrameLayout container = (FrameLayout) v;
-                    if(container.getChildCount() == 0
-                            || startDragIndex == desktopIcons.indexOfChild(container)) {
-                        v.setBackgroundColor(U.getAccentColor(HomeActivityDelegate.this));
-                        v.setAlpha(0.5f);
-                    }
-                    break;
-                case DragEvent.ACTION_DRAG_ENDED:
-                    View view = (View) event.getLocalState();
-                    if(view != null) view.setVisibility(View.VISIBLE);
-                    // fall through
-                case DragEvent.ACTION_DRAG_EXITED:
-                    v.setBackground(null);
-                    v.setAlpha(1);
-                    break;
-                case DragEvent.ACTION_DROP:
-                    FrameLayout container2 = (FrameLayout) v;
-                    if(container2.getChildCount() == 0) {
-                        // Dropped, reassign View to ViewGroup
-                        View view2 = (View) event.getLocalState();
-                        ViewGroup owner = (ViewGroup) view2.getParent();
-                        owner.removeView(view2);
-                        container2.addView(view2);
-
-                        endDragIndex = desktopIcons.indexOfChild(container2);
-                        reassignDroppedIcon();
-                    }
-                    break;
-            }
-            return true;
-        }
     }
 
     private void setOnHomeScreen(boolean value) {
