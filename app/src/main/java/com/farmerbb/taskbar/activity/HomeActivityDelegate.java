@@ -18,47 +18,26 @@ package com.farmerbb.taskbar.activity;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
-import android.content.ClipData;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.UserHandle;
-import android.os.UserManager;
-
-import androidx.core.content.ContextCompat;
 import android.app.Activity;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 import com.farmerbb.taskbar.R;
-import com.farmerbb.taskbar.helper.DisplayHelper;
-import com.farmerbb.taskbar.helper.GlobalHelper;
 import com.farmerbb.taskbar.util.Callbacks;
-import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.service.TaskbarService;
 import com.farmerbb.taskbar.ui.UIHost;
 import com.farmerbb.taskbar.ui.ViewParams;
-import com.farmerbb.taskbar.ui.StartMenuController;
 import com.farmerbb.taskbar.ui.TaskbarController;
-import com.farmerbb.taskbar.util.AppEntry;
-import com.farmerbb.taskbar.util.DisplayInfo;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.util.U;
-
-import java.io.File;
-import java.util.List;
 
 import static com.farmerbb.taskbar.util.Constants.*;
 
@@ -90,7 +69,6 @@ public class HomeActivityDelegate extends Activity implements UIHost {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences pref = U.getSharedPreferences(this);
 
         shouldDelayFreeformHack = true;
         hits = 0;
@@ -138,8 +116,6 @@ public class HomeActivityDelegate extends Activity implements UIHost {
     @Override
     protected void onStart() {
         super.onStart();
-
-        U.sendBroadcast(this, ACTION_HIDE_START_MENU);
         init();
     }
 
@@ -185,7 +161,7 @@ public class HomeActivityDelegate extends Activity implements UIHost {
             
         } catch (IllegalStateException ignored) {}
 
-        if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !U.isServiceRunning(this, NotificationService.class))
+        if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !U.isServiceRunning(this, TaskbarService.class))
             pref.edit().putBoolean(PREF_TASKBAR_ACTIVE, false).apply();
 
         // Show the Taskbar temporarily, as nothing else will be visible on screen
@@ -204,7 +180,6 @@ public class HomeActivityDelegate extends Activity implements UIHost {
     protected void onStop() {
         super.onStop();
 
-        SharedPreferences pref = U.getSharedPreferences(this);
         if(!U.canBootToFreeform(this)) {
             if(isChangingConfigurations())
                 setOnHomeScreen(false);
@@ -224,11 +199,6 @@ public class HomeActivityDelegate extends Activity implements UIHost {
 
         U.unregisterReceiver(this, killReceiver);
         U.unregisterReceiver(this, forceTaskbarStartReceiver);
-    }
-
-    @Override
-    public void onBackPressed() {
-        U.sendBroadcast(this, ACTION_HIDE_START_MENU);
     }
 
     private void killHomeActivity() {
@@ -282,14 +252,5 @@ public class HomeActivityDelegate extends Activity implements UIHost {
 
         overridePendingTransition(0, R.anim.close_anim);
         U.sendBroadcast(this, ACTION_TEMP_SHOW_TASKBAR);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if(resultCode != RESULT_OK)
-            return;
-
     }
 }

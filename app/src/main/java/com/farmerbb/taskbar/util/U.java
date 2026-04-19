@@ -73,12 +73,10 @@ import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.activity.ContextMenuActivity;
 import com.farmerbb.taskbar.activity.InvisibleActivityFreeform;
 import com.farmerbb.taskbar.activity.MainActivity;
-import com.farmerbb.taskbar.helper.DisplayHelper;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.helper.MenuHelper;
 import com.farmerbb.taskbar.helper.ToastHelper;
-import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.service.TaskbarService;
 
 import java.io.BufferedInputStream;
@@ -571,10 +569,6 @@ public class U {
         return value;
     }
 
-    public static void refreshPinnedIcons(Context context) {
-        IconCache.getInstance(context).clearCache();
-    }
-
     public static boolean canEnableFreeform(Context context) {
         return canEnableFreeform(context, true);
     }
@@ -797,12 +791,10 @@ public class U {
 
     private static void startTaskbarService(Context context, boolean fullRestart) {
         context.startService(new Intent(context, TaskbarService.class));
-        if(fullRestart) context.startService(new Intent(context, NotificationService.class));
     }
 
     private static void stopTaskbarService(Context context, boolean fullRestart) {
         context.stopService(new Intent(context, TaskbarService.class));
-        if(fullRestart) context.stopService(new Intent(context, NotificationService.class));
     }
 
     public static void restartTaskbar(Context context) {
@@ -810,56 +802,16 @@ public class U {
         if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false)) {
             pref.edit()
                     .putBoolean(PREF_IS_RESTARTING, true)
-                    .putBoolean(PREF_SKIP_AUTO_HIDE_NAVBAR, true)
                     .apply();
 
             stopTaskbarService(context, true);
             startTaskbarService(context, true);
-            pref.edit().putBoolean(PREF_SKIP_AUTO_HIDE_NAVBAR, true).apply();
 
             stopTaskbarService(context, false);
             startTaskbarService(context, false);
         }
 
         sendBroadcast(context, ACTION_RESTART);
-    }
-
-    public static void restartNotificationService(Context context) {
-        if(isServiceRunning(context, NotificationService.class)) {
-            SharedPreferences pref = getSharedPreferences(context);
-            pref.edit().putBoolean(PREF_IS_RESTARTING, true).apply();
-
-            Intent intent = new Intent(context, NotificationService.class);
-            context.stopService(intent);
-            context.startService(intent);
-        }
-    }
-
-    public static void showHideNavigationBar(Context context, boolean show) {
-        showHideNavigationBar(context, getTaskbarDisplayID(context), show, 0);
-    }
-
-    public static void showHideNavigationBar(Context context, int displayID, boolean show, int delay) {
-        if(!isShowHideNavbarSupported()) {
-            return;
-        }
-
-        Lazy<Integer> value = () -> show ? 0 : getSystemDimen(context, "navigation_bar_height") * -1;
-
-        if(hasSupportLibrary(context, 7)) {
-            Intent intent = new Intent(BuildConfig.SUPPORT_APPLICATION_ID + ".CHANGE_OVERSCAN");
-            intent.setPackage(BuildConfig.SUPPORT_APPLICATION_ID);
-
-            intent.putExtra("display_id", displayID);
-            intent.putExtra("value", value.get());
-
-            context.sendBroadcast(intent);
-            return;
-        }
-    }
-
-    public static boolean isShowHideNavbarSupported() {
-        return getCurrentApiVersion() <= 29.0f;
     }
 
     public static void initPrefs(Context context) {
@@ -1240,11 +1192,6 @@ public class U {
 
         SharedPreferences pref = getSharedPreferences(context);
         return pref.getBoolean(PREF_CHROME_OS_CONTEXT_MENU_FIX, true);
-    }
-
-    public static void clearCaches(Context context) {
-        IconCache.getInstance(context).clearCache();
-        DisplayHelper.getInstance().clear();
     }
 
     public static String getConfigString(Context context) {

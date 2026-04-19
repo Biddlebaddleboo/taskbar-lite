@@ -15,13 +15,140 @@
 
 package com.farmerbb.taskbar.service;
 
-import com.farmerbb.taskbar.ui.UIHostService;
-import com.farmerbb.taskbar.ui.UIController;
+import android.annotation.TargetApi;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.os.Build;
+import android.os.IBinder;
+
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
+
+import com.farmerbb.taskbar.R;
+import com.farmerbb.taskbar.activity.MainActivity;
 import com.farmerbb.taskbar.ui.TaskbarController;
+import com.farmerbb.taskbar.ui.UIController;
+import com.farmerbb.taskbar.ui.UIHostService;
+import com.farmerbb.taskbar.util.U;
+
+import static com.farmerbb.taskbar.util.Constants.*;
 
 public class TaskbarService extends UIHostService {
+    private static final String CHANNEL_ID = "taskbar_notification_channel";
+
+    private boolean foregroundStarted = false;
+
+    private final BroadcastReceiver userForegroundReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            startService(new Intent(context, TaskbarService.class));
+        }
+    };
+
+    private final BroadcastReceiver userBackgroundReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            stopService(new Intent(context, TaskbarService.class));
+        }
+    };
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        startForegroundIfNeeded();
+        return START_STICKY;
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        startForegroundIfNeeded();
+    }
+
+    @Override
+    public void onDestroy() {
+        if(foregroundStarted) {
+            try {
+                unregisterReceiver(userForegroundReceiver);
+            } catch (IllegalArgumentException ignored) {}
+
+            try {
+                unregisterReceiver(userBackgroundReceiver);
+            } catch (IllegalArgumentException ignored) {}
+
+            foregroundStarted = false;
+        }
+
+        SharedPreferences pref = U.getSharedPreferences(this);
+        if(pref.getBoolean(PREF_IS_RESTARTING, false))
+            pref.edit().remove(PREF_IS_RESTARTING).apply();
+        else if(U.isChromeOs(this))
+            U.stopFreeformHack(this);
+
+        super.onDestroy();
+    }
+
     @Override
     public UIController newController() {
         return new TaskbarController(this);
+    }
+
+    private void startForegroundIfNeeded() {
+        if(foregroundStarted)
+            return;
+
+        SharedPreferences pref = U.getSharedPreferences(this);
+        if(!U.canDrawOverlays(this)) {
+            pref.edit().putBoolean(PREF_TASKBAR_ACTIVE, false).apply();
+            stopSelf();
+            return;
+        }
+
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        PendingIntent contentIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.tb_app_name);
+            int importance = NotificationManager.IMPORTANCE_MIN;
+
+            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if(mNotificationManager != null)
+                mNotificationManager.createNotificationChannel(new NotificationChannel(CHANNEL_ID, name, importance));
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(U.getStartButtonIcon())
+                .setContentIntent(contentIntent)
+                .setContentTitle(getString(R.string.tb_taskbar_is_active))
+                .setContentText(getString(R.string.tb_click_to_open_taskbar))
+                .setColor(ContextCompat.getColor(this, R.color.tb_colorPrimary))
+                .setPriority(Notification.PRIORITY_MIN)
+                .setShowWhen(false)
+                .setOngoing(true);
+
+        startForeground(8675309, builder.build());
+
+        registerReceiver(userForegroundReceiver, new IntentFilter(Intent.ACTION_USER_FOREGROUND));
+        registerReceiver(userBackgroundReceiver, new IntentFilter(Intent.ACTION_USER_BACKGROUND));
+        foregroundStarted = true;
     }
 }

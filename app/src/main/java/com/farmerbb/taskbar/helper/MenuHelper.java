@@ -17,7 +17,6 @@ package com.farmerbb.taskbar.helper;
 
 public class MenuHelper {
 
-    private boolean startMenuOpen = false;
     private boolean contextMenuOpen = false;
 
     private static MenuHelper theInstance;
@@ -28,14 +27,6 @@ public class MenuHelper {
         if(theInstance == null) theInstance = new MenuHelper();
 
         return theInstance;
-    }
-
-    public boolean isStartMenuOpen() {
-        return startMenuOpen;
-    }
-
-    public void setStartMenuOpen(boolean value) {
-        startMenuOpen = value;
     }
 
     public boolean isContextMenuOpen() {

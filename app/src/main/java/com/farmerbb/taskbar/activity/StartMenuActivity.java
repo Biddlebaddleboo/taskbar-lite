@@ -30,29 +30,26 @@ public class StartMenuActivity extends Activity implements UIHost {
     private final Handler selfDestructHandler = U.newHandler();
     private final Runnable selfDestructRunnable = () -> Process.killProcess(Process.myPid());
 
-    private final BroadcastReceiver openedReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver appearingReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             cancelSelfDestruct();
         }
     };
-    private final BroadcastReceiver closedReceiver = new BroadcastReceiver() {
+
+    private final BroadcastReceiver disappearingReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             scheduleSelfDestruct();
         }
     };
+
     private final BroadcastReceiver killReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            scheduleSelfDestruct();
-        }
-    };
-    private final BroadcastReceiver toggleReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(controller != null)
-                controller.toggleStartMenu();
+            U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, false).apply();
+            finish();
+            Process.killProcess(Process.myPid());
         }
     };
 
@@ -60,21 +57,16 @@ public class StartMenuActivity extends Activity implements UIHost {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        int startMenuSpaceHeight = getIntent().getIntExtra(
-                EXTRA_START_MENU_SPACE_HEIGHT,
-                getResources().getDimensionPixelSize(R.dimen.tb_icon_size)
-        );
-
         ContextCompat.registerReceiver(
                 this,
-                openedReceiver,
-                new IntentFilter(ACTION_START_MENU_PROCESS_OPENED),
+                appearingReceiver,
+                new IntentFilter(ACTION_START_MENU_APPEARING),
                 ContextCompat.RECEIVER_NOT_EXPORTED
         );
         ContextCompat.registerReceiver(
                 this,
-                closedReceiver,
-                new IntentFilter(ACTION_START_MENU_PROCESS_CLOSED),
+                disappearingReceiver,
+                new IntentFilter(ACTION_START_MENU_DISAPPEARING),
                 ContextCompat.RECEIVER_NOT_EXPORTED
         );
         ContextCompat.registerReceiver(
@@ -83,35 +75,24 @@ public class StartMenuActivity extends Activity implements UIHost {
                 new IntentFilter(ACTION_KILL_START_MENU_PROCESS),
                 ContextCompat.RECEIVER_NOT_EXPORTED
         );
-        ContextCompat.registerReceiver(
-                this,
-                toggleReceiver,
-                new IntentFilter(ACTION_TOGGLE_START_MENU_PROCESS),
-                ContextCompat.RECEIVER_NOT_EXPORTED
-        );
 
-        controller = new StartMenuController(this, startMenuSpaceHeight);
+        controller = new StartMenuController(this);
         controller.drawStartMenu(this);
     }
 
     @Override
     protected void onDestroy() {
         try {
-            unregisterReceiver(openedReceiver);
+            unregisterReceiver(appearingReceiver);
         } catch (IllegalArgumentException ignored) {}
 
         try {
-            unregisterReceiver(closedReceiver);
+            unregisterReceiver(disappearingReceiver);
         } catch (IllegalArgumentException ignored) {}
 
         try {
             unregisterReceiver(killReceiver);
         } catch (IllegalArgumentException ignored) {}
-
-        try {
-            unregisterReceiver(toggleReceiver);
-        } catch (IllegalArgumentException ignored) {}
-
         cancelSelfDestruct();
         controller.onDestroyHost(this);
         super.onDestroy();

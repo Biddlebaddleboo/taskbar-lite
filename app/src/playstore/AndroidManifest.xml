@@ -109,21 +109,19 @@
             android:documentLaunchMode="always"
             android:excludeFromRecents="true"
             android:theme="@style/Taskbar.Dialog"/>
-        <service android:name=".service.TaskbarService"/>
+        <service
+            android:name=".service.TaskbarService"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="This foreground service is required because the app\'s core functionality draws an overlay over other apps, displaying UI that is hosted inside of services instead of an activity"/>
+        </service>
         <activity
             android:name=".activity.StartMenuActivity"
             android:process=":startmenu"
             android:theme="@style/Taskbar.StartMenu"
             android:exported="true"
             android:excludeFromRecents="true"/>
-
-        <service
-            android:name=".service.NotificationService"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="This foreground service is required because the app\'s core functionality draws an overlay over other apps, displaying UI that is hosted inside of services instead of an activity"/>
-        </service>
         <receiver
             android:name=".receiver.StartReceiver"
             android:enabled="true"

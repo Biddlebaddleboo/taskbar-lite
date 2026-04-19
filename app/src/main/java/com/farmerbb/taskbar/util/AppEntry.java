@@ -15,19 +15,11 @@
 
 package com.farmerbb.taskbar.util;
 
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.LauncherActivityInfo;
-import android.content.pm.LauncherApps;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Process;
 import android.os.UserManager;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 
 public class AppEntry implements Serializable {
@@ -40,20 +32,12 @@ public class AppEntry implements Serializable {
     private Long lastTimeUsed;
     private Long totalTimeInForeground;
     private transient Drawable icon;
-    private byte[] iconByteArray;
 
-    public AppEntry(String packageName, String componentName, String label, Drawable icon, boolean shouldCompress) {
+    public AppEntry(String packageName, String componentName, String label, Drawable icon) {
         this.packageName = packageName;
         this.componentName = componentName;
         this.label = label;
         this.icon = icon;
-
-        if(shouldCompress && icon instanceof BitmapDrawable) {
-            Bitmap bitmap = ((BitmapDrawable) icon).getBitmap();
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0, stream);
-            iconByteArray = stream.toByteArray();
-        }
     }
 
     public String getPackageName() {
@@ -82,19 +66,7 @@ public class AppEntry implements Serializable {
 
     public Drawable getIcon(Context context) {
         if(icon == null) {
-            if(iconByteArray != null)
-                icon = new BitmapDrawable(context.getResources(), BitmapFactory.decodeByteArray(iconByteArray, 0, iconByteArray.length));
-            else {
-                Intent intent = new Intent();
-                intent.setComponent(ComponentName.unflattenFromString(componentName));
-
-                LauncherApps launcherApps = (LauncherApps) context.getSystemService(Context.LAUNCHER_APPS_SERVICE);
-                UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);
-
-                LauncherActivityInfo appInfo = launcherApps.resolveActivity(intent, userManager.getUserForSerialNumber(userId));
-
-                icon = IconCache.getInstance(context).getIcon(context, appInfo);
-            }
+            icon = context.getPackageManager().getDefaultActivityIcon();
         }
         return icon;
     }

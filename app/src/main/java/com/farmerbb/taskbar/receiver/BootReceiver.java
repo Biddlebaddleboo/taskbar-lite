@@ -20,7 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
-import com.farmerbb.taskbar.service.NotificationService;
+import com.farmerbb.taskbar.service.TaskbarService;
 import com.farmerbb.taskbar.util.U;
 
 import static com.farmerbb.taskbar.util.Constants.*;
@@ -42,10 +42,7 @@ public class BootReceiver extends BroadcastReceiver {
                 U.startFreeformHack(context, true);
             }
 
-            Intent notificationIntent = new Intent(context, NotificationService.class);
-            notificationIntent.putExtra(EXTRA_START_SERVICES, true);
-
-            U.startForegroundService(context, notificationIntent);
+            U.startForegroundService(context, new Intent(context, TaskbarService.class));
         }
     }
 }

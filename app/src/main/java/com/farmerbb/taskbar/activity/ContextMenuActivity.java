@@ -41,7 +41,6 @@ import com.farmerbb.taskbar.util.AppEntry;
 import com.farmerbb.taskbar.util.ApplicationType;
 import com.farmerbb.taskbar.util.DisplayInfo;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
-import com.farmerbb.taskbar.util.IconCache;
 import com.farmerbb.taskbar.helper.MenuHelper;
 import com.farmerbb.taskbar.util.SavedWindowSizes;
 import com.farmerbb.taskbar.util.U;
@@ -57,18 +56,9 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
     boolean showStartMenu = false;
     boolean isStartButton = false;
     boolean secondaryMenu = false;
-    boolean startMenuAppearing = false;
     boolean contextMenuFix = false;
 
     List<ShortcutInfo> shortcuts;
-
-    private final BroadcastReceiver startMenuAppearingReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            startMenuAppearing = true;
-            finish();
-        }
-    };
 
     private final BroadcastReceiver finishReceiver = new BroadcastReceiver() {
         @Override
@@ -149,9 +139,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
         if(view != null) view.setPadding(0, 0, 0, 0);
 
         generateMenu();
-
-        U.registerReceiver(this, startMenuAppearingReceiver,
-                ACTION_START_MENU_APPEARING);
 
         U.registerReceiver(this, finishReceiver, ACTION_HIDE_CONTEXT_MENU);
     }
@@ -361,16 +348,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
         U.sendBroadcast(this, ACTION_CONTEXT_MENU_DISAPPEARING);
         MenuHelper.getInstance().setContextMenuOpen(false);
 
-        if(!startMenuAppearing) {
-            if(showStartMenu) {
-                U.sendBroadcast(this, ACTION_TOGGLE_START_MENU);
-            } else {
-                U.sendBroadcast(this, ACTION_RESET_START_MENU);
-            }
-        }
-
-        U.sendGlobalBroadcast(this, ACTION_START_MENU_PROCESS_CLOSED);
-
         SharedPreferences pref = U.getSharedPreferences(this);
 
         super.finish();
@@ -455,8 +432,6 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        U.unregisterReceiver(this, startMenuAppearingReceiver);
         U.unregisterReceiver(this, finishReceiver);
     }
 

@@ -21,7 +21,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 
 import com.farmerbb.taskbar.activity.MainActivity;
-import com.farmerbb.taskbar.service.NotificationService;
+import com.farmerbb.taskbar.service.TaskbarService;
 import com.farmerbb.taskbar.util.U;
 
 import static com.farmerbb.taskbar.util.Constants.*;
@@ -31,7 +31,7 @@ public class StartReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         SharedPreferences pref = U.getSharedPreferences(context);
 
-        boolean taskbarNotActive = !U.isServiceRunning(context, NotificationService.class);
+        boolean taskbarNotActive = !U.isServiceRunning(context, TaskbarService.class);
 
         if(!U.canDrawOverlays(context)) {
             U.newHandler().postDelayed(() -> {
@@ -58,10 +58,7 @@ public class StartReceiver extends BroadcastReceiver {
                 U.startFreeformHack(context, true);
             }
 
-            Intent notificationIntent = new Intent(context, NotificationService.class);
-            notificationIntent.putExtra(EXTRA_START_SERVICES, true);
-
-            U.startForegroundService(context, notificationIntent);
+            U.startForegroundService(context, new Intent(context, TaskbarService.class));
         }
     }
 }

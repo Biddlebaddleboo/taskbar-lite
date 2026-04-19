@@ -46,7 +46,6 @@ import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.adapter.StartMenuAdapter;
 import com.farmerbb.taskbar.util.AppEntry;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
-import com.farmerbb.taskbar.helper.MenuHelper;
 import com.farmerbb.taskbar.util.U;
 import com.farmerbb.taskbar.widget.StartMenuLayout;
 
@@ -60,8 +59,6 @@ import static com.farmerbb.taskbar.util.Constants.*;
 
 public class StartMenuController extends UIController {
 
-    private final int startMenuSpaceHeight;
-
     private StartMenuLayout layout;
     private GridView startMenu;
     private TextView textView;
@@ -73,13 +70,6 @@ public class StartMenuController extends UIController {
     private List<String> currentStartMenuIds = new ArrayList<>();
 
     private final View.OnClickListener ocl = view -> toggleStartMenu();
-
-    private final BroadcastReceiver toggleReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            toggleStartMenu();
-        }
-    };
 
     private final BroadcastReceiver hideReceiver = new BroadcastReceiver() {
         @Override
@@ -95,10 +85,10 @@ public class StartMenuController extends UIController {
         }
     };
 
-    private final BroadcastReceiver resetReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver showReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            startMenu.setSelection(0);
+            showStartMenu();
         }
     };
 
@@ -120,12 +110,7 @@ public class StartMenuController extends UIController {
     };
 
     public StartMenuController(Context context) {
-        this(context, -1);
-    }
-
-    public StartMenuController(Context context, int startMenuSpaceHeight) {
         super(context);
-        this.startMenuSpaceHeight = startMenuSpaceHeight;
     }
 
     @TargetApi(Build.VERSION_CODES.M)
@@ -155,13 +140,6 @@ public class StartMenuController extends UIController {
         layout.setAlpha(0);
         layout.viewHandlesBackButton();
 
-        View startMenuSpace = layout.findViewById(R.id.start_menu_space);
-        ViewGroup.LayoutParams startMenuSpaceParams = startMenuSpace.getLayoutParams();
-        startMenuSpaceParams.height = startMenuSpaceHeight > 0
-                ? startMenuSpaceHeight
-                : context.getResources().getDimensionPixelSize(R.dimen.tb_icon_size);
-        startMenuSpace.setLayoutParams(startMenuSpaceParams);
-
         startMenu = layout.findViewById(R.id.start_menu);
 
         if(pref.getBoolean(PREF_TRANSPARENT_START_MENU, false))
@@ -187,10 +165,9 @@ public class StartMenuController extends UIController {
 
         textView = layout.findViewById(R.id.no_apps_found);
 
-        U.registerReceiver(context, toggleReceiver, ACTION_TOGGLE_START_MENU);
         U.registerReceiver(context, hideReceiver, ACTION_HIDE_START_MENU);
         U.registerReceiver(context, hideReceiverNoReset, ACTION_HIDE_START_MENU_NO_RESET);
-        U.registerReceiver(context, resetReceiver, ACTION_RESET_START_MENU);
+        U.registerReceiver(context, showReceiver, ACTION_SHOW_START_MENU);
 
         handler = U.newHandler();
         refreshApps(true);
@@ -298,7 +275,7 @@ public class StartMenuController extends UIController {
             String packageName = appInfo.getApplicationInfo().packageName;
             ComponentName componentName = new ComponentName(packageName, appInfo.getName());
             AppEntry newEntry =
-                    new AppEntry(packageName, componentName.flattenToString(), label, icon, false);
+                    new AppEntry(packageName, componentName.flattenToString(), label, icon);
 
             newEntry.setUserId(userManager.getSerialNumberForUser(appInfo.getUser()));
             entries.add(newEntry);
@@ -318,12 +295,10 @@ public class StartMenuController extends UIController {
         if(layout.getVisibility() != View.VISIBLE) {
             layout.setOnClickListener(ocl);
             layout.setVisibility(View.VISIBLE);
+            U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, true).apply();
 
             if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1)
                 layout.setAlpha(1);
-
-            MenuHelper.getInstance().setStartMenuOpen(true);
-            U.sendGlobalBroadcast(context, ACTION_START_MENU_PROCESS_OPENED);
 
             U.sendBroadcast(context, ACTION_START_MENU_APPEARING);
 
@@ -341,15 +316,14 @@ public class StartMenuController extends UIController {
 
     private void hideStartMenu(boolean shouldReset) {
         if(layout.getVisibility() != View.VISIBLE) {
-            U.sendGlobalBroadcast(context, ACTION_START_MENU_PROCESS_CLOSED);
+            U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, false).apply();
+            U.sendBroadcast(context, ACTION_START_MENU_DISAPPEARING);
             return;
         }
 
         layout.setOnClickListener(null);
         layout.setAlpha(0);
-
-        MenuHelper.getInstance().setStartMenuOpen(false);
-        U.sendGlobalBroadcast(context, ACTION_START_MENU_PROCESS_CLOSED);
+        U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, false).apply();
 
         U.sendBroadcast(context, ACTION_START_MENU_DISAPPEARING);
 
@@ -363,8 +337,6 @@ public class StartMenuController extends UIController {
 
             InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(layout.getWindowToken(), 0);
-
-            U.sendGlobalBroadcast(context, ACTION_START_MENU_PROCESS_CLOSED);
         }, 100);
     }
 
@@ -375,12 +347,9 @@ public class StartMenuController extends UIController {
                 host.removeView(layout);
             } catch (IllegalArgumentException ignored) {}
 
-        U.unregisterReceiver(context, toggleReceiver);
         U.unregisterReceiver(context, hideReceiver);
         U.unregisterReceiver(context, hideReceiverNoReset);
-        U.unregisterReceiver(context, resetReceiver);
-
-        U.sendGlobalBroadcast(context, ACTION_START_MENU_PROCESS_CLOSED);
+        U.unregisterReceiver(context, showReceiver);
         U.sendBroadcast(context, ACTION_START_MENU_DISAPPEARING);
     }
 

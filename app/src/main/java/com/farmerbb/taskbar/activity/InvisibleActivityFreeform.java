@@ -26,7 +26,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.WindowManager;
 
-import com.farmerbb.taskbar.service.NotificationService;
 import com.farmerbb.taskbar.service.TaskbarService;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.helper.LauncherHelper;
@@ -158,7 +157,7 @@ public class InvisibleActivityFreeform extends Activity {
             startService(new Intent(this, TaskbarService.class));
             
 
-            if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !U.isServiceRunning(this, NotificationService.class))
+            if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !U.isServiceRunning(this, TaskbarService.class))
                 pref.edit().putBoolean(PREF_TASKBAR_ACTIVE, false).apply();
 
             // Show the taskbar when activity is started

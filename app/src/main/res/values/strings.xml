@@ -71,9 +71,6 @@
 
     <string name="tb_window_sizes_not_available">Window sizes don\'t work correctly on this Android version - see \"Help &amp; instructions\" for a workaround</string>
 
-    <string name="tb_auto_hide_navbar">Automatically control the system navigation bar</string>
-    <string name="tb_auto_hide_navbar_description">Hide the navigation bar when Taskbar Lite is active, and show it when Taskbar Lite is inactive</string>
-
     <string name="tb_use_default">Use default</string>
 
     <string name="tb_action_continue">Continue</string>

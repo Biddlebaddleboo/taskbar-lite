@@ -18,14 +18,6 @@ class MenuHelperTest {
     }
 
     @Test
-    fun testSetStartMenuOpen() {
-        Assert.assertFalse(menuHelper.isStartMenuOpen)
-        menuHelper.isStartMenuOpen = true
-        Assert.assertTrue(menuHelper.isStartMenuOpen)
-        menuHelper.isStartMenuOpen = false
-    }
-
-    @Test
     fun testSetContextMenuOpen() {
         Assert.assertFalse(menuHelper.isContextMenuOpen)
         menuHelper.isContextMenuOpen = true

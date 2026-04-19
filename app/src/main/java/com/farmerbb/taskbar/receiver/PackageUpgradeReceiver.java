@@ -20,7 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
-import com.farmerbb.taskbar.service.NotificationService;
+import com.farmerbb.taskbar.service.TaskbarService;
 import com.farmerbb.taskbar.util.U;
 
 import static com.farmerbb.taskbar.util.Constants.*;
@@ -32,18 +32,12 @@ public class PackageUpgradeReceiver extends BroadcastReceiver {
             SharedPreferences pref = U.getSharedPreferences(context);
             boolean startServices = pref.getBoolean(PREF_TASKBAR_ACTIVE, false);
 
-            if(startServices) {
-                if(U.hasFreeformSupport(context)) {
-                    U.startFreeformHack(context, true);
-                }
+            if(startServices && U.hasFreeformSupport(context)) {
+                U.startFreeformHack(context, true);
             }
 
-            if(startServices) {
-                Intent notificationIntent = new Intent(context, NotificationService.class);
-                notificationIntent.putExtra(EXTRA_START_SERVICES, startServices);
-
-                U.startForegroundService(context, notificationIntent);
-            }
+            if(startServices)
+                U.startForegroundService(context, new Intent(context, TaskbarService.class));
         }
     }
 }

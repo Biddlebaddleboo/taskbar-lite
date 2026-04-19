@@ -19,7 +19,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.view.View;
 
-import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.util.CompatUtils;
 import com.farmerbb.taskbar.util.U;
@@ -42,10 +41,7 @@ public abstract class UIController {
         SharedPreferences pref = U.getSharedPreferences(context);
         LauncherHelper helper = LauncherHelper.getInstance();
 
-        boolean shouldProceed = true;
-
-        if(shouldProceed && (pref.getBoolean(PREF_TASKBAR_ACTIVE, false)
-                || helper.isOnHomeScreen(context))) {
+        if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) || helper.isOnHomeScreen(context)) {
             if(U.canDrawOverlays(context))
                 runnable.run();
             else {
@@ -60,7 +56,7 @@ public abstract class UIController {
         return U.getDisplayInfo(context).displayDefaultsToFreeform
                 && U.getCurrentApiVersion() < 33.0f
                 && !U.isChromeOs(context)
-                && !U.isShowHideNavbarSupported()
+                && U.getCurrentApiVersion() > 29.0f
                 ? U.getNavbarHeight(context) : -1;
     }
 
@@ -81,7 +77,4 @@ public abstract class UIController {
         });
     }
 
-    protected boolean isImeFixDisabled() {
-        return false;
-    }
 }
