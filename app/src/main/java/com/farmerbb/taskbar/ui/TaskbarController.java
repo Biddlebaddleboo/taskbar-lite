@@ -25,7 +25,6 @@ import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
@@ -36,14 +35,12 @@ import android.graphics.Point;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.os.Handler;
 import android.os.Process;
 import android.os.SystemClock;
 import android.os.UserHandle;
 import android.os.UserManager;
 
 import androidx.annotation.VisibleForTesting;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import android.telephony.PhoneStateListener;
 import android.view.Display;
@@ -73,7 +70,6 @@ import com.farmerbb.taskbar.util.AppEntry;
 import com.farmerbb.taskbar.util.DisplayInfo;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.util.IconCache;
-import com.farmerbb.taskbar.helper.MenuHelper;
 import com.farmerbb.taskbar.util.U;
 
 import static com.farmerbb.taskbar.util.Constants.*;
@@ -90,8 +86,20 @@ public class TaskbarController extends UIController {
     private boolean matchParent;
     private Runnable updateParamsRunnable;
 
-    private final View.OnClickListener ocl = view ->
-            U.sendBroadcast(context, ACTION_TOGGLE_START_MENU);
+    private final View.OnClickListener ocl = view -> {
+        boolean startMenuProcessRunning = U.isProcessRunning(context, context.getPackageName() + ":startmenu");
+
+        if(startMenuProcessRunning) {
+            Intent intent = new Intent(ACTION_TOGGLE_START_MENU_PROCESS);
+            intent.setPackage(context.getPackageName());
+            context.sendBroadcast(intent);
+        } else {
+            Intent intent = new Intent(context, com.farmerbb.taskbar.activity.StartMenuActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra(EXTRA_START_MENU_SPACE_HEIGHT, getTaskbarHeight());
+            context.startActivity(intent);
+        }
+    };
 
     private final BroadcastReceiver showReceiver = new BroadcastReceiver() {
         @Override
@@ -109,6 +117,13 @@ public class TaskbarController extends UIController {
 
     public TaskbarController(Context context) {
         super(context);
+    }
+
+    private int getTaskbarHeight() {
+        if(layout != null && layout.getHeight() > 0)
+            return layout.getHeight();
+
+        return context.getResources().getDimensionPixelSize(R.dimen.tb_icon_size);
     }
 
     @Override
@@ -202,8 +217,6 @@ public class TaskbarController extends UIController {
         if(scrollView != null)
             scrollView.setVisibility(View.VISIBLE);
 
-        new Handler().post(() ->
-                U.sendBroadcast(context, ACTION_SHOW_START_MENU_SPACE));
     }
 
     private void tempShowTaskbar() {

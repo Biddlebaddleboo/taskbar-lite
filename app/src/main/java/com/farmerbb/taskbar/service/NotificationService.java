@@ -48,7 +48,7 @@ public class NotificationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(intent != null && intent.getBooleanExtra(EXTRA_START_SERVICES, false)) {
             startService(new Intent(this, TaskbarService.class));
-            startService(new Intent(this, StartMenuService.class));
+            
         }
 
         return START_STICKY;
@@ -58,7 +58,6 @@ public class NotificationService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             startService(new Intent(context, TaskbarService.class));
-            startService(new Intent(context, StartMenuService.class));
         }
     };
 
@@ -66,7 +65,6 @@ public class NotificationService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             stopService(new Intent(context, TaskbarService.class));
-            stopService(new Intent(context, StartMenuService.class));
 
             U.clearCaches(context);
         }

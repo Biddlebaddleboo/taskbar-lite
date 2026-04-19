@@ -252,7 +252,10 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
         boolean appIsValid = isStartButton || isEntryAvailable(userManager, launcherApps);
         secondaryMenu = false;
 
-        if(appIsValid) switch(p.getKey()) {
+        if(appIsValid) {
+            U.sendGlobalBroadcast(this, ACTION_KILL_START_MENU_PROCESS);
+
+            switch(p.getKey()) {
             case PREF_APP_INFO:
                 U.launchApp(this, () ->
                         launcherApps.startAppDetailsActivity(
@@ -340,6 +343,7 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
 
                 prepareToClose();
                 break;
+            }
         }
 
         if(!secondaryMenu) finish();
@@ -364,6 +368,8 @@ public class ContextMenuActivity extends PreferenceActivity implements Preferenc
                 U.sendBroadcast(this, ACTION_RESET_START_MENU);
             }
         }
+
+        U.sendGlobalBroadcast(this, ACTION_START_MENU_PROCESS_CLOSED);
 
         SharedPreferences pref = U.getSharedPreferences(this);
 

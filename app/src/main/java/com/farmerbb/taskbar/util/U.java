@@ -79,7 +79,6 @@ import com.farmerbb.taskbar.helper.LauncherHelper;
 import com.farmerbb.taskbar.helper.MenuHelper;
 import com.farmerbb.taskbar.helper.ToastHelper;
 import com.farmerbb.taskbar.service.NotificationService;
-import com.farmerbb.taskbar.service.StartMenuService;
 import com.farmerbb.taskbar.service.TaskbarService;
 
 import java.io.BufferedInputStream;
@@ -625,6 +624,21 @@ public class U {
         }
     }
 
+    public static boolean isProcessRunning(Context context, String processName) {
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        if(activityManager == null) return false;
+
+        List<ActivityManager.RunningAppProcessInfo> runningProcesses = activityManager.getRunningAppProcesses();
+        if(runningProcesses == null) return false;
+
+        for(ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
+            if(processInfo != null && processName.equals(processInfo.processName))
+                return true;
+        }
+
+        return false;
+    }
+
     public static int getBackgroundTint(Context context) {
         return HARD_CODED_BACKGROUND_TINT;
     }
@@ -783,13 +797,11 @@ public class U {
 
     private static void startTaskbarService(Context context, boolean fullRestart) {
         context.startService(new Intent(context, TaskbarService.class));
-        context.startService(new Intent(context, StartMenuService.class));
         if(fullRestart) context.startService(new Intent(context, NotificationService.class));
     }
 
     private static void stopTaskbarService(Context context, boolean fullRestart) {
         context.stopService(new Intent(context, TaskbarService.class));
-        context.stopService(new Intent(context, StartMenuService.class));
         if(fullRestart) context.stopService(new Intent(context, NotificationService.class));
     }
 
@@ -803,7 +815,6 @@ public class U {
 
             stopTaskbarService(context, true);
             startTaskbarService(context, true);
-        } else if(isServiceRunning(context, StartMenuService.class)) {
             pref.edit().putBoolean(PREF_SKIP_AUTO_HIDE_NAVBAR, true).apply();
 
             stopTaskbarService(context, false);
@@ -1101,6 +1112,12 @@ public class U {
 
     public static void sendBroadcast(Context context, Intent intent) {
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    public static void sendGlobalBroadcast(Context context, String action) {
+        Intent intent = new Intent(action);
+        intent.setPackage(context.getPackageName());
+        context.sendBroadcast(intent);
     }
 
     public static void setComponentEnabled(Context context, Class<?> clazz, boolean enabled) {

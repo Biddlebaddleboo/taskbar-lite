@@ -27,7 +27,6 @@ import android.os.Bundle;
 import android.view.WindowManager;
 
 import com.farmerbb.taskbar.service.NotificationService;
-import com.farmerbb.taskbar.service.StartMenuService;
 import com.farmerbb.taskbar.service.TaskbarService;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.helper.LauncherHelper;
@@ -157,7 +156,7 @@ public class InvisibleActivityFreeform extends Activity {
 
             // We always start the Taskbar and Start Menu services, even if the app isn't normally running
             startService(new Intent(this, TaskbarService.class));
-            startService(new Intent(this, StartMenuService.class));
+            
 
             if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !U.isServiceRunning(this, NotificationService.class))
                 pref.edit().putBoolean(PREF_TASKBAR_ACTIVE, false).apply();

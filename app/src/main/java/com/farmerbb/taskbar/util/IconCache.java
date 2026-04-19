@@ -16,65 +16,65 @@
 package com.farmerbb.taskbar.util;
 
 import android.app.ActivityManager;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.UserManager;
+import android.util.DisplayMetrics;
 import android.util.LruCache;
-
-import static com.farmerbb.taskbar.util.Constants.*;
 
 public class IconCache {
 
-    private final LruCache<String, BitmapDrawable> drawables;
+    private final LruCache<String, Drawable> drawables;
 
     private static IconCache theInstance;
 
     private IconCache(Context context) {
-        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        final int memClass = am.getMemoryClass();
-        final int cacheSize = (1024 * 1024 * memClass) / 8;
+        final int cacheSize = 4 * 1024 * 1024; // 4MB hard-cap
 
-        drawables = new LruCache<String, BitmapDrawable>(cacheSize) {
+        drawables = new LruCache<String, Drawable>(cacheSize) {
             @Override
-            protected int sizeOf(String key, BitmapDrawable value) {
-                return value.getBitmap().getByteCount();
+            protected int sizeOf(String key, Drawable value) {
+                if(value instanceof BitmapDrawable) {
+                    Bitmap bitmap = ((BitmapDrawable) value).getBitmap();
+                    if(bitmap != null) return bitmap.getByteCount();
+                }
+
+                return 1;
             }
         };
     }
 
     public static IconCache getInstance(Context context) {
-        if(theInstance == null) theInstance = new IconCache(context);
+        if(theInstance == null) theInstance = new IconCache(context.getApplicationContext());
 
         return theInstance;
     }
 
-    public BitmapDrawable getIcon(Context context, LauncherActivityInfo appInfo) {
+    public Drawable getIcon(Context context, LauncherActivityInfo appInfo) {
         return getIcon(context, context.getPackageManager(), appInfo);
     }
 
-    public BitmapDrawable getIcon(Context context, PackageManager pm, LauncherActivityInfo appInfo) {
+    public Drawable getIcon(Context context, PackageManager pm, LauncherActivityInfo appInfo) {
         UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);
         String name;
 
         try {
            name = appInfo.getComponentName().flattenToString() + ":" + userManager.getSerialNumberForUser(appInfo.getUser());
         } catch (NullPointerException e) {
-            return U.convertToBitmapDrawable(context, pm.getDefaultActivityIcon());
+            return pm.getDefaultActivityIcon();
         }
 
-        BitmapDrawable drawable;
+        Drawable drawable;
 
         synchronized (drawables) {
             drawable = drawables.get(name);
             if(drawable == null) {
-                Drawable loadedIcon = loadIcon(context, pm, appInfo);
-                drawable = U.convertToBitmapDrawable(context, loadedIcon);
-
+                drawable = appInfo.getIcon(DisplayMetrics.DENSITY_MEDIUM);
+                if (drawable == null) drawable = pm.getDefaultActivityIcon();
                 drawables.put(name, drawable);
             }
         }
@@ -82,19 +82,7 @@ public class IconCache {
         return drawable;
     }
 
-    private Drawable loadIcon(Context context, PackageManager pm, LauncherActivityInfo appInfo) {
-        return getIcon(pm, appInfo);
-    }
-
     public void clearCache() {
         drawables.evictAll();
-    }
-
-    private Drawable getIcon(PackageManager pm, LauncherActivityInfo appInfo) {
-        try {
-            return appInfo.getIcon(0);
-        } catch (NullPointerException | IllegalArgumentException | SecurityException e) {
-            return pm.getDefaultActivityIcon();
-        }
     }
 }

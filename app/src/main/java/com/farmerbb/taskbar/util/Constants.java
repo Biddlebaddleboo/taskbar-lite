@@ -29,12 +29,14 @@ public class Constants {
     public static final String ACTION_HIDE_CONTEXT_MENU = "com.farmerbb.taskbar.HIDE_CONTEXT_MENU";
     public static final String ACTION_HIDE_START_MENU = "com.farmerbb.taskbar.HIDE_START_MENU";
     public static final String ACTION_HIDE_START_MENU_NO_RESET = "com.farmerbb.taskbar.HIDE_START_MENU_NO_RESET";
-    public static final String ACTION_HIDE_START_MENU_SPACE = "com.farmerbb.taskbar.HIDE_START_MENU_SPACE";
+    public static final String ACTION_KILL_START_MENU_PROCESS = "com.farmerbb.taskbar.KILL_START_MENU_PROCESS";
+    public static final String ACTION_START_MENU_PROCESS_OPENED = "com.farmerbb.taskbar.START_MENU_PROCESS_OPENED";
+    public static final String ACTION_START_MENU_PROCESS_CLOSED = "com.farmerbb.taskbar.START_MENU_PROCESS_CLOSED";
+    public static final String ACTION_TOGGLE_START_MENU_PROCESS = "com.farmerbb.taskbar.TOGGLE_START_MENU_PROCESS";
     public static final String ACTION_KILL_HOME_ACTIVITY = "com.farmerbb.taskbar.KILL_HOME_ACTIVITY";
     public static final String ACTION_REFRESH_DESKTOP_ICONS = "com.farmerbb.taskbar.REFRESH_DESKTOP_ICONS";
     public static final String ACTION_RESET_START_MENU = "com.farmerbb.taskbar.RESET_START_MENU";
     public static final String ACTION_RESTART = "com.farmerbb.taskbar.RESTART";
-    public static final String ACTION_SHOW_START_MENU_SPACE = "com.farmerbb.taskbar.SHOW_START_MENU_SPACE";
     public static final String ACTION_SHOW_TASKBAR = "com.farmerbb.taskbar.SHOW_TASKBAR";
     public static final String ACTION_SORT_DESKTOP_ICONS = "com.farmerbb.taskbar.SORT_DESKTOP_ICONS";
     public static final String ACTION_START = "com.farmerbb.taskbar.START";
@@ -110,6 +112,7 @@ public class Constants {
     public static final String EXTRA_COUNT = "count";
     public static final String EXTRA_PACKAGE_NAME = "package_name";
     public static final String EXTRA_START_SERVICES = "start_services";
+    public static final String EXTRA_START_MENU_SPACE_HEIGHT = "start_menu_space_height";
     public static final String EXTRA_USER_ID = "user_id";
     public static final String EXTRA_WINDOW_SIZE = "window_size";
     public static final String EXTRA_SHOW_PERMISSION_DIALOG = "show_permission_dialog";

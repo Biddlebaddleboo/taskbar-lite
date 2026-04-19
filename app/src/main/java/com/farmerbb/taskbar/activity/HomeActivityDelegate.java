@@ -56,7 +56,6 @@ import com.farmerbb.taskbar.helper.DisplayHelper;
 import com.farmerbb.taskbar.helper.GlobalHelper;
 import com.farmerbb.taskbar.util.Callbacks;
 import com.farmerbb.taskbar.service.NotificationService;
-import com.farmerbb.taskbar.service.StartMenuService;
 import com.farmerbb.taskbar.service.TaskbarService;
 import com.farmerbb.taskbar.ui.UIHost;
 import com.farmerbb.taskbar.ui.ViewParams;
@@ -289,7 +288,7 @@ public class HomeActivityDelegate extends Activity implements UIHost {
         // We always start the Taskbar and Start Menu services, even if the app isn't normally running
         try {
             startService(new Intent(this, TaskbarService.class));
-            startService(new Intent(this, StartMenuService.class));
+            
         } catch (IllegalStateException ignored) {}
 
         if(pref.getBoolean(PREF_TASKBAR_ACTIVE, false) && !U.isServiceRunning(this, NotificationService.class))

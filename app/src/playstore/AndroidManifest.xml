@@ -110,7 +110,12 @@
             android:excludeFromRecents="true"
             android:theme="@style/Taskbar.Dialog"/>
         <service android:name=".service.TaskbarService"/>
-        <service android:name=".service.StartMenuService"/>
+        <activity
+            android:name=".activity.StartMenuActivity"
+            android:process=":startmenu"
+            android:theme="@style/Taskbar.StartMenu"
+            android:exported="true"
+            android:excludeFromRecents="true"/>
 
         <service
             android:name=".service.NotificationService"
