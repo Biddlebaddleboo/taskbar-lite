@@ -47,7 +47,7 @@ public class StartMenuActivity extends Activity implements UIHost {
     private final BroadcastReceiver killReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, false).apply();
+            U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, false).commit();
             finish();
             Process.killProcess(Process.myPid());
         }
@@ -76,6 +76,7 @@ public class StartMenuActivity extends Activity implements UIHost {
                 ContextCompat.RECEIVER_NOT_EXPORTED
         );
 
+        U.getSharedPreferences(this).edit().putBoolean(PREF_START_MENU_OPEN, true).commit();
         controller = new StartMenuController(this);
         controller.drawStartMenu(this);
     }
@@ -94,6 +95,7 @@ public class StartMenuActivity extends Activity implements UIHost {
             unregisterReceiver(killReceiver);
         } catch (IllegalArgumentException ignored) {}
         cancelSelfDestruct();
+        U.getSharedPreferences(this).edit().putBoolean(PREF_START_MENU_OPEN, false).commit();
         controller.onDestroyHost(this);
         super.onDestroy();
     }

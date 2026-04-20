@@ -19,10 +19,12 @@ import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 
 import androidx.annotation.VisibleForTesting;
+import androidx.core.content.ContextCompat;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,15 +54,15 @@ public class TaskbarController extends UIController {
         boolean startMenuProcessRunning = U.isProcessRunning(context, context.getPackageName() + ":startmenu");
         boolean startMenuOpen = pref.getBoolean(PREF_START_MENU_OPEN, false);
 
-        if(startMenuProcessRunning) {
-            if(startMenuOpen)
-                U.sendGlobalBroadcast(context, ACTION_KILL_START_MENU_PROCESS);
-            else
-                U.sendGlobalBroadcast(context, ACTION_SHOW_START_MENU);
+        if(startMenuOpen) {
+            pref.edit().putBoolean(PREF_START_MENU_OPEN, false).commit();
+            U.sendGlobalBroadcast(context, ACTION_KILL_START_MENU_PROCESS);
+        } else if(startMenuProcessRunning) {
+            pref.edit().putBoolean(PREF_START_MENU_OPEN, false).commit();
+            U.sendGlobalBroadcast(context, ACTION_KILL_START_MENU_PROCESS);
+            U.newHandler().postDelayed(this::openStartMenu, 100);
         } else {
-            Intent intent = new Intent(context, com.farmerbb.taskbar.activity.StartMenuActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
+            openStartMenu();
         }
     };
 
@@ -75,6 +77,20 @@ public class TaskbarController extends UIController {
         @Override
         public void onReceive(Context context, Intent intent) {
             tempShowTaskbar();
+        }
+    };
+
+    private final BroadcastReceiver startMenuAppearingReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, true).commit();
+        }
+    };
+
+    private final BroadcastReceiver startMenuDisappearingReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, false).commit();
         }
     };
 
@@ -131,6 +147,14 @@ public class TaskbarController extends UIController {
 
         U.registerReceiver(context, showReceiver, ACTION_SHOW_TASKBAR);
         U.registerReceiver(context, tempShowReceiver, ACTION_TEMP_SHOW_TASKBAR);
+        ContextCompat.registerReceiver(context,
+                startMenuAppearingReceiver,
+                new IntentFilter(ACTION_START_MENU_APPEARING),
+                ContextCompat.RECEIVER_NOT_EXPORTED);
+        ContextCompat.registerReceiver(context,
+                startMenuDisappearingReceiver,
+                new IntentFilter(ACTION_START_MENU_DISAPPEARING),
+                ContextCompat.RECEIVER_NOT_EXPORTED);
 
         host.addView(layout, params);
 
@@ -143,6 +167,12 @@ public class TaskbarController extends UIController {
         int padding = context.getResources().getDimensionPixelSize(R.dimen.tb_app_drawer_icon_padding);
         startButton.setPadding(padding, padding, padding, padding);
         startButton.setOnClickListener(ocl);
+    }
+
+    private void openStartMenu() {
+        Intent intent = new Intent(context, com.farmerbb.taskbar.activity.StartMenuActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
     }
 
     private void showTaskbar() {
@@ -168,6 +198,12 @@ public class TaskbarController extends UIController {
 
         U.unregisterReceiver(context, showReceiver);
         U.unregisterReceiver(context, tempShowReceiver);
+        try {
+            context.unregisterReceiver(startMenuAppearingReceiver);
+        } catch (IllegalArgumentException ignored) {}
+        try {
+            context.unregisterReceiver(startMenuDisappearingReceiver);
+        } catch (IllegalArgumentException ignored) {}
 
         isFirstStart = true;
     }

@@ -295,12 +295,13 @@ public class StartMenuController extends UIController {
         if(layout.getVisibility() != View.VISIBLE) {
             layout.setOnClickListener(ocl);
             layout.setVisibility(View.VISIBLE);
-            U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, true).apply();
+            U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, true).commit();
 
             if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1)
                 layout.setAlpha(1);
 
             U.sendBroadcast(context, ACTION_START_MENU_APPEARING);
+            U.sendGlobalBroadcast(context, ACTION_START_MENU_APPEARING);
 
             refreshApps(false);
 
@@ -316,16 +317,18 @@ public class StartMenuController extends UIController {
 
     private void hideStartMenu(boolean shouldReset) {
         if(layout.getVisibility() != View.VISIBLE) {
-            U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, false).apply();
+            U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, false).commit();
             U.sendBroadcast(context, ACTION_START_MENU_DISAPPEARING);
+            U.sendGlobalBroadcast(context, ACTION_START_MENU_DISAPPEARING);
             return;
         }
 
         layout.setOnClickListener(null);
         layout.setAlpha(0);
-        U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, false).apply();
+        U.getSharedPreferences(context).edit().putBoolean(PREF_START_MENU_OPEN, false).commit();
 
         U.sendBroadcast(context, ACTION_START_MENU_DISAPPEARING);
+        U.sendGlobalBroadcast(context, ACTION_START_MENU_DISAPPEARING);
 
         layout.postDelayed(() -> {
             layout.setVisibility(View.GONE);
@@ -351,6 +354,7 @@ public class StartMenuController extends UIController {
         U.unregisterReceiver(context, hideReceiverNoReset);
         U.unregisterReceiver(context, showReceiver);
         U.sendBroadcast(context, ACTION_START_MENU_DISAPPEARING);
+        U.sendGlobalBroadcast(context, ACTION_START_MENU_DISAPPEARING);
     }
 
     @TargetApi(Build.VERSION_CODES.M)
