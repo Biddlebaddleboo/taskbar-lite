@@ -8,14 +8,15 @@ import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
+import android.graphics.Typeface
 import android.os.SystemClock
 import android.os.UserHandle
 import android.os.UserManager
-import android.widget.ImageView
+import android.util.TypedValue
+import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import com.farmerbb.taskbar.Constants
 import com.farmerbb.taskbar.LauncherAppsHelper.generateTestLauncherActivityInfo
-import com.farmerbb.taskbar.R
 import com.farmerbb.taskbar.activity.HomeActivity
 import com.farmerbb.taskbar.activity.HomeActivityDelegate
 import com.farmerbb.taskbar.activity.InvisibleActivityFreeform
@@ -74,10 +75,17 @@ class TaskbarControllerTest {
 
     @Test
     fun testDrawStartButtonPadding() {
-        val startButton = ImageView(context)
-        uiController.drawStartButton(context, startButton, prefs)
-        var padding = context.resources.getDimensionPixelSize(R.dimen.tb_app_drawer_icon_padding)
+        val startButton = TextView(context)
+        uiController.drawStartButton(context, startButton)
+        val padding = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                16f,
+                context.resources.displayMetrics
+        ).toInt()
         checkStartButtonPadding(padding, startButton)
+        checkStartButtonDimensions(startButton)
+        Assert.assertEquals("Start", startButton.text.toString())
+        Assert.assertEquals(Typeface.BOLD, startButton.typeface?.style)
     }
 
     @Test
@@ -354,10 +362,25 @@ class TaskbarControllerTest {
                 .build()
     }
 
-    private fun checkStartButtonPadding(padding: Int, startButton: ImageView) {
+    private fun checkStartButtonPadding(padding: Int, startButton: TextView) {
         Assert.assertEquals(padding.toLong(), startButton.paddingLeft.toLong())
         Assert.assertEquals(padding.toLong(), startButton.paddingTop.toLong())
         Assert.assertEquals(padding.toLong(), startButton.paddingRight.toLong())
         Assert.assertEquals(padding.toLong(), startButton.paddingBottom.toLong())
+    }
+
+    private fun checkStartButtonDimensions(startButton: TextView) {
+        val minWidth = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                72f,
+                context.resources.displayMetrics
+        ).toInt()
+        val minHeight = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                48f,
+                context.resources.displayMetrics
+        ).toInt()
+        Assert.assertEquals(minWidth.toLong(), startButton.minimumWidth.toLong())
+        Assert.assertEquals(minHeight.toLong(), startButton.minimumHeight.toLong())
     }
 }

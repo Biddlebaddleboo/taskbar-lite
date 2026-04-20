@@ -16,26 +16,22 @@
 package com.farmerbb.taskbar.ui;
 
 import android.annotation.TargetApi;
+import android.graphics.Typeface;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.util.TypedValue;
 
 import androidx.annotation.VisibleForTesting;
 import androidx.core.content.ContextCompat;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
+import android.widget.TextView;
 
-import android.widget.LinearLayout;
-import android.widget.Space;
-
-import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
 import com.farmerbb.taskbar.util.U;
 
@@ -43,10 +39,14 @@ import static com.farmerbb.taskbar.util.Constants.*;
 
 public class TaskbarController extends UIController {
 
-    private LinearLayout layout;
-    private ImageView startButton;
-    private FrameLayout scrollView;
-    private Space space;
+    private static final String START_BUTTON_TEXT = "Start";
+    private static final int START_BUTTON_HORIZONTAL_PADDING_DP = 16;
+    private static final int START_BUTTON_VERTICAL_PADDING_DP = 8;
+    private static final int START_BUTTON_MIN_WIDTH_DP = 72;
+    private static final int START_BUTTON_MIN_HEIGHT_DP = 48;
+    private static final float START_BUTTON_TEXT_SIZE_SP = 16f;
+
+    private TextView layout;
     private boolean isFirstStart = true;
 
     private final View.OnClickListener ocl = view -> {
@@ -114,31 +114,7 @@ public class TaskbarController extends UIController {
 
         // Taskbar is fixed to the bottom-left corner.
         params.gravity = Gravity.BOTTOM | Gravity.LEFT;
-        int layoutId = R.layout.tb_taskbar_left;
-        // Initialize views
-        SharedPreferences pref = U.getSharedPreferences(context);
-
-        layout = (LinearLayout) LayoutInflater.from(U.wrapContext(context)).inflate(layoutId, null);
-        scrollView = layout.findViewById(R.id.taskbar_scrollview);
-
-        int backgroundTint = U.getBackgroundTint(context);
-        int accentColor = U.getAccentColor(context);
-
-        space = layout.findViewById(R.id.space);
-        layout.findViewById(R.id.space_alt).setVisibility(View.GONE);
-
-        space.setOnClickListener(v -> {});
-
-        startButton = layout.findViewById(R.id.start_button);
-        drawStartButton(context, startButton);
-
-        if(scrollView != null)
-            scrollView.setVisibility(View.VISIBLE);
-
-        layout.setBackgroundColor(backgroundTint);
-        layout.findViewById(R.id.divider).setBackgroundColor(
-                pref.getBoolean(PREF_CENTERED_ICONS, false) ? 0 : accentColor
-        );
+        layout = createStartButton();
 
         applyMarginFix(host, layout, params);
 
@@ -162,11 +138,35 @@ public class TaskbarController extends UIController {
     }
 
     @VisibleForTesting
-    void drawStartButton(Context context, ImageView startButton) {
-        startButton.setImageResource(U.getStartButtonIcon());
-        int padding = context.getResources().getDimensionPixelSize(R.dimen.tb_app_drawer_icon_padding);
-        startButton.setPadding(padding, padding, padding, padding);
+    void drawStartButton(Context context, TextView startButton) {
+        int horizontalPadding = dpToPx(START_BUTTON_HORIZONTAL_PADDING_DP);
+        int verticalPadding = dpToPx(START_BUTTON_VERTICAL_PADDING_DP);
+
+        startButton.setText(START_BUTTON_TEXT);
+        startButton.setTypeface(Typeface.DEFAULT_BOLD);
+        startButton.setTextColor(U.getAccentColor(context));
+        startButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, START_BUTTON_TEXT_SIZE_SP);
+        startButton.setGravity(Gravity.CENTER);
+        startButton.setIncludeFontPadding(false);
+        startButton.setBackgroundColor(U.getBackgroundTint(context));
+        startButton.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding);
+        startButton.setMinWidth(dpToPx(START_BUTTON_MIN_WIDTH_DP));
+        startButton.setMinHeight(dpToPx(START_BUTTON_MIN_HEIGHT_DP));
         startButton.setOnClickListener(ocl);
+    }
+
+    private TextView createStartButton() {
+        TextView startButton = new TextView(U.wrapContext(context));
+        drawStartButton(context, startButton);
+        return startButton;
+    }
+
+    private int dpToPx(int value) {
+        return Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                value,
+                context.getResources().getDisplayMetrics()
+        ));
     }
 
     private void openStartMenu() {
@@ -176,13 +176,8 @@ public class TaskbarController extends UIController {
     }
 
     private void showTaskbar() {
-        layout.setVisibility(View.VISIBLE);
-        startButton.setVisibility(View.VISIBLE);
-        space.setVisibility(View.VISIBLE);
-
-        if(scrollView != null)
-            scrollView.setVisibility(View.VISIBLE);
-
+        if(layout != null)
+            layout.setVisibility(View.VISIBLE);
     }
 
     private void tempShowTaskbar() {

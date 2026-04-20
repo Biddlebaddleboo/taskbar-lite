@@ -44,7 +44,6 @@ public class Constants {
     public static final String PREF_ADD_SHORTCUT = "add_shortcut";
     public static final String PREF_APP_INFO = "app_info";
     public static final String PREF_APP_SHORTCUTS = "app_shortcuts";
-    public static final String PREF_CENTERED_ICONS = "centered_icons";
     public static final String PREF_CHROME_OS_CONTEXT_MENU_FIX = "chrome_os_context_menu_fix";
     public static final String PREF_DEFAULT_NULL = "null";
     public static final String PREF_DIM_SCREEN = "dim_screen";

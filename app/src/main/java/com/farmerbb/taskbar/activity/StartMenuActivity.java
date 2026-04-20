@@ -9,12 +9,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Process;
 
-import com.farmerbb.taskbar.R;
 import com.farmerbb.taskbar.ui.StartMenuController;
 import com.farmerbb.taskbar.ui.UIHost;
 import com.farmerbb.taskbar.ui.ViewParams;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 
 import androidx.core.content.ContextCompat;
@@ -27,6 +25,7 @@ public class StartMenuActivity extends Activity implements UIHost {
     private static final long SELF_DESTRUCT_DELAY_MS = 5000L;
 
     private StartMenuController controller;
+    private WindowManager windowManager;
     private final Handler selfDestructHandler = U.newHandler();
     private final Runnable selfDestructRunnable = () -> Process.killProcess(Process.myPid());
 
@@ -77,6 +76,7 @@ public class StartMenuActivity extends Activity implements UIHost {
         );
 
         U.getSharedPreferences(this).edit().putBoolean(PREF_START_MENU_OPEN, true).commit();
+        windowManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
         controller = new StartMenuController(this);
         controller.drawStartMenu(this);
     }
@@ -102,26 +102,17 @@ public class StartMenuActivity extends Activity implements UIHost {
 
     @Override
     public void addView(View view, ViewParams params) {
-        setContentView(view);
-
-        Window window = getWindow();
-        WindowManager.LayoutParams attrs = window.getAttributes();
-        attrs.width = params.width;
-        attrs.height = params.height;
-
-        if(params.gravity > -1)
-            attrs.gravity = params.gravity;
-
-        if(params.bottomMargin > -1)
-            attrs.y = params.bottomMargin;
-
-        attrs.x = 0;
-        attrs.flags |= params.flags;
-        window.setAttributes(attrs);
+        if(windowManager != null)
+            windowManager.addView(view, params.toWindowManagerParams());
     }
 
     @Override
     public void removeView(View view) {
+        if(windowManager != null)
+            try {
+                windowManager.removeView(view);
+            } catch (IllegalArgumentException ignored) {}
+
         finish();
     }
 
