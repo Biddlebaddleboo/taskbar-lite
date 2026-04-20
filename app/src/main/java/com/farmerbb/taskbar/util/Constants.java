@@ -69,7 +69,6 @@ public class Constants {
     public static final String PREF_SORT_BY_NAME = "sort_by_name";
     public static final String PREF_TASKBAR_ACTIVE = "taskbar_active";
     public static final String PREF_TIME_OF_SERVICE_START = "time_of_service_start";
-    public static final String PREF_TRANSPARENT_START_MENU = "transparent_start_menu";
     public static final String PREF_UNINSTALL = "uninstall";
     public static final String PREF_UNINSTALL_DIALOG_SHOWN = "uninstall_dialog_shown";
     public static final String PREF_WINDOW_SIZE_FULLSCREEN = "window_size_fullscreen";

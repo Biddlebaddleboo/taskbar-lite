@@ -65,8 +65,6 @@
 
     <string name="tb_usage_stats_message">Please ensure that %s is set to \"On\"</string>
 
-    <string name="tb_transparent_start_menu">Transparent start menu</string>
-
     <string name="tb_invalid_grid_size">Invalid grid size</string>
 
     <string name="tb_window_sizes_not_available">Window sizes don\'t work correctly on this Android version - see \"Help &amp; instructions\" for a workaround</string>

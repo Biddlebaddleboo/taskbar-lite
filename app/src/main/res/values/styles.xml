@@ -49,17 +49,16 @@
     </style>
 
     <style name="Taskbar.HomeActivity" parent="@android:style/Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowBackground">@color/tb_main_activity_background_dark</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@color/tb_main_activity_background_dark</item>
+        <item name="android:navigationBarColor">@color/tb_main_activity_background_dark</item>
     </style>
 
     <style name="Taskbar.StartMenu" parent="TaskbarBase.Dark">
         <item name="android:windowIsFloating">true</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/tb_start_menu_background_dark</item>
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
@@ -79,14 +78,14 @@
         <item name="android:windowIsFloating">true</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:backgroundDimAmount">0</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/tb_main_activity_background_dark</item>
     </style>
 
     <style name="Taskbar.Incognito.Dark" parent="@android:style/Theme.Material">
         <item name="android:windowIsFloating">true</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:backgroundDimAmount">0</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/tb_main_activity_background_dark</item>
     </style>
 
     <style name="Taskbar.Dialog.Preference" parent="@android:style/Theme.Material.Light.Dialog">

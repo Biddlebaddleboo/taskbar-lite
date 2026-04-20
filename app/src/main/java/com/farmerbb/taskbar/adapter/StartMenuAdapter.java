@@ -73,7 +73,6 @@ public class StartMenuAdapter extends ArrayAdapter<AppEntry> implements SectionI
         // Check if an existing view is being reused, otherwise inflate the view
         if(convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(isGrid ? R.layout.tb_row_alt : R.layout.tb_row, parent, false);
-            convertView.setBackgroundColor(0);
         }
 
         final AppEntry entry = getItem(position);

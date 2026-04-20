@@ -108,8 +108,6 @@ public class U {
 
     private static final int HARD_CODED_BACKGROUND_TINT = 0x66000000;
     private static final int HARD_CODED_ACCENT_COLOR = 0xFFF0F0F0;
-    private static final int HARD_CODED_START_BUTTON_ICON = R.drawable.tb_allapps;
-
     public static final int HIDDEN = 0;
     public static final int TOP_APPS = 1;
 
@@ -980,10 +978,6 @@ public class U {
         }
 
         return false;
-    }
-
-    public static int getStartButtonIcon() {
-        return HARD_CODED_START_BUTTON_ICON;
     }
 
     public static boolean isLibrary(Context context) {

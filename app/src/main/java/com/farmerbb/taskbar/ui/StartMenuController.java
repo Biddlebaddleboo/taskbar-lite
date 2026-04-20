@@ -142,9 +142,6 @@ public class StartMenuController extends UIController {
 
         startMenu = layout.findViewById(R.id.start_menu);
 
-        if(pref.getBoolean(PREF_TRANSPARENT_START_MENU, false))
-            startMenu.setBackgroundColor(0);
-
         int columns = context.getResources().getInteger(R.integer.tb_start_menu_columns);
         ViewGroup.LayoutParams startMenuParams = startMenu.getLayoutParams();
         startMenuParams.width = (int) (startMenuParams.width * (columns / 3f));

@@ -19,7 +19,6 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -29,10 +28,8 @@ import android.os.Build;
 import android.os.IBinder;
 
 import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
 
 import com.farmerbb.taskbar.R;
-import com.farmerbb.taskbar.activity.MainActivity;
 import com.farmerbb.taskbar.ui.TaskbarController;
 import com.farmerbb.taskbar.ui.UIController;
 import com.farmerbb.taskbar.ui.UIHostService;
@@ -116,16 +113,6 @@ public class TaskbarService extends UIHostService {
             return;
         }
 
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-
-        PendingIntent contentIntent = PendingIntent.getActivity(
-                this,
-                0,
-                intent,
-                PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
-
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.tb_app_name);
             int importance = NotificationManager.IMPORTANCE_MIN;
@@ -136,11 +123,9 @@ public class TaskbarService extends UIHostService {
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(U.getStartButtonIcon())
-                .setContentIntent(contentIntent)
-                .setContentTitle(getString(R.string.tb_taskbar_is_active))
-                .setContentText(getString(R.string.tb_click_to_open_taskbar))
-                .setColor(ContextCompat.getColor(this, R.color.tb_colorPrimary))
+                .setSmallIcon(android.R.drawable.sym_def_app_icon)
+                .setContentTitle("T")
+                .setContentText("T")
                 .setPriority(Notification.PRIORITY_MIN)
                 .setShowWhen(false)
                 .setOngoing(true);
