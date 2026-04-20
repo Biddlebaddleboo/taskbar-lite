@@ -59,7 +59,6 @@ import android.os.UserManager;
 import android.provider.Settings;
 
 import androidx.annotation.DimenRes;
-import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.view.ContextThemeWrapper;
 import android.util.DisplayMetrics;
@@ -778,15 +777,6 @@ public class U {
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
-    }
-
-    @VisibleForTesting
-    public static float getBaseTaskbarSize(Context context) {
-        return getBaseTaskbarSizeStart(context);
-    }
-
-    public static float getBaseTaskbarSizeStart(Context context) {
-        return context.getResources().getDimension(R.dimen.tb_base_size_start_plus_divider);
     }
 
     private static void startTaskbarService(Context context, boolean fullRestart) {

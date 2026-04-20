@@ -29,9 +29,6 @@
     <dimen name="tb_phone_size_width">320dp</dimen>
     <dimen name="tb_phone_size_height">480dp</dimen>
     <dimen name="tb_max_width">@dimen/tb_match_parent</dimen>
-    <dimen name="tb_base_size_start_plus_divider">65dp</dimen>
-    <dimen name="tb_base_size_collapse_button">28dp</dimen>
-    <dimen name="tb_divider_size">5dp</dimen>
     <dimen name="tb_toast_y_offset">64dp</dimen>
     <dimen name="tb_caption_offset">48dp</dimen>
     <dimen name="tb_fake_fab_padding">16dp</dimen>

@@ -16,7 +16,8 @@
 package com.farmerbb.taskbar.ui;
 
 import android.annotation.TargetApi;
-import android.graphics.Typeface;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -30,23 +31,19 @@ import androidx.core.content.ContextCompat;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.TextView;
+import android.graphics.Rect;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import com.farmerbb.taskbar.helper.FreeformHackHelper;
+import com.farmerbb.taskbar.util.TaskbarFramebuffer;
 import com.farmerbb.taskbar.util.U;
 
 import static com.farmerbb.taskbar.util.Constants.*;
 
 public class TaskbarController extends UIController {
 
-    private static final String START_BUTTON_TEXT = "Start";
-    private static final int START_BUTTON_HORIZONTAL_PADDING_DP = 16;
-    private static final int START_BUTTON_VERTICAL_PADDING_DP = 8;
-    private static final int START_BUTTON_MIN_WIDTH_DP = 72;
-    private static final int START_BUTTON_MIN_HEIGHT_DP = 48;
-    private static final float START_BUTTON_TEXT_SIZE_SP = 16f;
-
-    private TextView layout;
+    private View layout;
     private boolean isFirstStart = true;
 
     private final View.OnClickListener ocl = view -> {
@@ -114,7 +111,7 @@ public class TaskbarController extends UIController {
 
         // Taskbar is fixed to the bottom-left corner.
         params.gravity = Gravity.BOTTOM | Gravity.LEFT;
-        layout = createStartButton();
+        layout = createTaskbarPlaceholder();
 
         applyMarginFix(host, layout, params);
 
@@ -138,27 +135,8 @@ public class TaskbarController extends UIController {
     }
 
     @VisibleForTesting
-    void drawStartButton(Context context, TextView startButton) {
-        int horizontalPadding = dpToPx(START_BUTTON_HORIZONTAL_PADDING_DP);
-        int verticalPadding = dpToPx(START_BUTTON_VERTICAL_PADDING_DP);
-
-        startButton.setText(START_BUTTON_TEXT);
-        startButton.setTypeface(Typeface.DEFAULT_BOLD);
-        startButton.setTextColor(U.getAccentColor(context));
-        startButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, START_BUTTON_TEXT_SIZE_SP);
-        startButton.setGravity(Gravity.CENTER);
-        startButton.setIncludeFontPadding(false);
-        startButton.setBackgroundColor(U.getBackgroundTint(context));
-        startButton.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding);
-        startButton.setMinWidth(dpToPx(START_BUTTON_MIN_WIDTH_DP));
-        startButton.setMinHeight(dpToPx(START_BUTTON_MIN_HEIGHT_DP));
-        startButton.setOnClickListener(ocl);
-    }
-
-    private TextView createStartButton() {
-        TextView startButton = new TextView(U.wrapContext(context));
-        drawStartButton(context, startButton);
-        return startButton;
+    View createTaskbarPlaceholder() {
+        return new TaskbarFramebufferView(U.wrapContext(context));
     }
 
     private int dpToPx(int value) {
@@ -167,6 +145,54 @@ public class TaskbarController extends UIController {
                 value,
                 context.getResources().getDisplayMetrics()
         ));
+    }
+
+    private final class TaskbarFramebufferView extends View {
+        private final Bitmap bitmap;
+        private final Rect bitmapBounds = new Rect();
+
+        TaskbarFramebufferView(Context context) {
+            super(context);
+            setClickable(true);
+            setOnClickListener(ocl);
+            bitmap = createBitmap();
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int desiredWidth = dpToPx(TaskbarFramebuffer.WIDTH);
+            int desiredHeight = dpToPx(TaskbarFramebuffer.HEIGHT);
+
+            int width = resolveSize(desiredWidth, widthMeasureSpec);
+            int height = resolveSize(desiredHeight, heightMeasureSpec);
+
+            setMeasuredDimension(width, height);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            bitmapBounds.set(0, 0, getWidth(), getHeight());
+            canvas.drawBitmap(bitmap, null, bitmapBounds, null);
+        }
+
+        private Bitmap createBitmap() {
+            Bitmap bitmap = Bitmap.createBitmap(
+                    TaskbarFramebuffer.WIDTH,
+                    TaskbarFramebuffer.HEIGHT,
+                    Bitmap.Config.RGB_565
+            );
+
+            ByteBuffer buffer = ByteBuffer.allocate(TaskbarFramebuffer.FRAMEBUFFER.length * 2)
+                    .order(ByteOrder.nativeOrder());
+
+            for(int pixel : TaskbarFramebuffer.FRAMEBUFFER)
+                buffer.putShort((short) pixel);
+
+            buffer.rewind();
+            bitmap.copyPixelsFromBuffer(buffer);
+
+            return bitmap;
+        }
     }
 
     private void openStartMenu() {

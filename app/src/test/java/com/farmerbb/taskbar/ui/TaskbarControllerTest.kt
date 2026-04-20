@@ -8,12 +8,11 @@ import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
-import android.graphics.Typeface
 import android.os.SystemClock
 import android.os.UserHandle
 import android.os.UserManager
 import android.util.TypedValue
-import android.widget.TextView
+import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import com.farmerbb.taskbar.Constants
 import com.farmerbb.taskbar.LauncherAppsHelper.generateTestLauncherActivityInfo
@@ -29,6 +28,7 @@ import com.farmerbb.taskbar.util.Constants.PREF_RECENTS_AMOUNT_APP_START
 import com.farmerbb.taskbar.util.Constants.PREF_RECENTS_AMOUNT_RUNNING_APPS_ONLY
 import com.farmerbb.taskbar.util.Constants.PREF_RECENTS_AMOUNT_SHOW_ALL
 import com.farmerbb.taskbar.util.Constants.PREF_TIME_OF_SERVICE_START
+import com.farmerbb.taskbar.util.TaskbarFramebuffer
 import com.farmerbb.taskbar.util.U
 import org.junit.After
 import org.junit.Assert
@@ -74,18 +74,27 @@ class TaskbarControllerTest {
     }
 
     @Test
-    fun testDrawStartButtonPadding() {
-        val startButton = TextView(context)
-        uiController.drawStartButton(context, startButton)
-        val padding = TypedValue.applyDimension(
+    fun testCreateTaskbarPlaceholder() {
+        val placeholder = uiController.createTaskbarPlaceholder()
+        placeholder.measure(
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+
+        val expectedWidth = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
-                16f,
+                TaskbarFramebuffer.WIDTH.toFloat(),
                 context.resources.displayMetrics
         ).toInt()
-        checkStartButtonPadding(padding, startButton)
-        checkStartButtonDimensions(startButton)
-        Assert.assertEquals("Start", startButton.text.toString())
-        Assert.assertEquals(Typeface.BOLD, startButton.typeface?.style)
+        val expectedHeight = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                TaskbarFramebuffer.HEIGHT.toFloat(),
+                context.resources.displayMetrics
+        ).toInt()
+
+        Assert.assertEquals(expectedWidth.toLong(), placeholder.measuredWidth.toLong())
+        Assert.assertEquals(expectedHeight.toLong(), placeholder.measuredHeight.toLong())
+        Assert.assertTrue(placeholder.isClickable)
     }
 
     @Test
@@ -360,27 +369,5 @@ class TaskbarControllerTest {
                 .setClass(className)
                 .setEventType(UsageEvents.Event.MOVE_TO_FOREGROUND)
                 .build()
-    }
-
-    private fun checkStartButtonPadding(padding: Int, startButton: TextView) {
-        Assert.assertEquals(padding.toLong(), startButton.paddingLeft.toLong())
-        Assert.assertEquals(padding.toLong(), startButton.paddingTop.toLong())
-        Assert.assertEquals(padding.toLong(), startButton.paddingRight.toLong())
-        Assert.assertEquals(padding.toLong(), startButton.paddingBottom.toLong())
-    }
-
-    private fun checkStartButtonDimensions(startButton: TextView) {
-        val minWidth = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                72f,
-                context.resources.displayMetrics
-        ).toInt()
-        val minHeight = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                48f,
-                context.resources.displayMetrics
-        ).toInt()
-        Assert.assertEquals(minWidth.toLong(), startButton.minimumWidth.toLong())
-        Assert.assertEquals(minHeight.toLong(), startButton.minimumHeight.toLong())
     }
 }

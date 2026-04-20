@@ -424,21 +424,6 @@ class UTest {
     }
 
     @Test
-    @Config(qualifiers = "sw720dp")
-    fun testGetBaseTaskbarSizeWithSW720dp() {
-        var initialSize = context.resources.getDimension(R.dimen.tb_base_size_start_plus_divider)
-        initialSize += context.resources.getDimension(R.dimen.tb_base_size_collapse_button)
-        Assert.assertEquals(initialSize, U.getBaseTaskbarSize(context), 0f)
-    }
-
-    @Test
-    fun testGetBaseTaskbarSizeWithNormalDimension() {
-        var initialSize = context.resources.getDimension(R.dimen.tb_base_size_start_plus_divider)
-        initialSize += context.resources.getDimension(R.dimen.tb_base_size_collapse_button)
-        Assert.assertEquals(initialSize, U.getBaseTaskbarSize(context), 0f)
-    }
-
-    @Test
     fun testInitPrefsForNormalWithCanEnableFreeformAndHackOverrideTrueButNoSupport() {
         PowerMockito.spy(U::class.java)
         PowerMockito.`when`(U.canEnableFreeform(context)).thenReturn(true)
